@@ -1,6 +1,7 @@
 from unittest import main
-from os.path import exists, basename
-from os import remove
+from os.path import exists, basename, join, isdir, splitext
+from os import remove, makedirs
+from shutil import rmtree, make_archive
 import filecmp
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
@@ -11,22 +12,21 @@ from qiita_db.sql_connection import TRN
 class FetchFileFromCentralHandlerTests(OauthTestingBase):
     def setUp(self):
         super(FetchFileFromCentralHandlerTests, self).setUp()
+        self.endpoint = '/cloud/fetch_file_from_central/'
+        self.base_data_dir = qdb.util.get_db_files_base_dir()
 
     def test_get(self):
-        endpoint = '/cloud/fetch_file_from_central/'
-        base_data_dir = qdb.util.get_db_files_base_dir()
-
-        obs = self.get_authed(endpoint + 'nonexistingfile')
+        obs = self.get_authed(self.endpoint + 'nonexistingfile')
         self.assertEqual(obs.status_code, 403)
         self.assertIn('outside of the BASE_DATA_DIR', obs.reason)
 
         obs = self.get_authed(
-            endpoint + base_data_dir[1:] + '/nonexistingfile')
+            self.endpoint + self.base_data_dir[1:] + '/nonexistingfile')
         self.assertEqual(obs.status_code, 403)
         self.assertIn('The requested file is not present', obs.reason)
 
         obs = self.get_authed(
-            endpoint + base_data_dir[1:] +
+            self.endpoint + self.base_data_dir[1:] +
             '/raw_data/FASTA_QUAL_preprocessing.fna')
         self.assertEqual(obs.status_code, 200)
         self.assertIn('FLP3FBN01ELBSX length=250 xy=1766_01', str(obs.content))
@@ -35,11 +35,19 @@ class FetchFileFromCentralHandlerTests(OauthTestingBase):
 class PushFileToCentralHandlerTests(OauthTestingBase):
     def setUp(self):
         super(PushFileToCentralHandlerTests, self).setUp()
+        self.endpoint = '/cloud/push_file_to_central/'
+        self.base_data_dir = qdb.util.get_db_files_base_dir()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
 
     def test_post(self):
-        endpoint = '/cloud/push_file_to_central/'
-        base_data_dir = qdb.util.get_db_files_base_dir()
-
         # create a test file "locally", i.e. in current working directory
         fp_source = 'foo.bar'
         with open(fp_source, 'w') as f:
@@ -47,7 +55,7 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
         self._files_to_remove.append(fp_source)
 
         # if successful, expected location of the file in BASE_DATA_DIR
-        fp_target = base_data_dir + '/bar/' + basename(fp_source)
+        fp_target = self.base_data_dir + '/bar/' + basename(fp_source)
         self._files_to_remove.append(fp_target)
 
         # create a second test file
@@ -55,16 +63,16 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
         with open(fp_source2, 'w') as f:
             f.write("this is another test\n")
         self._files_to_remove.append(fp_source2)
-        fp_target2 = base_data_dir + '/barr/' + basename(fp_source2)
+        fp_target2 = self.base_data_dir + '/barr/' + basename(fp_source2)
         self._files_to_remove.append(fp_target2)
 
         # test raise error if no file is given
-        obs = self.post_authed(endpoint)
+        obs = self.post_authed(self.endpoint)
         self.assertEqual(obs.reason, "No files to upload defined!")
 
         # test correct mechanism
         with open(fp_source, 'rb') as fh:
-            obs = self.post_authed(endpoint, files={'bar/': fh})
+            obs = self.post_authed(self.endpoint, files={'bar/': fh})
             self.assertIn('Stored 1 files into BASE_DATA_DIR of Qiita',
                           str(obs.content))
             self.assertTrue(filecmp.cmp(fp_source, fp_target, shallow=False))
@@ -75,7 +83,7 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
             with TRN:
                 TRN.add("UPDATE settings SET test = False")
                 TRN.execute()
-            obs = self.post_authed(endpoint, files={'bar/': fh})
+            obs = self.post_authed(self.endpoint, files={'bar/': fh})
             # reset test mode to true
             with TRN:
                 TRN.add("UPDATE settings SET test = True")
@@ -89,13 +97,96 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
         with open(fp_source, 'rb') as fh1:
             with open(fp_source2, 'rb') as fh2:
                 obs = self.post_authed(
-                    endpoint, files={'bar/': fh1, 'barr/': fh2})
+                    self.endpoint, files={'bar/': fh1, 'barr/': fh2})
                 self.assertIn('Stored 2 files into BASE_DATA_DIR of Qiita',
                               str(obs.content))
                 self.assertTrue(filecmp.cmp(fp_source, fp_target,
                                             shallow=False))
                 self.assertTrue(filecmp.cmp(fp_source2, fp_target2,
                                             shallow=False))
+
+    def _create_test_dir(self, prefix=None):
+        """Creates a test directory with files and subdirs."""
+        # prefix
+        # |- testdir/
+        # |---- fileA.txt
+        # |---- subdirA_l1/
+        # |-------- fileB.fna
+        # |-------- subdirC_l2/
+        # |------------ fileC.log
+        # |------------ fileD.seq
+        # |---- subdirB_l1/
+        # |-------- fileE.sff
+        if (prefix is not None) and (prefix != ""):
+            prefix = join(prefix, 'testdir')
+        else:
+            prefix = 'testdir'
+
+        for dir in [join(prefix, 'subdirA_l1', 'subdirC_l2'),
+                    join(prefix, 'subdirB_l1')]:
+            if not exists(dir):
+                makedirs(dir)
+        for file, cont in [(join(prefix, 'fileA.txt'), 'contentA'),
+                           (join(prefix, 'subdirA_l1',
+                                 'fileB.fna'), 'this is B'),
+                           (join(prefix, 'subdirA_l1', 'subdirC_l2',
+                                 'fileC.log'), 'call me c'),
+                           (join(prefix, 'subdirA_l1', 'subdirC_l2',
+                                 'fileD.seq'), 'I d'),
+                           (join(prefix, 'subdirB_l1', 'fileE.sff'), 'oh e')]:
+            with open(file, "w") as f:
+                f.write(cont + "\n")
+        self._clean_up_files.append(prefix)
+
+        return prefix
+
+    def _send_dir(self, fp_zipped='tmp_senddir.zip'):
+        dir = self._create_test_dir(prefix='/tmp/try1')
+
+        make_archive(splitext(fp_zipped)[0], 'zip', dir)
+        self._clean_up_files.append(fp_zipped)
+
+        with open(fp_zipped, 'rb') as fh:
+            obs = self.post_authed(
+                self.endpoint,
+                data={'is_directory': 'true'},
+                files={dir: fh})
+
+        return obs
+
+    def test_post_directory(self):
+        obs = self._send_dir()
+        self.assertTrue(obs.status_code == 200)
+        qmain_dir = obs.content.decode().split('\n')[1].split(' - ')[-1]
+
+        self.assertTrue(
+            len(filecmp.cmpfiles(
+                '/tmp/try1/testdir/', qmain_dir,
+                ['fileA.txt',
+                 'subdirA_l1/fileB.fna',
+                 'subdirA_l1/subdirC_l2/fileC.log',
+                 'subdirA_l1/subdirC_l2/fileD.seq',
+                 'subdirB_l1/fileE.sff'])[0]) == 5)
+
+    def test_post_directory_testexisting(self):
+        # check if error is raised, if directory already exists
+        # send first time, should be OK
+        obs = self._send_dir()
+        self.assertTrue(obs.status_code == 200)
+
+        # we need to let qiita thinks for this test, to NOT be in test mode
+        with TRN:
+            TRN.add("UPDATE settings SET test = False")
+            TRN.execute()
+        # send again, should fal
+        obs = self._send_dir()
+        # reset test mode to true
+        with TRN:
+            TRN.add("UPDATE settings SET test = True")
+            TRN.execute()
+
+        self.assertIn("already present in Qiita's BASE_DATA_DIR!",
+                      obs.reason)
 
 
 if __name__ == "__main__":

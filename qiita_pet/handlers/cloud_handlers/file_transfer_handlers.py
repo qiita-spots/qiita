@@ -2,6 +2,8 @@ import os
 
 from tornado.web import HTTPError, RequestHandler
 from tornado.gen import coroutine
+import zipfile
+from io import BytesIO
 
 from qiita_core.util import execute_as_transaction, is_test_environment
 from qiita_db.handlers.oauth2 import authenticate_oauth
@@ -80,31 +82,54 @@ class PushFileToCentralHandler(RequestHandler):
         # canonic version of base_data_dir
         basedatadir = os.path.abspath(qiita_config.base_data_dir)
         stored_files = []
+        stored_directories = []
 
         for filespath, filelist in self.request.files.items():
             if filespath.startswith(basedatadir):
                 filespath = filespath[len(basedatadir):]
 
             for file in filelist:
+                # differentiate between regular files and whole directories,
+                # which must be zipped AND the client must provide the
+                # is_directory='true' body argument.
+                sent_directory = self.get_body_argument(
+                    'is_directory', "false") == "true"
+
                 filepath = os.path.join(filespath, file['filename'])
                 # remove leading /
                 if filepath.startswith(os.sep):
                     filepath = filepath[len(os.sep):]
                 filepath = os.path.abspath(os.path.join(basedatadir, filepath))
 
+                if sent_directory:
+                    # if a whole directory was send, we want to store it at
+                    # the given dirname of the filepath
+                    filepath = os.path.dirname(filepath)
+
                 # prevent overwriting existing files, except in test mode
                 if os.path.exists(filepath) and (not is_test_environment()):
                     raise HTTPError(403, reason=(
-                        "The requested file is already "
-                        "present in Qiita's BASE_DATA_DIR!"))
+                        "The requested %s is already "
+                        "present in Qiita's BASE_DATA_DIR!" %
+                        ('directory' if sent_directory else 'file')))
 
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                with open(filepath, "wb") as f:
-                    f.write(file['body'])
-                    stored_files.append(filepath)
+                if sent_directory:
+                    with zipfile.ZipFile(BytesIO(file['body'])) as zf:
+                        zf.extractall(filepath)
+                        stored_directories.append(filepath)
+                else:
+                    with open(filepath, "wb") as f:
+                        f.write(file['body'])
+                        stored_files.append(filepath)
 
-        self.write("Stored %i files into BASE_DATA_DIR of Qiita:\n%s\n" % (
-            len(stored_files),
-            '\n'.join(map(lambda x: ' - %s' % x, stored_files))))
+        for (_type, objs) in [('files', stored_files),
+                              ('directories', stored_directories)]:
+            if len(objs) > 0:
+                self.write(
+                    "Stored %i %s into BASE_DATA_DIR of Qiita:\n%s\n" % (
+                        len(objs),
+                        _type,
+                        '\n'.join(map(lambda x: ' - %s' % x, objs))))
 
         self.finish()
