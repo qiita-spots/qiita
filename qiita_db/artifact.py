@@ -1463,8 +1463,22 @@ class Artifact(qdb.base.QiitaObject):
                      FROM qiita.preparation_artifact
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return [qdb.metadata_template.prep_template.PrepTemplate(pt_id)
-                    for pt_id in qdb.sql_connection.TRN.execute_fetchflatten()]
+            templates = [qdb.metadata_template.prep_template.PrepTemplate(pt_id)
+                         for pt_id in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+        if len(templates) > 1:
+            # We never expect an artifact to be associated with multiple
+            # preparations
+            ids = [p.id for p in templates]
+            msg = f"Artifact({self.id}) associated with preps: {sorted(ids)}"
+            raise ValueError(msg)
+
+        if len(templates) == 0:
+            # An artifact must be associated with a template
+            msg = f"Artifact({self.id}) is not associated with a template"
+            raise ValueError(msg)
+
+        return templates
 
     @property
     def study(self):
