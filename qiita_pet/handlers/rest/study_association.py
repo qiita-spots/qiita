@@ -53,6 +53,7 @@ ARTIFACT_FILEPATH_ID = f'{_ARTIFACT}_{_FILEPATH}_{_ID}'
 
 
 def _most_recent_template_path(template):
+    """Obtain the most recent available template filepath"""
     filepaths = template.get_filepaths()
 
     # the test dataset shows that a prep can exist without a prep template
@@ -67,6 +68,7 @@ def _most_recent_template_path(template):
 
 
 def _set_study(payload, study):
+    """Set study level information"""
     filepath = _most_recent_template_path(study.sample_template)
 
     payload[STUDY_ID] = study.id
@@ -74,6 +76,7 @@ def _set_study(payload, study):
 
 
 def _set_prep_templates(payload, study):
+    """Set prep template level information"""
     template_data = []
     for pt in study.prep_templates():
         _set_prep_template(template_data, pt)
@@ -81,12 +84,15 @@ def _set_prep_templates(payload, study):
 
 
 def _get_human_filtering(prep_template):
+    """Obtain the human filtering if applied"""
     # .current_human_filtering does not describe what the human filter is
+    # so we will examine the first artifact off the prep
     if prep_template.artifact is not None:
         return prep_template.artifact.human_reads_filter_method
 
 
 def _set_prep_template(template_payload, prep_template):
+    """Set an individual prep template information"""
     filepath = _most_recent_template_path(prep_template)
 
     current_template = {}
@@ -102,6 +108,7 @@ def _set_prep_template(template_payload, prep_template):
 
 
 def _get_artifacts(prep_template):
+    """Get artifact information associated with a prep"""
     pending_artifact_objects = [prep_template.artifact, ]
     all_artifact_objects = set(pending_artifact_objects[:])
 
@@ -114,6 +121,7 @@ def _get_artifacts(prep_template):
 
 
 def _set_artifacts(template_payload, prep_template):
+    """Set artifact information specific to a prep"""
     prep_artifacts = []
 
     if prep_template.artifact is None:
@@ -127,6 +135,7 @@ def _set_artifacts(template_payload, prep_template):
 
 
 def _set_artifact(prep_artifacts, artifact, basal_id):
+    """Set artifact specific information"""
     artifact_payload = {}
     artifact_payload[ARTIFACT_ID] = artifact.id
 
@@ -145,6 +154,7 @@ def _set_artifact(prep_artifacts, artifact, basal_id):
 
 
 def _set_artifact_processing(artifact_payload, artifact):
+    """Set processing parameter information associated with an artifact"""
     processing_parameters = artifact.processing_parameters
     if processing_parameters is None:
         artifact_processing_id = None
@@ -162,6 +172,7 @@ def _set_artifact_processing(artifact_payload, artifact):
 
 
 def _set_artifact_filepaths(artifact_payload, artifact):
+    """Set filepath information associated with an artifact"""
     artifact_filepaths = []
     for filepath_data in artifact.filepaths:
         local_payload = {}
@@ -184,12 +195,30 @@ class StudyAssociationHandler(RESTHandler):
         if study is None:
             return
 
+        # schema:
+        #  STUDY_ID: <int>,
+        #  STUDY_SAMPLE_METADATA_FILEPATH: <path>,
+        #  PREP_TEMPLATES: None | list[dict]
+        #      PREP_ID: <int>,
+        #      PREP_STATUS: <str>,
+        #      PREP_SAMPLE_METADATA_FILEPATH: <path>,
+        #      PREP_DATA_TYPE: <str>,
+        #      PREP_HUMAN_FILTERING: None | <str>,
+        #      PREP_ARTIFACTS: None | list[dict]
+        #          ARTIFACT_ID: <int>,
+        #          ARTIFACT_STATUS: <str>,
+        #          ARTIFACT_PARENT_IDS: None | list[int],
+        #          ARTIFACT_BASAL_ID: None | <int>,
+        #          ARTIFACT_PROCESSING_ID: None | <int>,
+        #          ARTIFACT_PROCESSING_NAME: None | <str,
+        #          ARTIFACT_PROCESSING_ARGUMENTS: None | dict[noschema]
+        #          ARTIFACT_FILEPATHS: None | list[dict]
+        #              ARTIFACT_FILEPATH_ID: <int>,
+        #              ARTIFACT_FILEPATH: <path>,
+        #              ARTIFACT_FILEPATH_TYPE': <str>
+        #
         payload = {}
         _set_study(payload, study)
         _set_prep_templates(payload, study)
         self.write(payload)
         self.finish()
-
-
-        # get all the things
-
