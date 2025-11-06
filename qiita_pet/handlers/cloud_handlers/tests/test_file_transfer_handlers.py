@@ -40,6 +40,8 @@ class FetchFileFromCentralHandlerTests(OauthTestingBase):
         self.assertEqual(obs.status_code, 200)
         self.assertIn('FLP3FBN01ELBSX length=250 xy=1766_01', str(obs.content))
 
+        self.assertNotIn('Is-Qiita-Directory', obs.headers.keys())
+
     def test_get_directory(self):
         # a directory that exists BUT is not managed as a directory by Qiita
         obs = self.get_authed(
@@ -67,6 +69,7 @@ class FetchFileFromCentralHandlerTests(OauthTestingBase):
         obs = self.get_authed(self.endpoint + fp_testfolder[1:])
         self.assertEqual(obs.status_code, 200)
         self.assertIn('call me c', str(obs.content))
+        self.assertIn('Is-Qiita-Directory', obs.headers.keys())
 
 
 class PushFileToCentralHandlerTests(OauthTestingBase):
