@@ -1,5 +1,5 @@
 from unittest import main
-from os.path import exists, basename, join, isdir, splitext, dirname
+from os.path import exists, basename, join, isdir, splitext
 from os import remove, makedirs
 from shutil import rmtree, make_archive
 import filecmp
@@ -7,7 +7,9 @@ import filecmp
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.sql_connection import TRN
-from qiita_pet.handlers.cloud_handlers.file_transfer_handlers import *
+from qiita_pet.handlers.cloud_handlers.file_transfer_handlers import \
+    is_directory
+
 
 class FetchFileFromCentralHandlerTests(OauthTestingBase):
     def setUp(self):
