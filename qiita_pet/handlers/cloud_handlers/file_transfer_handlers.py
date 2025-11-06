@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from tornado.web import HTTPError, RequestHandler
 from tornado.gen import coroutine
@@ -7,7 +8,69 @@ from io import BytesIO
 
 from qiita_core.util import execute_as_transaction, is_test_environment
 from qiita_db.handlers.oauth2 import authenticate_oauth
+from qiita_pet.handlers.download import BaseHandlerDownload
 from qiita_core.qiita_settings import qiita_config
+import qiita_db as qdb
+
+
+def is_directory(filepath):
+    """Tests if given filepath is listed as directory in Qiita DB.
+
+    Note: this is independent of the actual filesystem, only checks DB entries.
+
+    Parameters
+    ----------
+    filepath : str
+        The filepath to the directory that shall be tested for beeing listed
+        as directory in Qiita's DB
+
+    Returns
+    -------
+    Bool: True if the last part of the filepath is contained as filepath in
+          qiita.filepath AND part after base_data_dir is a mountpoint in
+          qiita.data_directory AND the filepath_type is 'directory'.
+    False otherwise.
+    """
+    working_filepath = filepath
+    # chop off trailing / to ensure we point to a directory name properly
+    if working_filepath.endswith(os.sep):
+        working_filepath = os.path.dirname(working_filepath)
+
+    dirname = os.path.basename(working_filepath)
+    # file-objects foo are stored in <base_data_dir>/<mountpoint>/foo. To
+    # determine mountpoint from a given filepath, we need to chop of
+    # base_data_dir and then take the top directory level.
+    # Checking if user provided filepath contains a valid mountpoint adds
+    # to preventing users to download arbitrary file contents
+    try:
+        mount_dirname = Path(working_filepath).relative_to(
+            Path(qiita_config.base_data_dir)).parts[0]
+    except ValueError:
+        # base_data_dir is no proper prefix of given filepath
+        return False
+    except IndexError:
+        # only base_data_dir given
+        return False
+    if dirname == '' or mount_dirname == '':
+        # later should never be true due to above IndexError, but better save
+        # than sorry
+        return False
+
+    with qdb.sql_connection.TRN:
+        # find entries that
+        #   a) are of filepath_type "directory"
+        #   b) whose filepath ends with directory name
+        #   c) whose mountpoint matches the provided parent_directory
+        sql = """SELECT filepath_id
+                FROM qiita.filepath
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                WHERE filepath_type='directory' AND
+                    filepath=%s AND
+                    position(%s in mountpoint)>0;"""
+        qdb.sql_connection.TRN.add(sql, [dirname, mount_dirname])
+        hits = qdb.sql_connection.TRN.execute_fetchflatten()
+        return len(hits) > 0
 
 
 class FetchFileFromCentralHandler(RequestHandler):
@@ -39,6 +102,18 @@ class FetchFileFromCentralHandler(RequestHandler):
             raise HTTPError(403, reason=(
                 "The requested file is not present in Qiita's BASE_DATA_DIR!"))
 
+        filename_directory = "qiita-main-data.zip"
+        if os.path.isdir(filepath):
+            # Test if this directory is manages by Qiita's DB as directory
+            # Thus we can prevent that a lazy client simply downloads the whole
+            # basa_data_directory
+            if not is_directory(filepath):
+                raise HTTPError(403, reason=(
+                    "You cannot access this directory!"))
+            else:
+                # flag the response for qiita_client
+                self.set_header('Is-Qiita-Directory', 'yes')
+
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('Content-Description', 'File Transfer')
@@ -52,21 +127,50 @@ class FetchFileFromCentralHandler(RequestHandler):
         # We indirectly infer this by looking for the "X-Forwarded-For" header,
         # which should only exists when redirectred through nginx.
         if self.request.headers.get('X-Forwarded-For') is None:
-            self.set_header(
-                'Content-Disposition',
-                'attachment; filename=%s' % os.path.basename(filepath))
-            with open(filepath, "rb") as f:
-                self.write(f.read())
+            # delivery via tornado
+            if not is_directory(filepath):
+                # a single file
+                self.set_header(
+                    'Content-Disposition',
+                    'attachment; filename=%s' % os.path.basename(filepath))
+                with open(filepath, "rb") as f:
+                    self.write(f.read())
+            else:
+                # a whole directory
+                memfile = BytesIO()
+                with zipfile.ZipFile(memfile, 'w', zipfile.ZIP_DEFLATED) as zf:
+                    for root, dirs, files in os.walk(filepath):
+                        for file in files:
+                            full_path = os.path.join(root, file)
+                            # make path in zip file relative
+                            rel_path = os.path.relpath(full_path, filepath)
+                            zf.write(full_path, rel_path)
+                memfile.seek(0)
+                self.set_header('Content-Type', 'application/zip')
+                self.set_header('Content-Disposition',
+                                'attachment; filename=%s' % filename_directory)
+                self.write(memfile.read())
         else:
-            # delivery of the file via nginx requires replacing the basedatadir
-            # with the prefix defined in the nginx configuration for the
-            # base_data_dir, '/protected/' by default
-            protected_filepath = filepath.replace(basedatadir, '/protected')
-            self.set_header('X-Accel-Redirect', protected_filepath)
-            self.set_header(
-                'Content-Disposition',
-                'attachment; filename=%s' % os.path.basename(
-                    protected_filepath))
+            # delivery via nginx
+            if not is_directory(filepath):
+                # a single file:
+                # delivery of the file via nginx requires replacing the
+                # basedatadir with the prefix defined in the nginx
+                # configuration for the base_data_dir, '/protected/' by default
+                protected_filepath = filepath.replace(basedatadir,
+                                                      '/protected')
+                self.set_header('X-Accel-Redirect', protected_filepath)
+                self.set_header(
+                    'Content-Disposition',
+                    'attachment; filename=%s' % os.path.basename(
+                        protected_filepath))
+            else:
+                # a whole directory
+                to_download = BaseHandlerDownload._list_dir_files_nginx(
+                    self, filepath)
+                BaseHandlerDownload._write_nginx_file_list(self, to_download)
+                BaseHandlerDownload._set_nginx_headers(
+                    self, filename_directory)
 
         self.finish()
 

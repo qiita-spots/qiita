@@ -1,5 +1,5 @@
 from unittest import main
-from os.path import exists, basename, join, isdir, splitext
+from os.path import exists, basename, join, isdir, splitext, dirname
 from os import remove, makedirs
 from shutil import rmtree, make_archive
 import filecmp
@@ -7,13 +7,22 @@ import filecmp
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.sql_connection import TRN
-
+from qiita_pet.handlers.cloud_handlers.file_transfer_handlers import *
 
 class FetchFileFromCentralHandlerTests(OauthTestingBase):
     def setUp(self):
         super(FetchFileFromCentralHandlerTests, self).setUp()
         self.endpoint = '/cloud/fetch_file_from_central/'
         self.base_data_dir = qdb.util.get_db_files_base_dir()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
 
     def test_get(self):
         obs = self.get_authed(self.endpoint + 'nonexistingfile')
@@ -30,6 +39,34 @@ class FetchFileFromCentralHandlerTests(OauthTestingBase):
             '/raw_data/FASTA_QUAL_preprocessing.fna')
         self.assertEqual(obs.status_code, 200)
         self.assertIn('FLP3FBN01ELBSX length=250 xy=1766_01', str(obs.content))
+
+    def test_get_directory(self):
+        # a directory that exists BUT is not managed as a directory by Qiita
+        obs = self.get_authed(
+            self.endpoint + self.base_data_dir[1:] + '/BIOM/7')
+        self.assertEqual(obs.status_code, 403)
+        self.assertIn('You cannot access this directory', obs.reason)
+
+        # create directory and file for a negative test as mountpoint is not
+        # correct. 2_test_folder is registered in DB through
+        # populate_test_db.sql
+        fp_testfolder = join(self.base_data_dir, 'wrongmount', '2_test_folder')
+        makedirs(fp_testfolder, exist_ok=True)
+        PushFileToCentralHandlerTests._create_test_dir(self, fp_testfolder)
+        self._clean_up_files.append(fp_testfolder)
+        obs = self.get_authed(self.endpoint + fp_testfolder[1:])
+        self.assertEqual(obs.status_code, 403)
+        self.assertIn('You cannot access this directory', obs.reason)
+
+        # create directory and file for a positive test. 2_test_folder is
+        # registered in DB through populate_test_db.sql
+        fp_testfolder = join(self.base_data_dir, 'job', '2_test_folder')
+        makedirs(fp_testfolder, exist_ok=True)
+        PushFileToCentralHandlerTests._create_test_dir(self, fp_testfolder)
+        self._clean_up_files.append(fp_testfolder)
+        obs = self.get_authed(self.endpoint + fp_testfolder[1:])
+        self.assertEqual(obs.status_code, 200)
+        self.assertIn('call me c', str(obs.content))
 
 
 class PushFileToCentralHandlerTests(OauthTestingBase):
@@ -187,6 +224,38 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
 
         self.assertIn("already present in Qiita's BASE_DATA_DIR!",
                       obs.reason)
+
+
+class UtilsTests(OauthTestingBase):
+    def setUp(self):
+        self.base_data_dir = qdb.util.get_db_files_base_dir()
+        self._files_to_remove = []
+
+    def test_is_directory(self):
+        obs = is_directory(join('/wrong_root', 'karl', 'heinz'))
+        self.assertFalse(obs)
+
+        # no path given
+        obs = is_directory('')
+        self.assertFalse(obs)
+
+        # just pointing to BASE_DATA_DIR, i.e. no mountpoint given
+        obs = is_directory(self.base_data_dir)
+        self.assertFalse(obs)
+
+        # existing dir, but not accessible as not managed by Qiita DB as dir
+        obs = is_directory(join(self.base_data_dir, 'BIOM'))
+        self.assertFalse(obs)
+
+        # managed directory, but wrong mountpoint
+        fp_testfolder = join(self.base_data_dir, 'wrongmount', '2_test_folder')
+        obs = is_directory(fp_testfolder)
+        self.assertFalse(obs)
+
+        # positive test
+        fp_testfolder = join(self.base_data_dir, 'job', '2_test_folder')
+        obs = is_directory(fp_testfolder)
+        self.assertTrue(obs)
 
 
 if __name__ == "__main__":
