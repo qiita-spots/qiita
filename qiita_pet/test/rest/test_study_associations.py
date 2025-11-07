@@ -10,7 +10,6 @@ from unittest import main
 
 from tornado.escape import json_decode
 
-from qiita_db.study import Study
 from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
@@ -152,11 +151,11 @@ class StudyAssociationTests(RESTHandlerTestCase):
         def _process_dict(d):
             return [(d, k) for k in d]
 
-        def _process_list(l):
-            if l is None:
+        def _process_list(list_):
+            if list_ is None:
                 return []
 
-            return [dk for d in l
+            return [dk for d in list_
                     for dk in _process_dict(d)]
 
         stack = _process_dict(obs)

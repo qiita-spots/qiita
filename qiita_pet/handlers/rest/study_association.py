@@ -5,15 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-import warnings
 
-from tornado.escape import json_decode
 
 from qiita_db.handlers.oauth2 import authenticate_oauth
-from qiita_db.study import StudyPerson, Study
-from qiita_db.user import User
 from .rest_handler import RESTHandler
-from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 # terms used more than once
