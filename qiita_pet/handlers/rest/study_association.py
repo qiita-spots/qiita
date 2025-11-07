@@ -95,7 +95,7 @@ def _set_prep_template(template_payload, prep_template):
     current_template[PREP_STATUS] = prep_template.status
     current_template[PREP_SAMPLE_METADATA_FILEPATH] = filepath
     current_template[PREP_DATA_TYPE] = prep_template.data_type()
-    current_template[PREP_HUMAN_FILTERING] = _get_human_filtering(prep_template)
+    current_template[PREP_HUMAN_FILTERING] = _get_human_filtering(prep_template)  # noqa
 
     _set_artifacts(current_template, prep_template)
 
@@ -163,7 +163,7 @@ def _set_artifact_processing(artifact_payload, artifact):
 
     artifact_payload[ARTIFACT_PROCESSING_ID] = artifact_processing_id
     artifact_payload[ARTIFACT_PROCESSING_NAME] = artifact_processing_name
-    artifact_payload[ARTIFACT_PROCESSING_ARGUMENTS] = artifact_processing_arguments
+    artifact_payload[ARTIFACT_PROCESSING_ARGUMENTS] = artifact_processing_arguments  # noqa
 
 
 def _set_artifact_filepaths(artifact_payload, artifact):
