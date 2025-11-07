@@ -170,10 +170,16 @@ class FetchFileFromCentralHandler(RequestHandler):
                 # a whole directory
                 to_download = BaseHandlerDownload._list_dir_files_nginx(
                     self, filepath)
+
+                # fp_subdir is the part of the filepath the user requested,
+                # without QIITA_BASE_DIR
+                fp_subdir = os.path.relpath(filepath, basedatadir)
+
                 # above function adds filepath to located files, which is
                 # different from the non-nginx version. Correct here:
                 to_download = [
-                    (fp, os.path.relpath(fp_name, filepath), fp_checksum, fp_size)
+                    (fp, os.path.relpath(fp_name, fp_subdir), fp_checksum,
+                     fp_size)
                     for fp, fp_name, fp_checksum, fp_size
                     in to_download]
                 with open("/tmp/stefan.log", "a") as f:
