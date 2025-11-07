@@ -145,6 +145,8 @@ class FetchFileFromCentralHandler(RequestHandler):
                             # make path in zip file relative
                             rel_path = os.path.relpath(full_path, filepath)
                             zf.write(full_path, rel_path)
+                            with open("/tmp/stefan.log", "a") as f:
+                                f.write("üüüüüüüü da bin ich baff=%s %s\n" % (full_path, rel_path))
                 memfile.seek(0)
                 self.set_header('Content-Type', 'application/zip')
                 self.set_header('Content-Disposition',
@@ -168,6 +170,12 @@ class FetchFileFromCentralHandler(RequestHandler):
                 # a whole directory
                 to_download = BaseHandlerDownload._list_dir_files_nginx(
                     self, filepath)
+                # above function adds filepath to located files, which is
+                # different from the non-nginx version. Correct here:
+                to_download = [
+                    (fp, rel_path(fp_name, filepath), fp_checksum, fp_size)
+                    for fp, fp_name, fp_checksum, fp_size
+                    in to_download]
                 with open("/tmp/stefan.log", "a") as f:
                         f.write("üüüüüüüü to_download=%s\n" % to_download)
                 BaseHandlerDownload._write_nginx_file_list(self, to_download)
