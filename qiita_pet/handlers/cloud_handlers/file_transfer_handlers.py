@@ -220,6 +220,9 @@ class PushFileToCentralHandler(RequestHandler):
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 if sent_directory:
                     with zipfile.ZipFile(BytesIO(file['body'])) as zf:
+                        import sys
+                        print("üüüüüüüü qiita filepath=%s" % filepath, file=sys.stderr)
+                        print("üüüüüüüü qiita inventory:%s\n" % zf.filelist, file=sys.stderr)
                         zf.extractall(filepath)
                         stored_directories.append(filepath)
                 else:
