@@ -145,8 +145,6 @@ class FetchFileFromCentralHandler(RequestHandler):
                             # make path in zip file relative
                             rel_path = os.path.relpath(full_path, filepath)
                             zf.write(full_path, rel_path)
-                            with open("/tmp/stefan.log", "a") as f:
-                                f.write("üüüüüüüü da bin ich baff=%s %s\n" % (full_path, rel_path))
                 memfile.seek(0)
                 self.set_header('Content-Type', 'application/zip')
                 self.set_header('Content-Disposition',
@@ -176,14 +174,19 @@ class FetchFileFromCentralHandler(RequestHandler):
                 fp_subdir = os.path.relpath(filepath, basedatadir)
 
                 # above function adds filepath to located files, which is
-                # different from the non-nginx version. Correct here:
+                # different from the non-nginx version, e.g.
+                # fp = /protected/job/2_test_folder/testdir/fileA.txt
+                # fp_name = job/2_test_folder/testdir/fileA.txt
+                # where "job/2_test_folder" is what user requested and
+                #       "testdir/fileA.txt" is a file within this directory.
+                # When extracting by qiita_client, the "job/2_test_folder"
+                # part would be added twice (one by user request, second by
+                # unzipping). Therefore, we need to correct these names here:
                 to_download = [
                     (fp, os.path.relpath(fp_name, fp_subdir), fp_checksum,
                      fp_size)
                     for fp, fp_name, fp_checksum, fp_size
                     in to_download]
-                with open("/tmp/stefan.log", "a") as f:
-                        f.write("üüüüüüüü to_download=%s\n" % to_download)
                 BaseHandlerDownload._write_nginx_file_list(self, to_download)
                 BaseHandlerDownload._set_nginx_headers(
                     self, filename_directory)
@@ -239,8 +242,6 @@ class PushFileToCentralHandler(RequestHandler):
                         zf.extractall(filepath)
                         stored_directories.append(filepath)
                 else:
-                    with open("/tmp/stefan.log", "a") as f:
-                        f.write("üüüüüüüü qiita filepath=%s\n" % filepath)
                     with open(filepath, "wb") as f:
                         f.write(file['body'])
                         stored_files.append(filepath)
