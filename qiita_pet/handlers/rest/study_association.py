@@ -55,11 +55,9 @@ def _most_recent_template_path(template):
     if len(filepaths) == 0:
         return None
 
-    metadata_paths = sorted(filepaths, reverse=True)
-
     # [0] -> the highest file by ID
     # [1] -> the filepath
-    return metadata_paths[0][1]
+    return filepaths[0][1]
 
 
 def _set_study(payload, study):
