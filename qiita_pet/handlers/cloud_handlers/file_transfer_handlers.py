@@ -168,6 +168,8 @@ class FetchFileFromCentralHandler(RequestHandler):
                 # a whole directory
                 to_download = BaseHandlerDownload._list_dir_files_nginx(
                     self, filepath)
+                with open("/tmp/stefan.log", "a") as f:
+                        f.write("üüüüüüüü to_download=%s\n" % to_download)
                 BaseHandlerDownload._write_nginx_file_list(self, to_download)
                 BaseHandlerDownload._set_nginx_headers(
                     self, filename_directory)
