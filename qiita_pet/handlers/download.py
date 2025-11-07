@@ -150,9 +150,6 @@ class BaseHandlerDownload(BaseHandler):
              for fp, fp_name, fp_checksum, fp_size in to_download])
 
         self.set_header('X-Archive-Files', 'zip')
-        with open("/tmp/stefan.log", "a") as f:
-            f.write("üüüüüüüü all_files=%s\n" % all_files)
-
         self.write("%s\n" % all_files)
 
     def _set_nginx_headers(self, fname):
@@ -300,10 +297,6 @@ class DownloadRawData(BaseHandlerDownload):
                 to_download.extend(self._list_artifact_files_nginx(a))
 
         self._write_nginx_file_list(to_download)
-
-        with open("/logs/download.log", "a") as f:
-            f.write("DownloadRawData::get(study_id=%s), to_download=%s\n" % (study_id, to_download))
-
 
         zip_fn = 'study_raw_data_%d_%s.zip' % (
             study_id, datetime.now().strftime('%m%d%y-%H%M%S'))
