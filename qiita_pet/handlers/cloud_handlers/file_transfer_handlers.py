@@ -168,6 +168,25 @@ class FetchFileFromCentralHandler(RequestHandler):
                 # a whole directory
                 to_download = BaseHandlerDownload._list_dir_files_nginx(
                     self, filepath)
+
+                # fp_subdir is the part of the filepath the user requested,
+                # without QIITA_BASE_DIR
+                fp_subdir = os.path.relpath(filepath, basedatadir)
+
+                # above function adds filepath to located files, which is
+                # different from the non-nginx version, e.g.
+                # fp = /protected/job/2_test_folder/testdir/fileA.txt
+                # fp_name = job/2_test_folder/testdir/fileA.txt
+                # where "job/2_test_folder" is what user requested and
+                #       "testdir/fileA.txt" is a file within this directory.
+                # When extracting by qiita_client, the "job/2_test_folder"
+                # part would be added twice (one by user request, second by
+                # unzipping). Therefore, we need to correct these names here:
+                to_download = [
+                    (fp, os.path.relpath(fp_name, fp_subdir), fp_checksum,
+                     fp_size)
+                    for fp, fp_name, fp_checksum, fp_size
+                    in to_download]
                 BaseHandlerDownload._write_nginx_file_list(self, to_download)
                 BaseHandlerDownload._set_nginx_headers(
                     self, filename_directory)
