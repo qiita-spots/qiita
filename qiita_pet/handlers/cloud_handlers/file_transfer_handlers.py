@@ -173,7 +173,7 @@ class FetchFileFromCentralHandler(RequestHandler):
                 # above function adds filepath to located files, which is
                 # different from the non-nginx version. Correct here:
                 to_download = [
-                    (fp, rel_path(fp_name, filepath), fp_checksum, fp_size)
+                    (fp, os.path.relpath(fp_name, filepath), fp_checksum, fp_size)
                     for fp, fp_name, fp_checksum, fp_size
                     in to_download]
                 with open("/tmp/stefan.log", "a") as f:
