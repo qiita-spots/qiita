@@ -1473,11 +1473,6 @@ class Artifact(qdb.base.QiitaObject):
             msg = f"Artifact({self.id}) associated with preps: {sorted(ids)}"
             raise ValueError(msg)
 
-        if len(templates) == 0:
-            # An artifact must be associated with a template
-            msg = f"Artifact({self.id}) is not associated with a template"
-            raise ValueError(msg)
-
         return templates
 
     @property
