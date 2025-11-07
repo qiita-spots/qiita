@@ -102,6 +102,9 @@ def _set_prep_template(template_payload, prep_template):
 
 def _get_artifacts(prep_template):
     """Get artifact information associated with a prep"""
+    if prep_template.artifact is None:
+        return []
+
     pending_artifact_objects = [prep_template.artifact, ]
     all_artifact_objects = set(pending_artifact_objects[:])
 
