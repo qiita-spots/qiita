@@ -5,6 +5,7 @@ from tornado.web import HTTPError, RequestHandler
 from tornado.gen import coroutine
 import zipfile
 from io import BytesIO
+from shutil import rmtree
 
 from qiita_core.util import execute_as_transaction, is_test_environment
 from qiita_db.handlers.oauth2 import authenticate_oauth
@@ -104,7 +105,7 @@ class FetchFileFromCentralHandler(RequestHandler):
 
         filename_directory = "qiita-main-data.zip"
         if os.path.isdir(filepath):
-            # Test if this directory is manages by Qiita's DB as directory
+            # Test if this directory is managed by Qiita's DB as directory
             # Thus we can prevent that a lazy client simply downloads the whole
             # basa_data_directory
             if not is_directory(filepath):
@@ -254,5 +255,51 @@ class PushFileToCentralHandler(RequestHandler):
                         len(objs),
                         _type,
                         '\n'.join(map(lambda x: ' - %s' % x, objs))))
+
+        self.finish()
+
+
+class DeleteFileFromCentralHandler(RequestHandler):
+    # Note: this function is NOT available in productive instances!
+    @authenticate_oauth
+    @coroutine
+    @execute_as_transaction
+    def get(self, requested_filepath):
+        if not is_test_environment():
+            raise HTTPError(403, reason=(
+                "You cannot delete files through this API endpoint, when "
+                "Qiita is not in test-mode!"))
+
+        # ensure we have an absolute path, i.e. starting at /
+        filepath = os.path.join(os.path.sep, requested_filepath)
+        # use a canonic version of the filepath
+        filepath = os.path.abspath(filepath)
+
+        # canonic version of base_data_dir
+        basedatadir = os.path.abspath(qiita_config.base_data_dir)
+
+        if not filepath.startswith(basedatadir):
+            # attempt to access files outside of the BASE_DATA_DIR
+            raise HTTPError(403, reason=(
+                "You cannot delete file '%s', which is outside of "
+                "the BASE_DATA_DIR of Qiita!" % filepath))
+
+        if not os.path.exists(filepath):
+            raise HTTPError(403, reason=(
+                "The requested file %s is not present "
+                "in Qiita's BASE_DATA_DIR!" % filepath))
+
+        if is_directory(filepath):
+            rmtree(filepath)
+            self.write("Deleted directory %s from BASE_DATA_DIR of QIita" %
+                       filepath)
+        else:
+            if os.path.isdir(filepath):
+                raise HTTPError(403, reason=(
+                    "You requested to delete directory %s, which is not "
+                    "managed by Qiita as a directory!" % filepath))
+            os.remove(filepath)
+            self.write("Deleted file %s from BASE_DATA_DIR of Qiita" %
+                       filepath)
 
         self.finish()

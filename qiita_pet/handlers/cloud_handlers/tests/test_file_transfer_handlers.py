@@ -263,5 +263,83 @@ class UtilsTests(OauthTestingBase):
         self.assertTrue(obs)
 
 
+class DeleteFileFromCentralHandlerTests(OauthTestingBase):
+    def setUp(self):
+        super(DeleteFileFromCentralHandlerTests, self).setUp()
+        self.endpoint = '/cloud/delete_file_from_central/'
+        self.base_data_dir = qdb.util.get_db_files_base_dir()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
+
+    def test_post(self):
+        # check if error is raised when NOT providing a filepath
+        obs = self.get_authed(self.endpoint)
+        self.assertEqual(obs.status_code, 403)
+        self.assertIn("You cannot delete file '/', which", obs.reason)
+
+        # check if error is raised when deleting something in productive mode
+        # we need to let qiita thinks for this test, to NOT be in test mode
+        with TRN:
+            TRN.add("UPDATE settings SET test = False")
+            TRN.execute()
+        obs = self.get_authed(self.endpoint)
+        with TRN:
+            TRN.add("UPDATE settings SET test = True")
+            TRN.execute()
+        self.assertEqual(obs.status_code, 403)
+        self.assertEqual("You cannot delete files through this API endpoint"
+                         ", when Qiita is not in test-mode!", obs.reason)
+
+        # check if error is raised when deleting existing file outside of base
+        # dir
+        obs = self.get_authed(self.endpoint + 'home')
+        self.assertEqual(obs.status_code, 403)
+        self.assertIn("You cannot delete file '/home', which", obs.reason)
+
+        # check if a file can be deleted
+        # step 1: create file
+        fp_file = join(self.base_data_dir, 'deleteme')
+        with open(fp_file, 'w') as f:
+            f.write("this file shall be deleted")
+        self._clean_up_files.append(fp_file)
+        # step 2: ensure file exists
+        self.assertTrue(exists(fp_file))
+        # step 3: delete file via API
+        obs = self.get_authed(self.endpoint + fp_file)
+        self.assertEqual(obs.status_code, 200)
+        self.assertIn("Deleted file %s from BASE_DATA_DIR" % fp_file,
+                      str(obs.content))
+        # step 4: ensure file does not exist anymore
+        self.assertFalse(exists(fp_file))
+
+        # check that only directory managed by qiita DB can be deleted
+        obs = self.get_authed(self.endpoint + self.base_data_dir + '/BIOM')
+        self.assertEqual(obs.status_code, 403)
+        self.assertIn("which is not managed by Qiita as a directory",
+                      obs.reason)
+
+        # check if a directory can be deleted
+        # step 1: create directory
+        fp_dir = join(self.base_data_dir, 'job/2_test_folder')
+        makedirs(fp_dir)
+        self._clean_up_files.append(fp_dir)
+        # step 2: ensure file exists
+        self.assertTrue(exists(fp_dir))
+        # step 3: delete file via API
+        obs = self.get_authed(self.endpoint + fp_dir)
+        self.assertEqual(obs.status_code, 200)
+        self.assertIn("Deleted directory %s from BASE_DATA_DIR" % fp_dir,
+                      str(obs.content))
+        # step 4: ensure file does not exist anymore
+        self.assertFalse(exists(fp_dir))
+
+
 if __name__ == "__main__":
     main()
