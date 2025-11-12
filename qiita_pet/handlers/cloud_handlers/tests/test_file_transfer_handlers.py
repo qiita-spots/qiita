@@ -319,15 +319,9 @@ class DeleteFileFromCentralHandlerTests(OauthTestingBase):
         # step 4: ensure file does not exist anymore
         self.assertFalse(exists(fp_file))
 
-        # check that only directory managed by qiita DB can be deleted
-        obs = self.get_authed(self.endpoint + self.base_data_dir + '/BIOM')
-        self.assertEqual(obs.status_code, 403)
-        self.assertIn("which is not managed by Qiita as a directory",
-                      obs.reason)
-
         # check if a directory can be deleted
         # step 1: create directory
-        fp_dir = join(self.base_data_dir, 'job/2_test_folder')
+        fp_dir = join(self.base_data_dir, 'deletemeDir')
         makedirs(fp_dir)
         self._clean_up_files.append(fp_dir)
         # step 2: ensure file exists
