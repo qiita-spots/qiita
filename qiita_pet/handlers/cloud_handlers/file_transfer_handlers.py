@@ -289,15 +289,11 @@ class DeleteFileFromCentralHandler(RequestHandler):
                 "The requested file %s is not present "
                 "in Qiita's BASE_DATA_DIR!" % filepath))
 
-        if is_directory(filepath):
+        if os.path.isdir(filepath):
             rmtree(filepath)
             self.write("Deleted directory %s from BASE_DATA_DIR of QIita" %
                        filepath)
         else:
-            if os.path.isdir(filepath):
-                raise HTTPError(403, reason=(
-                    "You requested to delete directory %s, which is not "
-                    "managed by Qiita as a directory!" % filepath))
             os.remove(filepath)
             self.write("Deleted file %s from BASE_DATA_DIR of Qiita" %
                        filepath)
