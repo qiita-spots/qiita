@@ -29,7 +29,8 @@ def is_directory(filepath):
     -------
     Bool: True if the last part of the filepath is contained as filepath in
           qiita.filepath AND part after base_data_dir is a mountpoint in
-          qiita.data_directory AND the filepath_type is 'directory'.
+          qiita.data_directory AND the filepath_type is 'directory or
+          'html_summary_dir'.
     False otherwise.
     """
     working_filepath = filepath
@@ -59,14 +60,14 @@ def is_directory(filepath):
 
     with qdb.sql_connection.TRN:
         # find entries that
-        #   a) are of filepath_type "directory"
+        #   a) are of filepath_type "directory" or "html_summary_dir"
         #   b) whose filepath ends with directory name
         #   c) whose mountpoint matches the provided parent_directory
         sql = """SELECT filepath_id
                 FROM qiita.filepath
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
-                WHERE filepath_type='directory' AND
+                WHERE filepath_type IN ('directory', 'html_summary_dir') AND
                     filepath=%s AND
                     position(%s in mountpoint)>0;"""
         qdb.sql_connection.TRN.add(sql, [dirname, mount_dirname])
