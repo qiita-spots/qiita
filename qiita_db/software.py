@@ -1621,7 +1621,6 @@ class Parameters(object):
             error_msg = ("The provided JSON string doesn't encode a "
                          "parameter set for command '%s (ID: %s)'" % (
                              command.name, command.id))
-            error_msg += str(parameters)
         else:
             if not isinstance(values_dict, dict):
                 raise qdb.exceptions.QiitaDBError(
