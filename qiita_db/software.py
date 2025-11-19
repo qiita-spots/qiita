@@ -1617,8 +1617,11 @@ class Parameters(object):
                 "but not both")
         elif json_str is not None:
             parameters = loads(json_str)
+
             error_msg = ("The provided JSON string doesn't encode a "
-                         "parameter set for command %s" % command.id)
+                         "parameter set for command '%s (ID: %s)'" % (
+                             command.name, command.id))
+            error_msg += str(parameters)
         else:
             if not isinstance(values_dict, dict):
                 raise qdb.exceptions.QiitaDBError(
@@ -1658,6 +1661,7 @@ class Parameters(object):
                         % (error_msg, key))
 
             if parameters:
+                error_msg += f'--- {cmd_reqd_params} --- {cmd_opt_params}'
                 raise qdb.exceptions.QiitaDBError(
                     "%s. Extra parameters: %s"
                     % (error_msg, ', '.join(parameters.keys())))

@@ -109,7 +109,7 @@ Other tutorials (e.g. the :ref:`Statistical Analysis`) explain how to process th
 * Only 16S raw data: ``https://qiita.ucsd.edu/public_download/?data=raw&study_id=<study-id>&data_type=16S``
 * Only Metagenomic BIOMs + mapping files: ``https://qiita.ucsd.edu/public_download/?data=biom&study_id=<study-id>&data_type=Metagenomic``
 * Only the sample information file: ``https://qiita.ucsd.edu/public_download/?data=sample_information&study_id=<study-id>``
-* Only the preparation information file: ``https://qiita.ucsd.edu/public_download/?data=data=prep_information&prep_id=<prep-id>``
+* Only the preparation information file: ``https://qiita.ucsd.edu/public_download/?data=prep_information&prep_id=<prep-id>``
 
 Where ``<study-id>/<prep-id>`` should be replaced with the appropriate study-id/prep-id.
 
