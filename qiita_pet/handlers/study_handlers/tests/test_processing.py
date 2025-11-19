@@ -152,7 +152,8 @@ class TestWorkflowHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         exp = {'status': 'error', 'workflow_id': None, 'job': None,
                'message': "The provided JSON string doesn't encode a parameter"
-                          " set for command 3. Missing required parameter: "
+                          " set for command 'Pick closed-reference OTUs "
+                          "(ID: 3)'. Missing required parameter: "
                           "input_data"}
         self.assertDictEqual(loads(response.body), exp)
 

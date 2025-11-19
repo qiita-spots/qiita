@@ -387,7 +387,7 @@ class DownloadDataReleaseFromPrep(BaseHandlerDownload):
             info, bioms and coverage
         """
         user = self.current_user
-        if user.level not in ('admin', 'web-lab admin'):
+        if user.level not in ('admin', 'wet-lab admin'):
             raise HTTPError(403, reason="%s doesn't have access to download "
                             "the data release files" % user.email)
 

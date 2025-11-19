@@ -72,7 +72,7 @@ Shotgun sequencing
 ------------------
 
 Qiita currently has one active shotgun metagenomics data analysis pipeline: a per sample, paired-end
-bowtie2 alignment step with Woltka classification using either the WoLr2 (default) or RS210 databases.
+bowtie2 alignment step with Woltka classification using either the WoLr2 (default) or RS225 databases.
 Below you will find more information about each of these options.
 
 .. note::
@@ -197,6 +197,23 @@ Note that some of these are legacy option but not available for new processing.
       - Genera: 6,811
       - Species: 12,258
 
+#. RS225: Collection of reference microbial genomes sampled from the NCBI
+   RefSeq genome database, as of 2024-08-01. This time point corresponds to
+   RefSeq release 225. RS225 contains 40,987 genomes from NCBI RefSeq and
+   11,771 genomes from external sources. The total number of genomes, 52,758,
+   represents an 78% increase from the previous version of the database.
+
+   - Total number of genomes: 52,758
+   - Total length of genomes (after adding linkers): 170,326,480,530 bp
+   - Number of genomes by category:
+     - Archaea: 870
+     - Bacteria: 32,894
+     - Fungi: 610
+     - Protozoa: 93
+     - Viral: 18,279
+     - SynDNA Constructs: 12
+
+
 #. RS210: Collection of reference microbial genomes sampled from the NCBI RefSeq
    genome database, as of 2022-01-01. This time point corresponds to RefSeq
    release 210.
@@ -211,6 +228,7 @@ Note that some of these are legacy option but not available for new processing.
       - Fungi: 409
       - Protozoa: 93
       - Viral: 7,493
+
 
 #. WoLr1 ("Web of Life" release 1): An even representation of microbial diversity, selected using an prototype
    selection algorithm based on the MinHash distance matrix among all non-redundant bacterial and archaeal genomes
@@ -236,6 +254,7 @@ Note that some of these are legacy option but not available for new processing.
      - Strains: 89
      - Note: Nucleotide sequences per genome were concatenated with a linker of 20 "N"s.
 
+
 #. Rep200: NCBI representative and reference microbial genomes, corresponding to RefSeq release 200 (2020-05-14)
 
    - Genomes:             11,955
@@ -248,6 +267,7 @@ Note that some of these are legacy option but not available for new processing.
      - Fungi:    320
      - Protozoa: 88
      - Viral:    48
+
 
 #. Rep94: NCBI representative and reference microbial genomes, corresponding to RefSeq release 94.
 
@@ -266,6 +286,7 @@ Note that some of these are legacy option but not available for new processing.
      - Species: 5,636
      - Strains: 84
 
+
 #. Rep82: NCBI representative and reference microbial genomes, corresponding to RefSeq release 82.
 
    - Not available anymore for new processing
@@ -283,6 +304,7 @@ Note that some of these are legacy option but not available for new processing.
      - Genera: 2,264
      - Species: 11,852
      - Strains: 4,263
+
 
 Metatranscriptome processing
 ----------------------------
