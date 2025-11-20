@@ -158,12 +158,19 @@ def _retrive_workflows(active):
 
         # note that this block is similar but not identical to adding connected
         # nodes
+        standalone_input = None
         for i, (_, x) in enumerate(not_used_nodes.items()):
             vals_x, input_x, output_x = _default_parameters_parsing(x)
-            if at in input_x[0][1]:
+            if input_x and at in input_x[0][1]:
                 input_x[0][1] = at
-            else:
+            elif input_x:
                 input_x[0][1] = '** WARNING, NOT DEFINED **'
+            else:
+                # if we get to this point it means that these are "standalone"
+                # commands, thus is fine to link them to the same raw data
+                if standalone_input is None:
+                    standalone_input = vals_x[0]
+                input_x = [['', at]]
 
             name_x = vals_x[0]
             if vals_x not in (nodes):
@@ -173,7 +180,14 @@ def _retrive_workflows(active):
                         name = inputs[b]
                     else:
                         name = 'input_%s_%s' % (name_x, b)
-                    nodes.append([name, a, b])
+                    # if standalone_input == name_x then this is the first time
+                    # we are adding an standalone command and we need to add the node
+                    # (only once) and store the name of the node for future usage
+                    if standalone_input == name_x:
+                        nodes.append([name, a, b])
+                        standalone_input = name
+                    else:
+                        name = standalone_input
                     edges.append([name, vals_x[0]])
                 for a, b in output_x:
                     name = 'output_%s_%s' % (name_x, b)
