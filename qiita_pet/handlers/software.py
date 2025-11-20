@@ -74,6 +74,7 @@ def _retrive_workflows(active):
         # for easy look up and merge of output_names
         main_nodes = dict()
         not_used_nodes = {n.id: n for n in graph.nodes}
+        standalone_input = None
         for i, (x, y) in enumerate(graph.edges):
             if x.id in not_used_nodes:
                 del not_used_nodes[x.id]
@@ -89,10 +90,16 @@ def _retrive_workflows(active):
             if i == 0:
                 # we are in the first element so we can specifically select
                 # the type we are looking for
-                if at in input_x[0][1]:
+                if input_x and at in input_x[0][1]:
                     input_x[0][1] = at
-                else:
+                elif input_x:
                     input_x[0][1] = '** WARNING, NOT DEFINED **'
+                else:
+                    # if we get to this point it means that the workflow has a
+                    # multiple commands starting from the main single input,
+                    # thus is fine to link them to the same raw data
+                    standalone_input = vals_x[0]
+                    input_x = [['', at]]
 
             name_x = vals_x[0]
             name_y = vals_y[0]
@@ -106,6 +113,8 @@ def _retrive_workflows(active):
                         name = inputs[b]
                     else:
                         name = 'input_%s_%s' % (name_x, b)
+                        if standalone_input is not None:
+                            standalone_input = name
                     vals = [name, a, b]
                     if vals not in nodes:
                         inputs[b] = name
@@ -149,21 +158,25 @@ def _retrive_workflows(active):
 
         wparams = w.parameters
 
-        # adding nodes without edges
-        # as a first step if not_used_nodes is not empty we'll confirm that
-        # nodes/edges are empty; in theory we should never hit this
-        if not_used_nodes and (nodes or edges):
-            raise ValueError(
-                'Error, please check your workflow configuration')
+        # This case happens when a workflow has 2 commands from the initial
+        # artifact and one of them has more processing after
+        if not_used_nodes and (nodes or edges) and standalone_input is None:
+            standalone_input = edges[0][0]
 
         # note that this block is similar but not identical to adding connected
         # nodes
         for i, (_, x) in enumerate(not_used_nodes.items()):
             vals_x, input_x, output_x = _default_parameters_parsing(x)
-            if at in input_x[0][1]:
+            if input_x and at in input_x[0][1]:
                 input_x[0][1] = at
-            else:
+            elif input_x:
                 input_x[0][1] = '** WARNING, NOT DEFINED **'
+            else:
+                # if we get to this point it means that these are "standalone"
+                # commands, thus is fine to link them to the same raw data
+                if standalone_input is None:
+                    standalone_input = vals_x[0]
+                input_x = [['', at]]
 
             name_x = vals_x[0]
             if vals_x not in (nodes):
@@ -173,7 +186,16 @@ def _retrive_workflows(active):
                         name = inputs[b]
                     else:
                         name = 'input_%s_%s' % (name_x, b)
-                    nodes.append([name, a, b])
+                    # if standalone_input == name_x then this is the first time
+                    # we are processing a standalone command so we need to add
+                    # the node and store the name of the node for future usage
+                    if standalone_input is None:
+                        nodes.append([name, a, b])
+                    elif standalone_input == name_x:
+                        nodes.append([name, a, b])
+                        standalone_input = name
+                    else:
+                        name = standalone_input
                     edges.append([name, vals_x[0]])
                 for a, b in output_x:
                     name = 'output_%s_%s' % (name_x, b)

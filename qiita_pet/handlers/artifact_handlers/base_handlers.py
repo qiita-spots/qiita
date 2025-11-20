@@ -134,7 +134,9 @@ def artifact_summary_get_request(user, artifact_id):
     # Check if the artifact is editable by the given user
     study = artifact.study
     analysis = artifact.analysis
-    if artifact_type == 'job-output-folder':
+    # if is a folder and has no parents, it means that is an SPP job and
+    # nobody should be able to change anything about it
+    if artifact_type == 'job-output-folder' and not artifact.parents:
         editable = False
     else:
         editable = study.can_edit(user) if study else analysis.can_edit(user)
