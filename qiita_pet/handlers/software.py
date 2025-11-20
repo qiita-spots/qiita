@@ -158,12 +158,10 @@ def _retrive_workflows(active):
 
         wparams = w.parameters
 
-        # adding nodes without edges
-        # as a first step if not_used_nodes is not empty we'll confirm that
-        # nodes/edges are empty; in theory we should never hit this
+        # This case happens when a workflow has 2 commands from the initial
+        # artifact and one of them has more processing after
         if not_used_nodes and (nodes or edges) and standalone_input is None:
-            raise ValueError(
-                'Error, please check your workflow configuration')
+            standalone_input = edges[0][0]
 
         # note that this block is similar but not identical to adding connected
         # nodes
