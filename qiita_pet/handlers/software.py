@@ -189,7 +189,9 @@ def _retrive_workflows(active):
                     # if standalone_input == name_x then this is the first time
                     # we are processing a standalone command so we need to add
                     # the node and store the name of the node for future usage
-                    if standalone_input == name_x:
+                    if standalone_input is None:
+                        nodes.append([name, a, b])
+                    elif standalone_input == name_x:
                         nodes.append([name, a, b])
                         standalone_input = name
                     else:

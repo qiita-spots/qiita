@@ -58,8 +58,8 @@ class TestWorkflowsHandler(TestHandlerBase):
         DefaultWorkflow(2).active = True
 
     def test_retrive_workflows_standalone(self):
-        # let's create a new workflow, add 2 commands, and make parameters not
-        # required: two standalone commands
+        # let's create a new workflow, add 1 commands, and make parameters not
+        # required to make sure the stanalone is "active"
         with TRN:
             # 5 per_sample_FASTQ
             sql = """INSERT INTO qiita.default_workflow
@@ -68,25 +68,40 @@ class TestWorkflowsHandler(TestHandlerBase):
                      RETURNING default_workflow_id"""
             TRN.add(sql)
             wid = TRN.execute_fetchlast()
-            # 11 & 12 are per-sample-FASTQ split libraries commands
+            # 11 is per-sample-FASTQ split libraries commands
             sql = """INSERT INTO qiita.default_workflow_node
                      (default_workflow_id, default_parameter_set_id)
-                     VALUES (%s, 11), (%s, 12)
+                     VALUES (%s, 11)
                      RETURNING default_workflow_node_id"""
-            TRN.add(sql, [wid, wid])
+            TRN.add(sql, [wid])
             nid = TRN.execute_fetchflatten()
             sql = """UPDATE qiita.command_parameter SET required = false"""
             TRN.add(sql)
             TRN.execute()
 
-            obs = _retrive_workflows(True)[-1]
-            exp_value = f'input_params_{nid[0]}_per_sample_FASTQ'
-            # there should be a single "input" node
-            self.assertEqual(1, len(
-                [x for x in obs['nodes'] if x[0] == exp_value]))
-            # and 2 edges
-            self.assertEqual(2, len(
-                [x for x in obs['edges'] if x[0] == exp_value]))
+        # here we expect 1 input node and 1 edge
+        obs = _retrive_workflows(True)[-1]
+        exp_value = f'input_params_{nid[0]}_per_sample_FASTQ'
+        self.assertEqual(1, len(
+            [x for x in obs['nodes'] if x[0] == exp_value]))
+        self.assertEqual(1, len(
+            [x for x in obs['edges'] if x[0] == exp_value]))
+
+        # now let's insert another command using the same input
+        with TRN:
+            # 12 is per-sample-FASTQ split libraries commands
+            sql = """INSERT INTO qiita.default_workflow_node
+                     (default_workflow_id, default_parameter_set_id)
+                     VALUES (%s, 12)"""
+            TRN.add(sql, [wid])
+            TRN.execute()
+
+        # we should still have 1 node but now with 2 edges
+        obs = _retrive_workflows(True)[-1]
+        self.assertEqual(1, len(
+            [x for x in obs['nodes'] if x[0] == exp_value]))
+        self.assertEqual(2, len(
+            [x for x in obs['edges'] if x[0] == exp_value]))
 
     def test_retrive_workflows(self):
         # we should see all 3 workflows
