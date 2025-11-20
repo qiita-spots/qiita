@@ -571,7 +571,7 @@ class DownloadPublicHandler(BaseHandlerDownload):
             zip_fn = '%s_%s.zip' % (
                 fname, datetime.now().strftime('%m%d%y-%H%M%S'))
             self._set_nginx_headers(zip_fn)
-        else:
+        elif study_id is not None:
             study_id = int(study_id)
             try:
                 study = Study(study_id)
@@ -609,6 +609,53 @@ class DownloadPublicHandler(BaseHandlerDownload):
 
                     zip_fn = 'study_%d_%s_%s.zip' % (
                         study_id, data, datetime.now().strftime(
+                            '%m%d%y-%H%M%S'))
+
+                    self._set_nginx_headers(zip_fn)
+        else:
+            prep_id = int(prep_id)
+            try:
+                prep = PrepTemplate(prep_id)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(422, reason='Prep does not exist')
+            else:
+                public_raw_download = Study(prep.study_id).public_raw_download
+                if prep.status != 'public':
+                    raise HTTPError(404, reason='Prep is not public. If this '
+                                    'is a mistake contact: %s' %
+                                    qiita_config.help_email)
+                elif data == 'raw' and not public_raw_download:
+                    raise HTTPError(422, reason='No raw data access. If this '
+                                    'is a mistake contact: %s'
+                                    % qiita_config.help_email)
+                else:
+                    # raw data
+                    if data == 'raw':
+                        artifacts = [prep.artifact]
+                    # bioms
+                    elif data == 'biom':
+                        artifacts = [a for a in
+                                     prep.artifact.descendants.nodes()
+                                     if a.artifact_type == 'BIOM' and
+                                     a.visibility == 'public']
+                    else:
+                        raise HTTPError(
+                            422,
+                            reason='You can only download raw/biom from preps')
+                    for a in artifacts:
+                        if a.visibility != 'public' or a.has_human:
+                            continue
+                        to_download.extend(self._list_artifact_files_nginx(a))
+
+                if not to_download:
+                    raise HTTPError(422, reason='Nothing to download. If '
+                                    'this is a mistake contact: %s'
+                                    % qiita_config.help_email)
+                else:
+                    self._write_nginx_file_list(to_download)
+
+                    zip_fn = 'prep_%d_%s_%s.zip' % (
+                        prep_id, data, datetime.now().strftime(
                             '%m%d%y-%H%M%S'))
 
                     self._set_nginx_headers(zip_fn)

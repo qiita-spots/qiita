@@ -535,6 +535,26 @@ class TestDownloadPublicArtifactHandler(TestHandlerBase):
             'mapping_files/5_mapping_file.txt')
         self.assertRegex(response.body.decode('ascii'), exp)
 
+        # Now let's check download prep with no raw data access
+        response = self.get('/public_download/?data=raw&prep_id=1')
+        self.assertTrue(response.reason.startswith('No raw data access.'))
+
+        # Now success
+        Study(1).public_raw_download = True
+        response = self.get('/public_download/?data=raw&prep_id=1')
+        self.assertEqual(response.code, 200)
+        exp = ('- [0-9]* /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+               'raw_data/1_s_G1_L001_sequences.fastq.gz\n- [0-9]* /protected'
+               '/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz raw_data/'
+               '1_s_G1_L001_sequences_barcodes.fastq.gz\n- [0-9]* /protected/'
+               'templates/1_prep_1_qiime_19700101-000000.txt mapping_files/'
+               '1_mapping_file.txt\n')
+        self.assertRegex(response.body.decode('ascii'), exp)
+
+        # for simplicity, let's just check respose.code
+        response = self.get('/public_download/?data=biom&prep_id=1')
+        self.assertEqual(response.code, 200)
+
     def test_download_sample_information(self):
         response = self.get('/public_artifact_download/')
         self.assertEqual(response.code, 422)
