@@ -523,19 +523,27 @@ class DownloadPublicHandler(BaseHandlerDownload):
         valid_data = ['raw', 'biom'] + templates
 
         to_download = []
+        # for this block to work we need 3 main inputs: prep_id/sample_id, data
+        # and data_type - if one is missing raise an error, if both
+        # prep_id/sample_id are defined or data_type doesn't exist in qiita
+        # we should error
         if data is None or (study_id is None and prep_id is None) or \
                 data not in valid_data:
             raise HTTPError(422, reason='You need to specify both data (the '
                             'data type you want to download - %s) and '
                             'study_id or prep_id' % '/'.join(valid_data))
-        elif data_type is not None and data_type not in dtypes:
+        if data_type is not None and data_type not in dtypes:
             raise HTTPError(422, reason='Not a valid data_type. Valid types '
                             'are: %s' % ', '.join(dtypes))
-        elif data in templates and prep_id is None and study_id is None:
+        if data in templates and prep_id is None and study_id is None:
             raise HTTPError(422, reason='If downloading a sample or '
                             'preparation file you need to define study_id or'
                             ' prep_id')
-        elif data in templates:
+
+        # if we get here, then we have two main options: templates or raw/biom;
+        # however, for raw/biom we need to retrieve the data via the study_id
+        # or the prep_id so splitting the next block in study_id/pre_id
+        if data in templates:
             if data_type is not None:
                 raise HTTPError(422, reason='If requesting an information '
                                 'file you cannot specify the data_type')
@@ -571,95 +579,72 @@ class DownloadPublicHandler(BaseHandlerDownload):
             zip_fn = '%s_%s.zip' % (
                 fname, datetime.now().strftime('%m%d%y-%H%M%S'))
             self._set_nginx_headers(zip_fn)
-        elif study_id is not None:
-            study_id = int(study_id)
-            try:
-                study = Study(study_id)
-            except QiitaDBUnknownIDError:
-                raise HTTPError(422, reason='Study does not exist')
-            else:
-                public_raw_download = study.public_raw_download
-                if study.status != 'public':
-                    raise HTTPError(404, reason='Study is not public. If this '
-                                    'is a mistake contact: %s' %
-                                    qiita_config.help_email)
-                elif data == 'raw' and not public_raw_download:
-                    raise HTTPError(422, reason='No raw data access. If this '
-                                    'is a mistake contact: %s'
-                                    % qiita_config.help_email)
-                else:
-                    # raw data
-                    artifacts = [a for a in study.artifacts(dtype=data_type)
-                                 if not a.parents]
-                    # bioms
-                    if data == 'biom':
-                        artifacts = study.artifacts(
-                            dtype=data_type, artifact_type='BIOM')
-                    for a in artifacts:
-                        if a.visibility != 'public' or a.has_human:
-                            continue
-                        to_download.extend(self._list_artifact_files_nginx(a))
-
-                if not to_download:
-                    raise HTTPError(422, reason='Nothing to download. If '
-                                    'this is a mistake contact: %s'
-                                    % qiita_config.help_email)
-                else:
-                    self._write_nginx_file_list(to_download)
-
-                    zip_fn = 'study_%d_%s_%s.zip' % (
-                        study_id, data, datetime.now().strftime(
-                            '%m%d%y-%H%M%S'))
-
-                    self._set_nginx_headers(zip_fn)
         else:
-            prep_id = int(prep_id)
-            try:
-                prep = PrepTemplate(prep_id)
-            except QiitaDBUnknownIDError:
-                raise HTTPError(422, reason='Prep does not exist')
+            # depending on if we have a study_id or a prep_id, instantiate
+            # the study for basic permission validations
+            if study_id is not None:
+                study_id = int(study_id)
+                try:
+                    study = Study(study_id)
+                except QiitaDBUnknownIDError:
+                    raise HTTPError(422, reason='Study does not exist')
+                zip_fn = 'study_%d_%s_%s.zip' % (
+                    study_id, data, datetime.now().strftime(
+                        '%m%d%y-%H%M%S'))
             else:
-                public_raw_download = Study(prep.study_id).public_raw_download
-                if prep.status != 'public':
-                    raise HTTPError(404, reason='Prep is not public. If this '
-                                    'is a mistake contact: %s' %
-                                    qiita_config.help_email)
-                elif data == 'raw' and not public_raw_download:
-                    raise HTTPError(422, reason='No raw data access. If this '
-                                    'is a mistake contact: %s'
-                                    % qiita_config.help_email)
-                else:
-                    # raw data
-                    if data == 'raw':
-                        artifacts = [prep.artifact]
-                    # bioms
-                    elif data == 'biom':
-                        artifacts = [a for a in
-                                     prep.artifact.descendants.nodes()
-                                     if a.artifact_type == 'BIOM' and
-                                     a.visibility == 'public']
-                    else:
-                        raise HTTPError(
-                            422,
-                            reason='You can only download raw/biom from preps')
-                    for a in artifacts:
-                        if a.visibility != 'public' or a.has_human:
-                            continue
-                        to_download.extend(self._list_artifact_files_nginx(a))
-
-                if not to_download:
-                    raise HTTPError(422, reason='Nothing to download. If '
-                                    'this is a mistake contact: %s'
-                                    % qiita_config.help_email)
-                else:
-                    self._write_nginx_file_list(to_download)
-
-                    zip_fn = 'prep_%d_%s_%s.zip' % (
+                prep_id = int(prep_id)
+                try:
+                    prep = PrepTemplate(prep_id)
+                except QiitaDBUnknownIDError:
+                    raise HTTPError(422, reason='Prep does not exist')
+                study = Study(prep.study_id)
+                zip_fn = 'prep_%d_%s_%s.zip' % (
                         prep_id, data, datetime.now().strftime(
                             '%m%d%y-%H%M%S'))
 
-                    self._set_nginx_headers(zip_fn)
+            public_raw_download = study.public_raw_download
+            # just to be 100% that the data is public, let's start
+            # with checking that the study is actually public
+            if study.status != 'public':
+                raise HTTPError(404, reason='Study is not public. If this '
+                                'is a mistake contact: %s' %
+                                qiita_config.help_email)
+            # now let's check that if the data is raw, the study's
+            # public_raw_download flag is on
+            if data == 'raw':
+                if not public_raw_download:
+                    raise HTTPError(422, reason='No raw data access. If this '
+                                    'is a mistake contact: %s'
+                                    % qiita_config.help_email)
+                if study_id is not None:
+                    artifacts = [a for a in study.artifacts(dtype=data_type)
+                                 if not a.parents]
+                else:
+                    artifacts = [prep.artifact]
+            else:  # this is biom
+                if study_id is not None:
+                    artifacts = study.artifacts(
+                        dtype=data_type, artifact_type='BIOM')
+                else:
+                    artifacts = [a for a in
+                                 prep.artifact.descendants.nodes()
+                                 if a.artifact_type == 'BIOM']
 
+            # at this point artifacts has all the available artifact
+            # so we need to make sure they are public and have no has_human
+            # to be added to_download
+            for a in artifacts:
+                if a.visibility != 'public' or a.has_human:
+                    continue
+                to_download.extend(self._list_artifact_files_nginx(a))
+
+            if not to_download:
+                raise HTTPError(422, reason='Nothing to download. If '
+                                'this is a mistake contact: %s'
+                                % qiita_config.help_email)
+
+        self._write_nginx_file_list(to_download)
+        self._set_nginx_headers(zip_fn)
         self.finish()
 
 
