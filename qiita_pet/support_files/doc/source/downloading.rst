@@ -87,6 +87,7 @@ replace artifact-id):
 
 - https://qiita.ucsd.edu/public_artifact_download/?artifact_id=artifact-id
 
+
 Access non-public artifacts without a login
 -------------------------------------------
 
@@ -115,7 +116,9 @@ can be used to download BIOMs or raw data. Do not forget to replace `study-id`,
 - Only 16S raw data: https://qiita.ucsd.edu/public_download/?data=raw&study_id=study-id&data_type=16S
 - Only Metagenomic BIOMs + mapping files: https://qiita.ucsd.edu/public_download/?data=biom&study_id=study-id&data_type=Metagenomic
 - Only the sample information file: https://qiita.ucsd.edu/public_download/?data=sample_information&study_id=study-id
-- Only the preparation information file: https://qiita.ucsd.edu/public_download/?data=data=prep_information&prep_id=prep-id
+- Only the preparation information file: https://qiita.ucsd.edu/public_download/?data=prep_information&prep_id=prep-id
+- Raw data for a given preparation: https://qiita.ucsd.edu/public_download/?data=raw&prep_id=prep-id
+- BIOM data for a given preparation: https://qiita.ucsd.edu/public_download/?data=biom&prep_id=prep-id
 
 Note that if you are downloading raw data, the owner should have made that data
 available by selecting "Allow Qiita users to download raw data files" in

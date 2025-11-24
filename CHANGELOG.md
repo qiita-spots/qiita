@@ -1,5 +1,28 @@
 # Qiita changelog
 
+Version 2025.11
+---------------
+
+Deployed on Novermber 25th, 2025
+
+* Updated `qp-knight-lab-processing` to add support of PacBio raw data processing that has twisted adaptors, including human-filtering using MOVI. Also, replaced flake8 for ruff. Additionally, added `IsPairedEndComplete` as part of the Illumina xml validation process.
+* Added a new plugin to the system: `https://github.com/qiita-spots/qp-pacbio`, which adds two new commands: `Woltka v0.1.7, minimap2` and `PacBio processing`.
+* Added default workflows specific to PacBio.
+* Allowed default workflows to have multiple commands starting from a single input. 
+* Now users can download public raw and biom per-preparation directly.
+* Initial changes for to support cloud environments via cloud specific endpoints; thank you @sjanssen2!
+
+
+Version 2025.09
+---------------
+
+Deployed on September 11th, 2025
+
+* Updated `qp-knight-lab-processing` to add support of PacBio raw data processing, including human-filtering using MOVI.
+* Updated fastp in local environment for `qp-knight-lab-processing` from 0.20.1 to 0.23.4.
+* Added workflows parameters to the default workfows in Qiita to make them Illumina specific: `UPDATE qiita.default_workflow set parameters = '{"prep": {"platform": "Illumina"}, "sample": {}}'::json WHERE default_workflow_id IN (4, 6, 9 ,11);` to avoid PacBio processing applying them.
+
+
 Version 2025.07
 ---------------
 
