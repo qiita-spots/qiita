@@ -77,6 +77,7 @@ class ArtifactHandler(OauthBaseHandler):
             'processing_parameters': dict with the processing parameters used
                 to generate the artifact or None
             'files': dict with the artifact files, keyed by filepath type
+            'parents': list of the parents artifact ids
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
@@ -93,7 +94,8 @@ class ArtifactHandler(OauthBaseHandler):
                     artifact.can_be_submitted_to_vamps,
                 'prep_information': [p.id for p in artifact.prep_templates],
                 'study': study.id if study else None,
-                'analysis': analysis.id if analysis else None}
+                'analysis': analysis.id if analysis else None,
+                'parents': [p.id for p in artifact.parents]}
             params = artifact.processing_parameters
             response['processing_parameters'] = (
                 params.values if params is not None else None)
