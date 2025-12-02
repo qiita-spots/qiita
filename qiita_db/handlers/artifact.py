@@ -1,5 +1,4 @@
 # -----------------------------------------------------------------------------
-            pp = qdb.software.Parameters(parameters_id)
 # Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
