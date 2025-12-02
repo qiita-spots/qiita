@@ -77,6 +77,7 @@ class ArtifactHandler(OauthBaseHandler):
             'processing_parameters': dict with the processing parameters used
                 to generate the artifact or None
             'files': dict with the artifact files, keyed by filepath type
+            'parents': list of the parents artifact ids
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
@@ -93,7 +94,8 @@ class ArtifactHandler(OauthBaseHandler):
                     artifact.can_be_submitted_to_vamps,
                 'prep_information': [p.id for p in artifact.prep_templates],
                 'study': study.id if study else None,
-                'analysis': analysis.id if analysis else None}
+                'analysis': analysis.id if analysis else None,
+                'parents': [p.id for p in artifact.parents]}
             params = artifact.processing_parameters
             response['processing_parameters'] = (
                 params.values if params is not None else None)
@@ -184,6 +186,8 @@ class ArtifactAPItestHandler(OauthBaseHandler):
         analysis = self.get_argument('analysis', None)
         name = self.get_argument('name', None)
         dtype = self.get_argument('data_type', None)
+        parents = self.get_argument('parents', None)
+        job_id = self.get_argument('job_id', None)
 
         if prep_template is not None:
             prep_template = qdb.metadata_template.prep_template.PrepTemplate(
@@ -191,9 +195,19 @@ class ArtifactAPItestHandler(OauthBaseHandler):
             dtype = None
         if analysis is not None:
             analysis = qdb.analysis.Analysis(analysis)
+        if parents is not None:
+            # remember that this method is only accessed via the tests so
+            # to load an artifact with parents, the easiest it to use
+            # the job_id that is being used for testing and passed as a
+            # parameter
+            parents = [qdb.artifact.Artifact(p) for p in loads(parents)]
+            pp = qdb.processing_job.ProcessingJob(job_id).parameters
+        else:
+            pp = None
 
         a = qdb.artifact.Artifact.create(
             filepaths, artifact_type, name=name, prep_template=prep_template,
+            parents=parents, processing_parameters=pp,
             analysis=analysis, data_type=dtype)
 
         self.write({'artifact': a.id})
