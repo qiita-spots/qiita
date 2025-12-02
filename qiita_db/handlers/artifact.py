@@ -1,4 +1,5 @@
 # -----------------------------------------------------------------------------
+            pp = qdb.software.Parameters(parameters_id)
 # Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
@@ -186,6 +187,8 @@ class ArtifactAPItestHandler(OauthBaseHandler):
         analysis = self.get_argument('analysis', None)
         name = self.get_argument('name', None)
         dtype = self.get_argument('data_type', None)
+        parents = self.get_argument('parents', None)
+        job_id = self.get_argument('job_id', None)
 
         if prep_template is not None:
             prep_template = qdb.metadata_template.prep_template.PrepTemplate(
@@ -193,9 +196,19 @@ class ArtifactAPItestHandler(OauthBaseHandler):
             dtype = None
         if analysis is not None:
             analysis = qdb.analysis.Analysis(analysis)
+        if parents is not None:
+            # remember that this method is only accessed via the tests so
+            # to load an artifact with parents, the easiest it to use
+            # the job_id that is being used for testing and passed as a
+            # parameter
+            parents = [qdb.artifact.Artifact(p) for p in loads(parents)]
+            pp = qdb.processing_job.ProcessingJob(job_id).parameters
+        else:
+            pp = None
 
         a = qdb.artifact.Artifact.create(
             filepaths, artifact_type, name=name, prep_template=prep_template,
+            parents=parents, processing_parameters=pp,
             analysis=analysis, data_type=dtype)
 
         self.write({'artifact': a.id})
