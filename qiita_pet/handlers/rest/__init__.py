@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from .study import StudyHandler, StudyCreatorHandler, StudyStatusHandler
+from .study_association import StudyAssociationHandler
 from .study_samples import (StudySamplesHandler, StudySamplesInfoHandler,
                             StudySamplesCategoriesHandler,
                             StudySamplesDetailHandler,
@@ -25,6 +26,7 @@ __all__ = ['StudyHandler', 'StudySamplesHandler', 'StudySamplesInfoHandler',
 ENDPOINTS = (
     (r"/api/v1/study$", StudyCreatorHandler),
     (r"/api/v1/study/([0-9]+)$", StudyHandler),
+    (r"/api/v1/study/([0-9]+)/associations$", StudyAssociationHandler),
     (r"/api/v1/study/([0-9]+)/samples/categories=([a-zA-Z\-0-9\.:,_]*)",
         StudySamplesCategoriesHandler),
     (r"/api/v1/study/([0-9]+)/samples", StudySamplesHandler),
