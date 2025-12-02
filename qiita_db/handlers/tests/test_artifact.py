@@ -86,6 +86,7 @@ class ArtifactHandlerTests(OauthTestingBase):
             'prep_information': [1],
             'study': 1,
             'analysis': None,
+            'parents': [],
             'processing_parameters': None,
             'files': exp_fps}
         self.assertEqual(loads(obs.body), exp)
@@ -109,6 +110,7 @@ class ArtifactHandlerTests(OauthTestingBase):
             'prep_information': [],
             'study': None,
             'analysis': 1,
+            'parents': [8],
             'processing_parameters': {'biom_table': '8', 'depth': '9000',
                                       'subsample_multinomial': 'False'},
             'files': exp_fps}
