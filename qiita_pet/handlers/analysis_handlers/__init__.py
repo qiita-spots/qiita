@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from .util import check_analysis_access  # noqa
+
 from .base_handlers import (
     AnalysisGraphHandler,
     AnalysisHandler,
@@ -18,7 +20,6 @@ from .listing_handlers import (
     SelectedSamplesHandler,
 )
 from .sharing_handlers import ShareAnalysisAJAX
-from .util import check_analysis_access
 
 __all__ = [
     "CreateAnalysisHandler",
