@@ -6,26 +6,25 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import TestCase, main
-from os import environ, close, remove
-from tempfile import mkstemp
-from functools import partial
 import warnings
-
-from qiita_core.exceptions import MissingConfigSection
-from qiita_core.configuration_manager import ConfigurationManager
-
 from configparser import ConfigParser
+from functools import partial
+from os import close, environ, remove
+from tempfile import mkstemp
+from unittest import TestCase, main
+
+from qiita_core.configuration_manager import ConfigurationManager
+from qiita_core.exceptions import MissingConfigSection
 
 
 class ConfigurationManagerTests(TestCase):
     def setUp(self):
-        self.old_conf_fp = environ.get('QIITA_CONFIG_FP')
-        fd, self.conf_fp = mkstemp(suffix='.txt')
+        self.old_conf_fp = environ.get("QIITA_CONFIG_FP")
+        fd, self.conf_fp = mkstemp(suffix=".txt")
         close(fd)
-        with open(self.conf_fp, 'w') as f:
+        with open(self.conf_fp, "w") as f:
             f.write(CONF)
-        environ['QIITA_CONFIG_FP'] = self.conf_fp
+        environ["QIITA_CONFIG_FP"] = self.conf_fp
 
         self.conf = ConfigParser()
         with open(self.conf_fp, newline=None) as f:
@@ -33,9 +32,9 @@ class ConfigurationManagerTests(TestCase):
 
     def tearDown(self):
         if self.old_conf_fp is not None:
-            environ['QIITA_CONFIG_FP'] = self.old_conf_fp
+            environ["QIITA_CONFIG_FP"] = self.old_conf_fp
         else:
-            del environ['QIITA_CONFIG_FP']
+            del environ["QIITA_CONFIG_FP"]
         remove(self.conf_fp)
 
     def test_init(self):
@@ -49,12 +48,13 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.max_upload_size, 100)
         self.assertTrue(obs.require_approval)
         self.assertEqual(obs.qiita_env, "source activate qiita")
-        self.assertEqual(obs.private_launcher, 'qiita-private-launcher')
+        self.assertEqual(obs.private_launcher, "qiita-private-launcher")
         self.assertEqual(obs.plugin_launcher, "qiita-plugin-launcher")
         self.assertEqual(obs.plugin_dir, "/tmp/")
         self.assertEqual(
             obs.valid_upload_extension,
-            ["fastq", "fastq.gz", "txt", "tsv", "sff", "fna", "qual"])
+            ["fastq", "fastq.gz", "txt", "tsv", "sff", "fna", "qual"],
+        )
         self.assertEqual(obs.certificate_file, "/tmp/server.cert")
         self.assertEqual(obs.cookie_secret, "SECRET")
         self.assertEqual(obs.key_file, "/tmp/server.key")
@@ -93,15 +93,17 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.ebi_seq_xfer_url, "webin.ebi.ac.uk")
         self.assertEqual(
             obs.ebi_dropbox_url,
-            "https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/")
+            "https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/",
+        )
         self.assertEqual(obs.ebi_center_name, "qiita-test")
         self.assertEqual(obs.ebi_organization_prefix, "example_organization")
 
         # VAMPS section
         self.assertEqual(obs.vamps_user, "user")
         self.assertEqual(obs.vamps_pass, "password")
-        self.assertEqual(obs.vamps_url,
-                         "https://vamps.mbl.edu/mobe_workshop/getfile.php")
+        self.assertEqual(
+            obs.vamps_url, "https://vamps.mbl.edu/mobe_workshop/getfile.php"
+        )
 
         # Portal section
         self.assertEqual(obs.portal_fp, "/tmp/portal.cfg")
@@ -112,7 +114,7 @@ class ConfigurationManagerTests(TestCase):
         self.assertIsNone(obs.iframe_qiimp)
 
     def test_init_error(self):
-        with open(self.conf_fp, 'w') as f:
+        with open(self.conf_fp, "w") as f:
             f.write("\n")
 
         with self.assertRaises(MissingConfigSection):
@@ -121,62 +123,64 @@ class ConfigurationManagerTests(TestCase):
     def test_get_main(self):
         obs = ConfigurationManager()
 
-        conf_setter = partial(self.conf.set, 'main')
-        conf_setter('COOKIE_SECRET', '')
-        conf_setter('JWT_SECRET', '')
-        conf_setter('BASE_DATA_DIR', '')
-        conf_setter('PLUGIN_DIR', '')
-        conf_setter('CERTIFICATE_FILE', '')
-        conf_setter('KEY_FILE', '')
-        conf_setter('QIITA_ENV', '')
+        conf_setter = partial(self.conf.set, "main")
+        conf_setter("COOKIE_SECRET", "")
+        conf_setter("JWT_SECRET", "")
+        conf_setter("BASE_DATA_DIR", "")
+        conf_setter("PLUGIN_DIR", "")
+        conf_setter("CERTIFICATE_FILE", "")
+        conf_setter("KEY_FILE", "")
+        conf_setter("QIITA_ENV", "")
 
         # Warning raised if No files will be allowed to be uploaded
         # Warning raised if no cookie_secret
-        self.conf.set('main', 'HELP_EMAIL', 'ignore@me')
-        self.conf.set('main', 'SYSADMIN_EMAIL', 'ignore@me')
+        self.conf.set("main", "HELP_EMAIL", "ignore@me")
+        self.conf.set("main", "SYSADMIN_EMAIL", "ignore@me")
         with warnings.catch_warnings(record=True) as warns:
             obs._get_main(self.conf)
 
             obs_warns = [str(w.message) for w in warns]
-            exp_warns = ['Random cookie secret generated.',
-                         'Random JWT secret generated.  Non Public Artifact '
-                         'Download Links will expire upon system restart.']
+            exp_warns = [
+                "Random cookie secret generated.",
+                "Random JWT secret generated.  Non Public Artifact "
+                "Download Links will expire upon system restart.",
+            ]
             self.assertCountEqual(obs_warns, exp_warns)
 
         self.assertNotEqual(obs.cookie_secret, "SECRET")
         # Test default base_data_dir
-        self.assertTrue(
-            obs.base_data_dir.endswith("/qiita_db/support_files/test_data"))
+        self.assertTrue(obs.base_data_dir.endswith("/qiita_db/support_files/test_data"))
         # Test default plugin dir
         self.assertTrue(obs.plugin_dir.endswith("/.qiita_plugins"))
         # Default certificate_file
         self.assertTrue(
-            obs.certificate_file.endswith(
-                "/qiita_core/support_files/ci_server.crt"))
+            obs.certificate_file.endswith("/qiita_core/support_files/ci_server.crt")
+        )
         # Default key_file
         self.assertTrue(
-            obs.key_file.endswith("/qiita_core/support_files/ci_server.key"))
+            obs.key_file.endswith("/qiita_core/support_files/ci_server.key")
+        )
 
         # BASE_DATA_DIR does not exist
-        conf_setter('BASE_DATA_DIR', '/surprised/if/this/dir/exists')
+        conf_setter("BASE_DATA_DIR", "/surprised/if/this/dir/exists")
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
         # WORKING_DIR does not exist
-        conf_setter('BASE_DATA_DIR', '/tmp')
-        conf_setter('WORKING_DIR', '/surprised/if/this/dir/exists')
+        conf_setter("BASE_DATA_DIR", "/tmp")
+        conf_setter("WORKING_DIR", "/surprised/if/this/dir/exists")
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
         # PLUGIN_DIR does not exist
-        conf_setter('WORKING_DIR', '/tmp')
-        conf_setter('PLUGIN_DIR', '/surprised/if/this/dir/exists')
+        conf_setter("WORKING_DIR", "/tmp")
+        conf_setter("PLUGIN_DIR", "/surprised/if/this/dir/exists")
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
         # No files can be uploaded
-        conf_setter('PLUGIN_DIR', '/tmp')
-        conf_setter('VALID_UPLOAD_EXTENSION', '')
+        conf_setter("PLUGIN_DIR", "/tmp")
+        conf_setter("VALID_UPLOAD_EXTENSION", "")
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
@@ -187,61 +191,61 @@ class ConfigurationManagerTests(TestCase):
 
         with warnings.catch_warnings(record=True) as warns:
             # warning get only issued when in non test environment
-            self.conf.set('main', 'TEST_ENVIRONMENT', 'FALSE')
+            self.conf.set("main", "TEST_ENVIRONMENT", "FALSE")
 
             obs._get_main(self.conf)
-            self.assertEqual(obs.help_email, 'foo@bar.com')
-            self.assertEqual(obs.sysadmin_email, 'jeff@bar.com')
+            self.assertEqual(obs.help_email, "foo@bar.com")
+            self.assertEqual(obs.sysadmin_email, "jeff@bar.com")
 
             obs_warns = [str(w.message) for w in warns]
             exp_warns = [
-                'Using the github fake email for HELP_EMAIL, '
-                'are you sure this is OK?',
-                'Using the github fake email for SYSADMIN_EMAIL, '
-                'are you sure this is OK?']
+                "Using the github fake email for HELP_EMAIL, are you sure this is OK?",
+                "Using the github fake email for SYSADMIN_EMAIL, "
+                "are you sure this is OK?",
+            ]
             self.assertCountEqual(obs_warns, exp_warns)
 
         # test if it falls back to qiita.help@gmail.com
-        self.conf.set('main', 'HELP_EMAIL', '')
+        self.conf.set("main", "HELP_EMAIL", "")
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
         # test if it falls back to qiita.help@gmail.com
-        self.conf.set('main', 'SYSADMIN_EMAIL', '')
+        self.conf.set("main", "SYSADMIN_EMAIL", "")
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
     def test_get_job_scheduler(self):
         obs = ConfigurationManager()
 
-        conf_setter = partial(self.conf.set, 'job_scheduler')
-        conf_setter('JOB_SCHEDULER_JOB_OWNER', '')
+        conf_setter = partial(self.conf.set, "job_scheduler")
+        conf_setter("JOB_SCHEDULER_JOB_OWNER", "")
         obs._get_job_scheduler(self.conf)
-        self.assertEqual('', obs.job_scheduler_owner)
+        self.assertEqual("", obs.job_scheduler_owner)
 
     def test_get_postgres(self):
         obs = ConfigurationManager()
 
-        conf_setter = partial(self.conf.set, 'postgres')
-        conf_setter('PASSWORD', '')
-        conf_setter('ADMIN_PASSWORD', '')
+        conf_setter = partial(self.conf.set, "postgres")
+        conf_setter("PASSWORD", "")
+        conf_setter("ADMIN_PASSWORD", "")
         obs._get_postgres(self.conf)
         self.assertIsNone(obs.password)
         self.assertIsNone(obs.admin_password)
 
     def test_get_portal(self):
         obs = ConfigurationManager()
-        conf_setter = partial(self.conf.set, 'portal')
+        conf_setter = partial(self.conf.set, "portal")
         # Default portal_dir
-        conf_setter('PORTAL_DIR', '')
+        conf_setter("PORTAL_DIR", "")
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "")
         # Portal dir does not start with /
-        conf_setter('PORTAL_DIR', 'gold_portal')
+        conf_setter("PORTAL_DIR", "gold_portal")
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "/gold_portal")
         # Portal dir endswith /
-        conf_setter('PORTAL_DIR', '/gold_portal/')
+        conf_setter("PORTAL_DIR", "/gold_portal/")
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "/gold_portal")
 
@@ -253,39 +257,39 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.stats_map_center_longitude, -105.24827)
 
         # a string cannot be parsed as a float
-        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', 'kurt')
+        self.conf.set("portal", "STATS_MAP_CENTER_LATITUDE", "kurt")
         with self.assertRaises(ValueError):
             obs._get_portal(self.conf)
 
         # check for illegal float values
-        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', "-200")
+        self.conf.set("portal", "STATS_MAP_CENTER_LATITUDE", "-200")
         with self.assertRaises(ValueError):
             obs._get_portal(self.conf)
-        self.conf.set('portal', 'STATS_MAP_CENTER_LATITUDE', "200")
+        self.conf.set("portal", "STATS_MAP_CENTER_LATITUDE", "200")
         with self.assertRaises(ValueError):
             obs._get_portal(self.conf)
 
         # check if value defaults if option is missing altogether
-        self.conf.remove_option('portal', 'STATS_MAP_CENTER_LATITUDE')
+        self.conf.remove_option("portal", "STATS_MAP_CENTER_LATITUDE")
         obs._get_portal(self.conf)
         self.assertEqual(obs.stats_map_center_latitude, 40.01027)
 
         # same as above, but for longitude
         # a string cannot be parsed as a float
-        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', 'kurt')
+        self.conf.set("portal", "STATS_MAP_CENTER_LONGITUDE", "kurt")
         with self.assertRaises(ValueError):
             obs._get_portal(self.conf)
 
         # check for illegal float values
-        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', "-200")
+        self.conf.set("portal", "STATS_MAP_CENTER_LONGITUDE", "-200")
         with self.assertRaises(ValueError):
             obs._get_portal(self.conf)
-        self.conf.set('portal', 'STATS_MAP_CENTER_LONGITUDE', "200")
+        self.conf.set("portal", "STATS_MAP_CENTER_LONGITUDE", "200")
         with self.assertRaises(ValueError):
             obs._get_portal(self.conf)
 
         # check if value defaults if option is missing altogether
-        self.conf.remove_option('portal', 'STATS_MAP_CENTER_LONGITUDE')
+        self.conf.remove_option("portal", "STATS_MAP_CENTER_LONGITUDE")
         obs._get_portal(self.conf)
         self.assertEqual(obs.stats_map_center_longitude, -105.24827)
 
@@ -470,5 +474,5 @@ STATS_MAP_CENTER_LONGITUDE =
 [iframe]
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

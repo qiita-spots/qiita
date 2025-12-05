@@ -8,18 +8,18 @@
 
 # adapted from
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
-from json import loads, dumps
 from itertools import chain
+from json import dumps, loads
 
 import toredis
+from tornado.gen import Task, engine
 from tornado.web import authenticated
 from tornado.websocket import WebSocketHandler
-from tornado.gen import engine, Task
 
 from qiita_core.qiita_settings import r_client
-from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_db.artifact import Artifact
 from qiita_core.util import execute_as_transaction
+from qiita_db.artifact import Artifact
+from qiita_pet.handlers.base_handlers import BaseHandler
 
 
 class MessageHandler(WebSocketHandler):
@@ -46,7 +46,7 @@ class MessageHandler(WebSocketHandler):
     # pylint: disable=W0221
     @authenticated
     def open(self):
-        self.write_message('hello')
+        self.write_message("hello")
 
     @authenticated
     def on_message(self, msg):
@@ -56,10 +56,10 @@ class MessageHandler(WebSocketHandler):
 
         # Determine which Redis communication channel the server needs to
         # listen on
-        self.channel = msginfo.get('user', None)
+        self.channel = msginfo.get("user", None)
 
         if self.channel is not None:
-            self.channel_messages = '%s:messages' % self.channel
+            self.channel_messages = "%s:messages" % self.channel
             self.listen()
 
     def listen(self):
@@ -80,18 +80,19 @@ class MessageHandler(WebSocketHandler):
         # if a compute process wrote to the Redis channel that we are
         # listening too, and if it is actually a message, send the payload to
         # the javascript client via the websocket
-        if channel == self.channel and message_type == 'message':
+        if channel == self.channel and message_type == "message":
             self.write_message(payload)
 
     @engine
     def on_close(self):
         yield Task(self.toredis.unsubscribe, self.channel)
-        self.r_client.delete('%s:messages' % self.channel)
+        self.r_client.delete("%s:messages" % self.channel)
         self.redis.disconnect()
 
 
 class SelectedSocketHandler(WebSocketHandler, BaseHandler):
     """Websocket for removing samples on default analysis display page"""
+
     @authenticated
     @execute_as_transaction
     def on_message(self, msg):
@@ -100,16 +101,16 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
         msginfo = loads(msg)
         default = self.current_user.default_analysis
 
-        if 'remove_sample' in msginfo:
-            data = msginfo['remove_sample']
-            artifact = Artifact(data['proc_data'])
-            default.remove_samples([artifact], data['samples'])
-        elif 'remove_pd' in msginfo:
-            data = msginfo['remove_pd']
-            default.remove_samples([Artifact(data['proc_data'])])
-        elif 'clear' in msginfo:
-            data = msginfo['clear']
-            artifacts = [Artifact(_id) for _id in data['pids']]
+        if "remove_sample" in msginfo:
+            data = msginfo["remove_sample"]
+            artifact = Artifact(data["proc_data"])
+            default.remove_samples([artifact], data["samples"])
+        elif "remove_pd" in msginfo:
+            data = msginfo["remove_pd"]
+            default.remove_samples([Artifact(data["proc_data"])])
+        elif "clear" in msginfo:
+            data = msginfo["clear"]
+            artifacts = [Artifact(_id) for _id in data["pids"]]
             default.remove_samples(artifacts)
         self.write_message(msg)
 
@@ -118,11 +119,12 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
     @authenticated
     @execute_as_transaction
     def open(self):
-        self.write_message('hello')
+        self.write_message("hello")
 
 
 class SelectSamplesHandler(WebSocketHandler, BaseHandler):
     """Websocket for selecting and deselecting samples on list studies page"""
+
     @authenticated
     @execute_as_transaction
     def on_message(self, msg):
@@ -136,9 +138,14 @@ class SelectSamplesHandler(WebSocketHandler, BaseHandler):
         """
         msginfo = loads(msg)
         default = self.current_user.default_analysis
-        default.add_samples(msginfo['sel'])
+        default.add_samples(msginfo["sel"])
         # Count total number of unique samples selected and return
-        self.write_message(dumps({
-            'sel': len(set(
-                chain.from_iterable(s for s in msginfo['sel'].values())))
-        }))
+        self.write_message(
+            dumps(
+                {
+                    "sel": len(
+                        set(chain.from_iterable(s for s in msginfo["sel"].values()))
+                    )
+                }
+            )
+        )

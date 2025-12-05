@@ -12,34 +12,41 @@ from qiita_core.exceptions import QiitaError
 
 class QiitaWareError(QiitaError):
     """Base clase for all Qiita-ware exceptions"""
+
     pass
 
 
 class UserDoesNotExistsError(QiitaWareError):
     """Error used when a user does not exist"""
+
     pass
 
 
 class AnalysisDoesNotExistsError(QiitaWareError):
     """Error used when an analysis does not exist"""
+
     pass
 
 
 class JobDoesNotExistsError(QiitaWareError):
     """Error used when a job does not exist"""
+
     pass
 
 
 class StudyDoesNotExistsError(QiitaWareError):
     """Error used when a study does not exist"""
+
     pass
 
 
 class ComputeError(QiitaWareError):
     """A compute error happened"""
+
     pass
 
 
 class EBISubmissionError(QiitaWareError):
     """Error used when EBI cannot be submitted"""
+
     pass

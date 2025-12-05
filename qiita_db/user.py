@@ -16,6 +16,7 @@ Classes
 
    User
 """
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -23,14 +24,16 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from re import sub
 from datetime import datetime
-
-from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
-                                   IncompetentQiitaDeveloperError)
-from qiita_core.qiita_settings import qiita_config
+from re import sub
 
 import qiita_db as qdb
+from qiita_core.exceptions import (
+    IncompetentQiitaDeveloperError,
+    IncorrectEmailError,
+    IncorrectPasswordError,
+)
+from qiita_core.qiita_settings import qiita_config
 
 
 class User(qdb.base.QiitaObject):
@@ -134,8 +137,11 @@ class User(qdb.base.QiitaObject):
                 raise IncorrectPasswordError("Password not valid!")
 
             # pull password out of database
-            sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
-                   "email = %s".format(cls._table))
+            sql = (
+                "SELECT password, user_level_id FROM qiita.{0} WHERE email = %s".format(
+                    cls._table
+                )
+            )
             qdb.sql_connection.TRN.add(sql, [email])
             # Using [0] because there is only one row
             info = qdb.sql_connection.TRN.execute_fetchindex()[0]
@@ -203,15 +209,14 @@ class User(qdb.base.QiitaObject):
 
             # make sure user does not already exist
             if cls.exists(email):
-                raise qdb.exceptions.QiitaDBDuplicateError(
-                    "User", "email: %s" % email)
+                raise qdb.exceptions.QiitaDBDuplicateError("User", "email: %s" % email)
 
             # make sure non-info columns aren't passed in info dict
             if info:
                 if cls._non_info.intersection(info):
                     raise qdb.exceptions.QiitaDBColumnError(
-                        "non info keys passed: %s" %
-                        cls._non_info.intersection(info))
+                        "non info keys passed: %s" % cls._non_info.intersection(info)
+                    )
             else:
                 info = {}
 
@@ -219,8 +224,7 @@ class User(qdb.base.QiitaObject):
             # add values to info
             info["email"] = email
             info["password"] = qdb.util.hash_password(password)
-            info["user_verify_code"] = qdb.util.create_rand_string(
-                20, punct=False)
+            info["user_verify_code"] = qdb.util.create_rand_string(20, punct=False)
 
             # make sure keys in info correspond to columns in table
             qdb.util.check_table_cols(info, cls._table)
@@ -231,7 +235,8 @@ class User(qdb.base.QiitaObject):
             values = [info[col] for col in columns]
             # crete user
             sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
-                cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
+                cls._table, ",".join(columns), ",".join(["%s"] * len(values))
+            )
             qdb.sql_connection.TRN.add(sql, values)
 
             # Add system messages to user
@@ -269,16 +274,17 @@ class User(qdb.base.QiitaObject):
             User has no code of the given type
         """
         with qdb.sql_connection.TRN:
-            if code_type == 'create':
-                column = 'user_verify_code'
-            elif code_type == 'reset':
-                column = 'pass_reset_code'
+            if code_type == "create":
+                column = "user_verify_code"
+            elif code_type == "reset":
+                column = "pass_reset_code"
             else:
                 raise IncompetentQiitaDeveloperError(
-                    "code_type must be 'create' or 'reset' Uknown type %s"
-                    % code_type)
+                    "code_type must be 'create' or 'reset' Uknown type %s" % code_type
+                )
             sql = "SELECT {0} FROM qiita.{1} WHERE email = %s".format(
-                column, cls._table)
+                column, cls._table
+            )
             qdb.sql_connection.TRN.add(sql, [email])
             db_code = qdb.sql_connection.TRN.execute_fetchindex()
 
@@ -288,7 +294,8 @@ class User(qdb.base.QiitaObject):
             db_code = db_code[0][0]
             if db_code is None:
                 raise qdb.exceptions.QiitaDBError(
-                    "No %s code for user %s" % (column, email))
+                    "No %s code for user %s" % (column, email)
+                )
 
             correct_code = db_code == code
 
@@ -299,8 +306,7 @@ class User(qdb.base.QiitaObject):
 
                 if code_type == "create":
                     # verify the user
-                    level = qdb.util.convert_to_id(
-                        'user', 'user_level', 'name')
+                    level = qdb.util.convert_to_id("user", "user_level", "name")
                     sql = """UPDATE qiita.{} SET user_level_id = %s
                              WHERE email = %s""".format(cls._table)
                     qdb.sql_connection.TRN.add(sql, [level, email])
@@ -320,8 +326,7 @@ class User(qdb.base.QiitaObject):
 
                     portal_ids = qdb.sql_connection.TRN.execute_fetchflatten()
                     for portal_id in portal_ids:
-                        args = [email, '%s-dflt-%d' % (email, portal_id),
-                                'dflt', True]
+                        args = [email, "%s-dflt-%d" % (email, portal_id), "dflt", True]
                         qdb.sql_connection.TRN.add(an_sql, args)
                         an_id = qdb.sql_connection.TRN.execute_fetchlast()
                         qdb.sql_connection.TRN.add(ap_sql, [an_id, portal_id])
@@ -333,12 +338,17 @@ class User(qdb.base.QiitaObject):
     @classmethod
     def delete(cls, email, force=False):
         if not cls.exists(email):
-            raise IncorrectEmailError(f'This email does not exist: {email}')
+            raise IncorrectEmailError(f"This email does not exist: {email}")
 
-        tables = ['qiita.study_users', 'qiita.study_tags',
-                  'qiita.processing_job_workflow', 'qiita.processing_job',
-                  'qiita.message_user', 'qiita.analysis_users',
-                  'qiita.analysis']
+        tables = [
+            "qiita.study_users",
+            "qiita.study_tags",
+            "qiita.processing_job_workflow",
+            "qiita.processing_job",
+            "qiita.message_user",
+            "qiita.analysis_users",
+            "qiita.analysis",
+        ]
 
         not_empty = []
         for t in tables:
@@ -350,8 +360,10 @@ class User(qdb.base.QiitaObject):
                     not_empty.append(t)
 
         if not_empty and not force:
-            raise ValueError(f'These tables are not empty: "{not_empty}", '
-                             'delete them first or use `force=True`')
+            raise ValueError(
+                f'These tables are not empty: "{not_empty}", '
+                "delete them first or use `force=True`"
+            )
 
         sql = """
             DELETE FROM qiita.study_users WHERE email = %(email)s;
@@ -409,7 +421,7 @@ class User(qdb.base.QiitaObject):
             DELETE FROM qiita.qiita_user WHERE email = %(email)s;"""
 
         with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(sql, {'email': email})
+            qdb.sql_connection.TRN.add(sql, {"email": email})
             qdb.sql_connection.TRN.execute()
 
     # ---properties---
@@ -423,8 +435,7 @@ class User(qdb.base.QiitaObject):
         """The password of the user"""
         with qdb.sql_connection.TRN:
             # pull password out of database
-            sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(
-                self._table)
+            sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self.email])
 
             return qdb.sql_connection.TRN.execute_fetchlast()
@@ -445,8 +456,7 @@ class User(qdb.base.QiitaObject):
     def info(self):
         """Dict with any other information attached to the user"""
         with qdb.sql_connection.TRN:
-            sql = "SELECT * from qiita.{0} WHERE email = %s".format(
-                self._table)
+            sql = "SELECT * from qiita.{0} WHERE email = %s".format(self._table)
             # Need direct typecast from psycopg2 dict to standard dict
             qdb.sql_connection.TRN.add(sql, [self._id])
             # [0] retrieves the first row (the only one present)
@@ -467,8 +477,7 @@ class User(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # make sure non-info columns aren't passed in info dict
             if self._non_info.intersection(info):
-                raise qdb.exceptions.QiitaDBColumnError(
-                    "non info keys passed!")
+                raise qdb.exceptions.QiitaDBColumnError("non info keys passed!")
 
             # make sure keys in info correspond to columns in table
             qdb.util.check_table_cols(info, self._table)
@@ -482,8 +491,9 @@ class User(qdb.base.QiitaObject):
                 data.append(val)
             data.append(self._id)
 
-            sql = ("UPDATE qiita.{0} SET {1} WHERE "
-                   "email = %s".format(self._table, ','.join(sql_insert)))
+            sql = "UPDATE qiita.{0} SET {1} WHERE email = %s".format(
+                self._table, ",".join(sql_insert)
+            )
             qdb.sql_connection.TRN.add(sql, data)
             qdb.sql_connection.TRN.execute()
 
@@ -496,8 +506,7 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE email = %s AND dflt = true AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
-            return qdb.analysis.Analysis(
-                qdb.sql_connection.TRN.execute_fetchlast())
+            return qdb.analysis.Analysis(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def user_studies(self):
@@ -511,7 +520,8 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
             return set(
                 qdb.study.Study(sid)
-                for sid in qdb.sql_connection.TRN.execute_fetchflatten())
+                for sid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     @property
     def shared_studies(self):
@@ -525,7 +535,8 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
             return set(
                 qdb.study.Study(sid)
-                for sid in qdb.sql_connection.TRN.execute_fetchflatten())
+                for sid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     @property
     def private_analyses(self):
@@ -538,7 +549,8 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
             return set(
                 qdb.analysis.Analysis(aid)
-                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     @property
     def shared_analyses(self):
@@ -551,7 +563,8 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
             return set(
                 qdb.analysis.Analysis(aid)
-                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     @property
     def unread_messages(self):
@@ -613,7 +626,8 @@ class User(qdb.base.QiitaObject):
             res = {}
             for s_id, artifact_ids in db_res.items():
                 res[qdb.study.Study(s_id)] = [
-                    qdb.artifact.Artifact(a_id) for a_id in artifact_ids]
+                    qdb.artifact.Artifact(a_id) for a_id in artifact_ids
+                ]
 
             return res
 
@@ -633,8 +647,7 @@ class User(qdb.base.QiitaObject):
             password changed or not
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(
-                self._table)
+            sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
             dbpass = qdb.sql_connection.TRN.execute_fetchlast()
             if dbpass == qdb.util.hash_password(oldpass, dbpass):
@@ -679,7 +692,8 @@ class User(qdb.base.QiitaObject):
                  SET password=%s, pass_reset_code = NULL
                  WHERE email = %s""".format(self._table)
         qdb.sql_connection.perform_as_transaction(
-            sql, [qdb.util.hash_password(newpass), self._id])
+            sql, [qdb.util.hash_password(newpass), self._id]
+        )
 
     def messages(self, count=None):
         """Return messages in user's queue
@@ -753,7 +767,7 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
 
-    def jobs(self, limit=30, ignore_status=['success'], show_hidden=False):
+    def jobs(self, limit=30, ignore_status=["success"], show_hidden=False):
         """Return jobs created by the user
 
         Parameters
@@ -785,7 +799,7 @@ class User(qdb.base.QiitaObject):
                 sql_info = [self._id, limit]
 
             if not show_hidden:
-                sql += ' AND hidden = false'
+                sql += " AND hidden = false"
 
             sql += """
                      ORDER BY CASE processing_job_status
@@ -798,18 +812,20 @@ class User(qdb.base.QiitaObject):
                         END, heartbeat DESC LIMIT %s"""
 
             qdb.sql_connection.TRN.add(sql, sql_info)
-            return [qdb.processing_job.ProcessingJob(p[0])
-                    for p in qdb.sql_connection.TRN.execute_fetchindex()]
+            return [
+                qdb.processing_job.ProcessingJob(p[0])
+                for p in qdb.sql_connection.TRN.execute_fetchindex()
+            ]
 
     def update_email(self, email):
         if not validate_email(email):
-            raise IncorrectEmailError(f'Bad email given: {email}')
+            raise IncorrectEmailError(f"Bad email given: {email}")
 
         if self.exists(email):
-            raise IncorrectEmailError(f'This email already exists: {email}')
+            raise IncorrectEmailError(f"This email already exists: {email}")
 
         with qdb.sql_connection.TRN:
-            sql = 'UPDATE qiita.qiita_user SET email = %s where email = %s'
+            sql = "UPDATE qiita.qiita_user SET email = %s where email = %s"
             qdb.sql_connection.TRN.add(sql, [email, self.email])
 
 
@@ -843,7 +859,7 @@ def validate_email(email):
     """
     # Do not accept email addresses that have unicode characters
     try:
-        email.encode('ascii')
+        email.encode("ascii")
     except UnicodeError:
         return False
 
@@ -852,30 +868,30 @@ def validate_email(email):
         return False
 
     # Must have exactly 1 @ symbol
-    if email.count('@') != 1:
+    if email.count("@") != 1:
         return False
 
-    local_part, domain_part = email.split('@')
+    local_part, domain_part = email.split("@")
 
     # Neither part can be blank
     if not (local_part and domain_part):
         return False
 
     # The local part cannot begin or end with a dot
-    if local_part.startswith('.') or local_part.endswith('.'):
+    if local_part.startswith(".") or local_part.endswith("."):
         return False
 
     # The domain part cannot begin or end with a hyphen
-    if domain_part.startswith('-') or domain_part.endswith('-'):
+    if domain_part.startswith("-") or domain_part.endswith("-"):
         return False
 
     # This is the full set of allowable characters for the local part.
     local_valid_chars = "[a-zA-Z0-9#_~!$&'()*+,;=:.-]"
-    if len(sub(local_valid_chars, '', local_part)):
+    if len(sub(local_valid_chars, "", local_part)):
         return False
 
     domain_valid_chars = "[a-zA-Z0-9.-]"
-    if len(sub(domain_valid_chars, '', domain_part)):
+    if len(sub(domain_valid_chars, "", domain_part)):
         return False
 
     return True
@@ -918,7 +934,7 @@ def validate_password(password):
         return False
 
     try:
-        password.encode('ascii')
+        password.encode("ascii")
     except UnicodeError:
         return False
 

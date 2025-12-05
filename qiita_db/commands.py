@@ -6,17 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from configparser import ConfigParser
 from functools import partial
 from json import loads
 
 import qiita_db as qdb
 
-from configparser import ConfigParser
-
-
-SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
-                    'preprocessed_sequence_454_params',
-                    'processed_params_sortmerna']
+SUPPORTED_PARAMS = [
+    "preprocessed_sequence_illumina_params",
+    "preprocessed_sequence_454_params",
+    "processed_params_sortmerna",
+]
 
 
 def load_study_from_cmd(owner, title, info):
@@ -36,18 +36,29 @@ def load_study_from_cmd(owner, title, info):
     config = ConfigParser()
     config.readfp(info)
 
-    optional = dict(config.items('optional'))
+    optional = dict(config.items("optional"))
 
     def get_optional(name):
         return optional.get(name, None)
 
-    get_required = partial(config.get, 'required')
-    required_fields = ['timeseries_type_id', 'mixs_compliant',
-                       'reprocess', 'study_alias',
-                       'study_description', 'study_abstract',
-                       'metadata_complete', 'principal_investigator']
-    optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
-                       'vamps_id', 'study_id']
+    get_required = partial(config.get, "required")
+    required_fields = [
+        "timeseries_type_id",
+        "mixs_compliant",
+        "reprocess",
+        "study_alias",
+        "study_description",
+        "study_abstract",
+        "metadata_complete",
+        "principal_investigator",
+    ]
+    optional_fields = [
+        "funding",
+        "most_recent_contact",
+        "spatial_series",
+        "vamps_id",
+        "study_id",
+    ]
     infodict = {}
     for value in required_fields:
         infodict[value] = get_required(value)
@@ -58,24 +69,32 @@ def load_study_from_cmd(owner, title, info):
             infodict[value] = optvalue
 
     with qdb.sql_connection.TRN:
-        lab_name_email = get_optional('lab_person')
+        lab_name_email = get_optional("lab_person")
         if lab_name_email is not None:
-            lab_name, lab_email, lab_affiliation = lab_name_email.split(',')
-            infodict['lab_person_id'] = qdb.study.StudyPerson.create(
-                lab_name.strip(), lab_email.strip(), lab_affiliation.strip())
+            lab_name, lab_email, lab_affiliation = lab_name_email.split(",")
+            infodict["lab_person_id"] = qdb.study.StudyPerson.create(
+                lab_name.strip(), lab_email.strip(), lab_affiliation.strip()
+            )
 
-        pi_name_email = infodict.pop('principal_investigator')
-        pi_name, pi_email, pi_affiliation = pi_name_email.split(',', 2)
-        infodict['principal_investigator_id'] = qdb.study.StudyPerson.create(
-            pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
+        pi_name_email = infodict.pop("principal_investigator")
+        pi_name, pi_email, pi_affiliation = pi_name_email.split(",", 2)
+        infodict["principal_investigator_id"] = qdb.study.StudyPerson.create(
+            pi_name.strip(), pi_email.strip(), pi_affiliation.strip()
+        )
 
         return qdb.study.Study.create(qdb.user.User(owner), title, infodict)
 
 
-def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
-                           prep_template=None, parents=None,
-                           dflt_params_id=None, required_params=None,
-                           optional_params=None):
+def load_artifact_from_cmd(
+    filepaths,
+    filepath_types,
+    artifact_type,
+    prep_template=None,
+    parents=None,
+    dflt_params_id=None,
+    required_params=None,
+    optional_params=None,
+):
     r"""Adds an artifact to the system
 
     Parameters
@@ -109,21 +128,26 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
         length
     """
     if len(filepaths) != len(filepath_types):
-        raise ValueError("Please provide exactly one filepath_type for each "
-                         "and every filepath")
+        raise ValueError(
+            "Please provide exactly one filepath_type for each and every filepath"
+        )
     with qdb.sql_connection.TRN:
         fp_types_dict = qdb.util.get_filepath_types()
-        fps = [(fp, fp_types_dict[ftype])
-               for fp, ftype in zip(filepaths, filepath_types)]
+        fps = [
+            (fp, fp_types_dict[ftype]) for fp, ftype in zip(filepaths, filepath_types)
+        ]
 
         if prep_template:
             prep_template = qdb.metadata_template.prep_template.PrepTemplate(
-                prep_template)
+                prep_template
+            )
 
         if parents:
             if len(parents) > 1 and required_params is None:
-                raise ValueError("When you pass more than 1 parent you need "
-                                 "to also pass required_params")
+                raise ValueError(
+                    "When you pass more than 1 parent you need "
+                    "to also pass required_params"
+                )
             parents = [qdb.artifact.Artifact(pid) for pid in parents]
 
         params = None
@@ -136,11 +160,17 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
             optional_dict = loads(optional_params) if optional_params else None
             params = qdb.software.Parameters.from_default_params(
                 qdb.software.DefaultParameters(dflt_params_id),
-                required_dict, optional_dict)
+                required_dict,
+                optional_dict,
+            )
 
         return qdb.artifact.Artifact.create(
-            fps, artifact_type, prep_template=prep_template, parents=parents,
-            processing_parameters=params)
+            fps,
+            artifact_type,
+            prep_template=prep_template,
+            parents=parents,
+            processing_parameters=params,
+        )
 
 
 def load_sample_template_from_cmd(sample_temp_path, study_id):
@@ -154,9 +184,11 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
         The study id to which the sample template belongs
     """
     sample_temp = qdb.metadata_template.util.load_template_to_dataframe(
-        sample_temp_path)
+        sample_temp_path
+    )
     return qdb.metadata_template.sample_template.SampleTemplate.create(
-        sample_temp, qdb.study.Study(study_id))
+        sample_temp, qdb.study.Study(study_id)
+    )
 
 
 def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
@@ -171,10 +203,10 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
     data_type : str
         The data type of the prep template
     """
-    prep_temp = qdb.metadata_template.util.load_template_to_dataframe(
-        prep_temp_path)
+    prep_temp = qdb.metadata_template.util.load_template_to_dataframe(prep_temp_path)
     return qdb.metadata_template.prep_template.PrepTemplate.create(
-        prep_temp, qdb.study.Study(study_id), data_type)
+        prep_temp, qdb.study.Study(study_id), data_type
+    )
 
 
 def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
@@ -199,20 +231,21 @@ def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
         If 'filepaths' and 'filepath_types' do not have the same length
     """
     if len(filepaths) != len(filepath_types):
-        raise ValueError("Please provide exactly one filepath_type for each "
-                         "and every filepath")
+        raise ValueError(
+            "Please provide exactly one filepath_type for each and every filepath"
+        )
     with qdb.sql_connection.TRN:
         artifact = qdb.artifact.Artifact(artifact_id)
         fp_types_dict = qdb.util.get_filepath_types()
-        fps = [(fp, fp_types_dict[ftype])
-               for fp, ftype in zip(filepaths, filepath_types)]
+        fps = [
+            (fp, fp_types_dict[ftype]) for fp, ftype in zip(filepaths, filepath_types)
+        ]
         old_fps = artifact.filepaths
         sql = "DELETE FROM qiita.artifact_filepath WHERE artifact_id = %s"
         qdb.sql_connection.TRN.add(sql, [artifact.id])
         qdb.sql_connection.TRN.execute()
         qdb.util.move_filepaths_to_upload_folder(artifact.study.id, old_fps)
-        fp_ids = qdb.util.insert_filepaths(
-            fps, artifact.id, artifact.artifact_type)
+        fp_ids = qdb.util.insert_filepaths(fps, artifact.id, artifact.artifact_type)
         sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
                  VALUES (%s, %s)"""
         sql_args = [[artifact.id, fp_id] for fp_id in fp_ids]

@@ -5,20 +5,22 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from tornado.web import authenticated
+from tornado.web import HTTPError, authenticated
+
+from qiita_core.util import execute_as_transaction
+from qiita_db.logger import LogEntry
 
 from .base_handlers import BaseHandler
-from qiita_db.logger import LogEntry
-from qiita_core.util import execute_as_transaction
-from tornado.web import HTTPError
 
 
 class LogEntryViewerHandler(BaseHandler):
     def check_access(self):
-        if self.current_user.level not in {'admin', 'dev'}:
-            raise HTTPError(403, reason="User %s doesn't have sufficient "
-                            "privileges to view error page" %
-                            self.current_user.email)
+        if self.current_user.level not in {"admin", "dev"}:
+            raise HTTPError(
+                403,
+                reason="User %s doesn't have sufficient "
+                "privileges to view error page" % self.current_user.email,
+            )
 
     @authenticated
     @execute_as_transaction

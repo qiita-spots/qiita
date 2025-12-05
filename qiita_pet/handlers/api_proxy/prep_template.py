@@ -6,28 +6,28 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 import warnings
+from collections import defaultdict
+from json import dumps, loads
 from os import remove
 from os.path import basename
-from json import loads, dumps
-from collections import defaultdict
 
 from natsort import natsorted
 
-from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
-from qiita_pet.handlers.api_proxy.util import check_access, check_fp
-from qiita_pet.util import get_network_nodes_edges
+from qiita_core.util import execute_as_transaction
 from qiita_db.artifact import Artifact
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.util import load_template_to_dataframe
-from qiita_db.util import convert_to_id, get_files_from_uploads_folders
+from qiita_db.ontology import Ontology
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Parameters, Software
 from qiita_db.study import Study
 from qiita_db.user import User
-from qiita_db.ontology import Ontology
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.processing_job import ProcessingJob
-from qiita_db.software import Software, Parameters
+from qiita_db.util import convert_to_id, get_files_from_uploads_folders
+from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_pet.util import get_network_nodes_edges
 
-PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
+PREP_TEMPLATE_KEY_FORMAT = "prep_template_%s"
 
 
 def _get_ENA_ontology():
@@ -39,13 +39,13 @@ def _get_ENA_ontology():
         A dictionary of the form {'ENA': list of str, 'User': list of str}
         with the ENA-defined terms and the User-defined terms, respectivelly.
     """
-    ontology = Ontology(convert_to_id('ENA', 'ontology'))
+    ontology = Ontology(convert_to_id("ENA", "ontology"))
     ena_terms = sorted(ontology.terms)
     # make "Other" last on the list
-    ena_terms.remove('Other')
-    ena_terms.append('Other')
+    ena_terms.remove("Other")
+    ena_terms.append("Other")
 
-    return {'ENA': ena_terms, 'User': sorted(ontology.user_defined_terms)}
+    return {"ENA": ena_terms, "User": sorted(ontology.user_defined_terms)}
 
 
 def new_prep_template_get_req(study_id):
@@ -63,17 +63,22 @@ def new_prep_template_get_req(study_id):
         The list of available data types
         The investigation type ontology information
     """
-    prep_files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
-                  if f.endswith(('.txt', '.tsv', '.xlsx'))]
+    prep_files = [
+        f
+        for _, f, _ in get_files_from_uploads_folders(study_id)
+        if f.endswith((".txt", ".tsv", ".xlsx"))
+    ]
     data_types = sorted(Study.all_data_types())
 
     # Get all the ENA terms for the investigation type
     ontology_info = _get_ENA_ontology()
 
-    return {'status': 'success',
-            'prep_files': prep_files,
-            'data_types': data_types,
-            'ontology': ontology_info}
+    return {
+        "status": "success",
+        "prep_files": prep_files,
+        "data_types": data_types,
+        "ontology": ontology_info,
+    }
 
 
 def prep_template_ajax_get_req(user_id, prep_id):
@@ -111,29 +116,32 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     # Initialize variables here
     processing = False
-    alert_type = ''
-    alert_msg = ''
+    alert_type = ""
+    alert_msg = ""
     job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
     if job_info:
-        job_info = defaultdict(lambda: '', loads(job_info))
-        job_id = job_info['job_id']
+        job_info = defaultdict(lambda: "", loads(job_info))
+        job_id = job_info["job_id"]
         job = ProcessingJob(job_id)
         job_status = job.status
-        processing = job_status not in ('success', 'error')
+        processing = job_status not in ("success", "error")
         if processing:
-            alert_type = 'info'
-            alert_msg = 'This prep template is currently being updated'
-        elif job_status == 'error':
-            alert_type = 'danger'
-            alert_msg = job.log.msg.replace('\n', '</br>')
+            alert_type = "info"
+            alert_msg = "This prep template is currently being updated"
+        elif job_status == "error":
+            alert_type = "danger"
+            alert_msg = job.log.msg.replace("\n", "</br>")
         else:
-            alert_type = job_info['alert_type']
-            alert_msg = job_info['alert_msg'].replace('\n', '</br>')
+            alert_type = job_info["alert_type"]
+            alert_msg = job_info["alert_msg"].replace("\n", "</br>")
 
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
-    files = [f for _, f, _ in get_files_from_uploads_folders(study_id)
-             if f.endswith(('.txt', '.tsv', '.xlsx'))]
+    files = [
+        f
+        for _, f, _ in get_files_from_uploads_folders(study_id)
+        if f.endswith((".txt", ".tsv", ".xlsx"))
+    ]
 
     # The call to list is needed because keys is an iterator
     num_samples = len(list(pt.keys()))
@@ -159,28 +167,30 @@ def prep_template_ajax_get_req(user_id, prep_id):
     if creation_job is not None:
         creation_job = ProcessingJob(creation_job)
 
-    return {'status': 'success',
-            'message': '',
-            'name': name,
-            'files': files,
-            'download_prep_id': download_prep_id,
-            'other_filepaths': other_filepaths,
-            'num_samples': num_samples,
-            'num_columns': num_columns,
-            'investigation_type': investigation_type,
-            'ontology': ontology,
-            'artifact_attached': artifact_attached,
-            'archived_artifacts': pt.archived_artifacts,
-            'study_id': study_id,
-            'editable': editable,
-            'data_type': pt.data_type(),
-            'alert_type': alert_type,
-            'is_submitted_to_ebi': pt.is_submitted_to_ebi,
-            'prep_restrictions': restrictions,
-            'samples': sorted(list(pt.keys())),
-            'deprecated': deprecated,
-            'creation_job': creation_job,
-            'alert_message': alert_msg}
+    return {
+        "status": "success",
+        "message": "",
+        "name": name,
+        "files": files,
+        "download_prep_id": download_prep_id,
+        "other_filepaths": other_filepaths,
+        "num_samples": num_samples,
+        "num_columns": num_columns,
+        "investigation_type": investigation_type,
+        "ontology": ontology,
+        "artifact_attached": artifact_attached,
+        "archived_artifacts": pt.archived_artifacts,
+        "study_id": study_id,
+        "editable": editable,
+        "data_type": pt.data_type(),
+        "alert_type": alert_type,
+        "is_submitted_to_ebi": pt.is_submitted_to_ebi,
+        "prep_restrictions": restrictions,
+        "samples": sorted(list(pt.keys())),
+        "deprecated": deprecated,
+        "creation_job": creation_job,
+        "alert_message": alert_msg,
+    }
 
 
 @execute_as_transaction
@@ -201,14 +211,14 @@ def _process_investigation_type(inv_type, user_def_type, new_type):
     str
         The investigation type chosen by the user
     """
-    if inv_type == '':
+    if inv_type == "":
         inv_type = None
-    elif inv_type == 'Other' and user_def_type == 'New Type':
+    elif inv_type == "Other" and user_def_type == "New Type":
         # This is a new user defined investigation type so store it
         inv_type = new_type
-        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ontology = Ontology(convert_to_id("ENA", "ontology"))
         ontology.add_user_defined_term(inv_type)
-    elif inv_type == 'Other' and user_def_type != 'New Type':
+    elif inv_type == "Other" and user_def_type != "New Type":
         inv_type = user_def_type
     return inv_type
 
@@ -228,11 +238,11 @@ def _check_prep_template_exists(prep_id):
          'message': msg}
     """
     if not PrepTemplate.exists(int(prep_id)):
-        return {'status': 'error',
-                'message': 'Prep template %d does not exist' % int(prep_id)
-                }
-    return {'status': 'success',
-            'message': ''}
+        return {
+            "status": "error",
+            "message": "Prep template %d does not exist" % int(prep_id),
+        }
+    return {"status": "success", "message": ""}
 
 
 def prep_template_get_req(prep_id, user_id):
@@ -253,7 +263,7 @@ def prep_template_get_req(prep_id, user_id):
      'template': {sample: {column: value, ...}, ...}
     """
     exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
 
     prep = PrepTemplate(int(prep_id))
@@ -261,9 +271,7 @@ def prep_template_get_req(prep_id, user_id):
     if access_error:
         return access_error
     df = prep.to_dataframe()
-    return {'status': 'success',
-            'message': '',
-            'template': df.to_dict(orient='index')}
+    return {"status": "success", "message": "", "template": df.to_dict(orient="index")}
 
 
 def prep_template_summary_get_req(prep_id, user_id):
@@ -289,7 +297,7 @@ def prep_template_summary_get_req(prep_id, user_id):
                 'editable': bool}
     """
     exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
 
     prep = PrepTemplate(int(prep_id))
@@ -299,26 +307,34 @@ def prep_template_summary_get_req(prep_id, user_id):
 
     editable = Study(prep.study_id).can_edit(User(user_id))
     df = prep.to_dataframe()
-    out = {'num_samples': df.shape[0],
-           'summary': [],
-           'status': 'success',
-           'message': '',
-           'editable': editable}
+    out = {
+        "num_samples": df.shape[0],
+        "summary": [],
+        "status": "success",
+        "message": "",
+        "editable": editable,
+    }
 
     cols = sorted(list(df.columns))
     for column in cols:
         counts = df[column].value_counts(dropna=False)
-        out['summary'].append(
-            (str(column), [(str(key), counts[key])
-                           for key in natsorted(counts.index)]))
+        out["summary"].append(
+            (str(column), [(str(key), counts[key]) for key in natsorted(counts.index)])
+        )
     return out
 
 
 @execute_as_transaction
-def prep_template_post_req(study_id, user_id, prep_template, data_type,
-                           investigation_type=None,
-                           user_defined_investigation_type=None,
-                           new_investigation_type=None, name=None):
+def prep_template_post_req(
+    study_id,
+    user_id,
+    prep_template,
+    data_type,
+    investigation_type=None,
+    user_defined_investigation_type=None,
+    new_investigation_type=None,
+    name=None,
+):
     """Adds a prep template to the system
 
     Parameters
@@ -352,18 +368,18 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     if access_error:
         return access_error
     fp_rpt = check_fp(study_id, prep_template)
-    if fp_rpt['status'] != 'success':
+    if fp_rpt["status"] != "success":
         # Unknown filepath, so return the error message
         return fp_rpt
-    fp_rpt = fp_rpt['file']
+    fp_rpt = fp_rpt["file"]
 
     # Add new investigation type if needed
     investigation_type = _process_investigation_type(
-        investigation_type, user_defined_investigation_type,
-        new_investigation_type)
+        investigation_type, user_defined_investigation_type, new_investigation_type
+    )
 
-    msg = ''
-    status = 'success'
+    msg = ""
+    status = "success"
     prep = None
     if name:
         name = name if name.strip() else None
@@ -371,30 +387,35 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         with warnings.catch_warnings(record=True) as warns:
             # deleting previous uploads and inserting new one
             prep = PrepTemplate.create(
-                load_template_to_dataframe(fp_rpt), Study(study_id), data_type,
-                investigation_type=investigation_type, name=name)
+                load_template_to_dataframe(fp_rpt),
+                Study(study_id),
+                data_type,
+                investigation_type=investigation_type,
+                name=name,
+            )
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info
             # will be ignored if an exception is raised
             if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
-                status = 'warning'
+                msg = "\n".join(set(str(w.message) for w in warns))
+                status = "warning"
     except Exception as e:
         # Some error occurred while processing the prep template
         # Show the error to the user so he can fix the template
-        status = 'error'
+        status = "error"
         msg = str(e)
-    info = {'status': status,
-            'message': msg,
-            'file': prep_template,
-            'id': prep.id if prep is not None else None}
+    info = {
+        "status": status,
+        "message": msg,
+        "file": prep_template,
+        "id": prep.id if prep is not None else None,
+    }
 
     return info
 
 
-def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
-                            req_from=None):
+def prep_template_patch_req(user_id, req_op, req_path, req_value=None, req_from=None):
     """Modifies an attribute of the prep template
 
     Parameters
@@ -418,13 +439,12 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         - message: str, if the request is unsuccessful, a human readable error
         - row_id: str, the row_id that we tried to delete
     """
-    req_path = [v for v in req_path.split('/') if v]
-    if req_op == 'replace':
+    req_path = [v for v in req_path.split("/") if v]
+    if req_op == "replace":
         # The structure of the path should be /prep_id/attribute_to_modify/
         # so if we don't have those 2 elements, we should return an error
         if len(req_path) != 2:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
+            return {"status": "error", "message": "Incorrect path parameter"}
         prep_id = int(req_path[0])
         attribute = req_path[1]
 
@@ -434,39 +454,40 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if access_error:
             return access_error
 
-        status = 'success'
-        msg = ''
-        if attribute == 'investigation_type':
+        status = "success"
+        msg = ""
+        if attribute == "investigation_type":
             prep.investigation_type = req_value
-        elif attribute == 'data':
+        elif attribute == "data":
             fp = check_fp(prep.study_id, req_value)
-            if fp['status'] != 'success':
+            if fp["status"] != "success":
                 return fp
-            fp = fp['file']
-            qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-            cmd = qiita_plugin.get_command('update_prep_template')
+            fp = fp["file"]
+            qiita_plugin = Software.from_name_and_version("Qiita", "alpha")
+            cmd = qiita_plugin.get_command("update_prep_template")
             params = Parameters.load(
-                cmd, values_dict={'prep_template': prep_id, 'template_fp': fp})
+                cmd, values_dict={"prep_template": prep_id, "template_fp": fp}
+            )
             job = ProcessingJob.create(User(user_id), params, True)
 
-            r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                         dumps({'job_id': job.id}))
+            r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id, dumps({"job_id": job.id}))
             job.submit()
-        elif attribute == 'name':
+        elif attribute == "name":
             prep.name = req_value.strip()
         else:
             # We don't understand the attribute so return an error
-            return {'status': 'error',
-                    'message': 'Attribute "%s" not found. '
-                               'Please, check the path parameter' % attribute}
+            return {
+                "status": "error",
+                "message": 'Attribute "%s" not found. '
+                "Please, check the path parameter" % attribute,
+            }
 
-        return {'status': status, 'message': msg}
-    elif req_op == 'remove':
+        return {"status": status, "message": msg}
+    elif req_op == "remove":
         # The structure of the path should be:
         # /prep_id/row_id/{columns|samples}/name
         if len(req_path) != 4:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
+            return {"status": "error", "message": "Incorrect path parameter"}
         prep_id = int(req_path[0])
         row_id = req_path[1]
         attribute = req_path[2]
@@ -478,25 +499,27 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if access_error:
             return access_error
 
-        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-        cmd = qiita_plugin.get_command('delete_sample_or_column')
+        qiita_plugin = Software.from_name_and_version("Qiita", "alpha")
+        cmd = qiita_plugin.get_command("delete_sample_or_column")
         params = Parameters.load(
-            cmd, values_dict={'obj_class': 'PrepTemplate',
-                              'obj_id': prep_id,
-                              'sample_or_col': attribute,
-                              'name': attr_id})
+            cmd,
+            values_dict={
+                "obj_class": "PrepTemplate",
+                "obj_id": prep_id,
+                "sample_or_col": attribute,
+                "name": attr_id,
+            },
+        )
         job = ProcessingJob.create(User(user_id), params, True)
         # Store the job id attaching it to the sample template id
-        r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                     dumps({'job_id': job.id}))
+        r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id, dumps({"job_id": job.id}))
         job.submit()
-        return {'status': 'success', 'message': '', 'row_id': row_id}
-    elif req_op == 'update-deprecated':
+        return {"status": "success", "message": "", "row_id": row_id}
+    elif req_op == "update-deprecated":
         if len(req_path) != 2:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
+            return {"status": "error", "message": "Incorrect path parameter"}
         prep_id = int(req_path[0])
-        value = req_path[1] == 'true'
+        value = req_path[1] == "true"
 
         # Check if the user actually has access to the study
         pt = PrepTemplate(prep_id)
@@ -505,13 +528,14 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             return access_error
 
         pt.deprecated = value
-        return {'status': 'success', 'message': ''}
+        return {"status": "success", "message": ""}
     else:
-        return {'status': 'error',
-                'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace, remove'
-                           % req_op,
-                'row_id': '0'}
+        return {
+            "status": "error",
+            "message": 'Operation "%s" not supported. '
+            "Current supported operations: replace, remove" % req_op,
+            "row_id": "0",
+        }
 
 
 def prep_template_samples_get_req(prep_id, user_id):
@@ -534,16 +558,17 @@ def prep_template_samples_get_req(prep_id, user_id):
          samples is list of samples in the template
     """
     exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    return {'status': 'success',
-            'message': '',
-            'samples': sorted(x for x in PrepTemplate(int(prep_id)))
-            }
+    return {
+        "status": "success",
+        "message": "",
+        "samples": sorted(x for x in PrepTemplate(int(prep_id))),
+    }
 
 
 def prep_template_delete_req(prep_id, user_id):
@@ -563,23 +588,22 @@ def prep_template_delete_req(prep_id, user_id):
          'message': message}
     """
     exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
 
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    msg = ''
-    status = 'success'
+    msg = ""
+    status = "success"
     try:
         PrepTemplate.delete(prep.id)
     except Exception as e:
         msg = str(e)
-        status = 'error'
+        status = "error"
 
-    return {'status': status,
-            'message': msg}
+    return {"status": status, "message": msg}
 
 
 @execute_as_transaction
@@ -601,17 +625,14 @@ def prep_template_filepaths_get_req(prep_id, user_id):
          'filepaths': [(filepath_id, filepath), ...]}
     """
     exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
 
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    return {'status': 'success',
-            'message': '',
-            'filepaths': prep.get_filepaths()
-            }
+    return {"status": "success", "message": "", "filepaths": prep.get_filepaths()}
 
 
 def prep_template_graph_get_req(prep_id, user_id):
@@ -639,7 +660,7 @@ def prep_template_graph_get_req(prep_id, user_id):
     Nodes are identified by the corresponding Artifact ID.
     """
     exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
 
     prep = PrepTemplate(int(prep_id))
@@ -654,8 +675,7 @@ def prep_template_graph_get_req(prep_id, user_id):
     artifact = prep.artifact
 
     if artifact is None:
-        return {'edges': [], 'nodes': [],
-                'status': 'success', 'message': ''}
+        return {"edges": [], "nodes": [], "status": "success", "message": ""}
 
     G = artifact.descendants_with_jobs
 
@@ -663,15 +683,20 @@ def prep_template_graph_get_req(prep_id, user_id):
     # nodes returns [node_type, node_name, element_id]; here we are looking
     # for the node_type == artifact, and check by the element/artifact_id if
     # it's being deleted
-    artifacts_being_deleted = [a[2] for a in nodes if a[0] == 'artifact' and
-                               Artifact(a[2]).being_deleted_by is not None]
+    artifacts_being_deleted = [
+        a[2]
+        for a in nodes
+        if a[0] == "artifact" and Artifact(a[2]).being_deleted_by is not None
+    ]
 
-    return {'edges': edges,
-            'nodes': nodes,
-            'workflow': wf_id,
-            'status': 'success',
-            'artifacts_being_deleted': artifacts_being_deleted,
-            'message': ''}
+    return {
+        "edges": edges,
+        "nodes": nodes,
+        "workflow": wf_id,
+        "status": "success",
+        "artifacts_being_deleted": artifacts_being_deleted,
+        "message": "",
+    }
 
 
 def prep_template_jobs_get_req(prep_id, user_id):
@@ -700,10 +725,13 @@ def prep_template_jobs_get_req(prep_id, user_id):
     job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
     result = {}
     if job_info:
-        job_info = defaultdict(lambda: '', loads(job_info))
-        job_id = job_info['job_id']
+        job_info = defaultdict(lambda: "", loads(job_info))
+        job_id = job_info["job_id"]
         job = ProcessingJob(job_id)
-        result[job.id] = {'status': job.status, 'step': job.step,
-                          'error': job.log.msg if job.log else ""}
+        result[job.id] = {
+            "status": job.status,
+            "step": job.step,
+            "error": job.log.msg if job.log else "",
+        }
 
     return result

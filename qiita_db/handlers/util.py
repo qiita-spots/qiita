@@ -40,6 +40,6 @@ def _get_instance(klass, oid, reason):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, reason=reason + ', id=%s: %s' % (oid, str(e)))
+        raise HTTPError(500, reason=reason + ", id=%s: %s" % (oid, str(e)))
 
     return object

@@ -6,11 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado import gen
-from tornado.web import HTTPError
 from json import dumps
 
+from tornado import gen
+from tornado.web import HTTPError
+
 import qiita_db as qdb
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
@@ -39,8 +41,9 @@ def _get_analysis(a_id):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, reason='Error instantiating analysis %s: %s'
-                        % (a_id, str(e)))
+        raise HTTPError(
+            500, reason="Error instantiating analysis %s: %s" % (a_id, str(e))
+        )
     return a
 
 
@@ -69,18 +72,18 @@ class APIAnalysisMetadataHandler(OauthBaseHandler):
         response = None
         with qdb.sql_connection.TRN:
             a = _get_analysis(analysis_id)
-            mf_fp = qdb.util.get_filepath_information(
-                a.mapping_file)['fullpath']
+            mf_fp = qdb.util.get_filepath_information(a.mapping_file)["fullpath"]
             if mf_fp is not None:
                 df = qdb.metadata_template.util.load_template_to_dataframe(
-                    mf_fp, index='#SampleID')
-                response = dumps(df.to_dict(orient='index'))
+                    mf_fp, index="#SampleID"
+                )
+                response = dumps(df.to_dict(orient="index"))
 
         if response is not None:
-            crange = range(chunk_len, len(response)+chunk_len, chunk_len)
+            crange = range(chunk_len, len(response) + chunk_len, chunk_len)
             for i, (win) in enumerate(crange):
                 # sending the chunk and flushing
-                chunk = response[i*chunk_len:win]
+                chunk = response[i * chunk_len : win]
                 self.write(chunk)
                 await self.flush()
 

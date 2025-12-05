@@ -1,17 +1,17 @@
-from unittest import TestCase, main
+from functools import partial
+from json import dumps
 from os import remove
-from os.path import exists, join, basename
+from os.path import basename, exists, join
 from shutil import move
+from unittest import TestCase, main
 
 from biom import load_table
 from pandas.testing import assert_frame_equal
-from functools import partial
 
-from qiita_core.util import qiita_test_checker
-from qiita_core.testing import wait_for_processing_job
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
-from json import dumps
+from qiita_core.qiita_settings import qiita_config
+from qiita_core.testing import wait_for_processing_job
+from qiita_core.util import qiita_test_checker
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -26,9 +26,13 @@ class TestAnalysisIter(TestCase):
     def test_iter(self):
         obs = list(qdb.analysis.Analysis.iter())
         exp = [
-            qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
-            qdb.analysis.Analysis(3), qdb.analysis.Analysis(4),
-            qdb.analysis.Analysis(5), qdb.analysis.Analysis(6)]
+            qdb.analysis.Analysis(1),
+            qdb.analysis.Analysis(2),
+            qdb.analysis.Analysis(3),
+            qdb.analysis.Analysis(4),
+            qdb.analysis.Analysis(5),
+            qdb.analysis.Analysis(6),
+        ]
         self.assertCountEqual(obs, exp)
 
 
@@ -45,42 +49,43 @@ class TestAnalysis(TestCase):
         self.table_fp = None
 
         # fullpaths for testing
-        self.duplicated_samples_not_merged = self.get_fp(
-            "not_merged_samples.txt")
+        self.duplicated_samples_not_merged = self.get_fp("not_merged_samples.txt")
         self.map_exp_fp = self.get_fp("1_analysis_mapping_exp.txt")
 
         from glob import glob
+
         conf_files = glob(join(qiita_config.plugin_dir, "BIOM*.conf"))
         for i, fp in enumerate(conf_files):
             qdb.software.Software.from_file(fp, update=True)
 
     def tearDown(self):
-        self.analysis.artifacts[0].visibility = 'private'
+        self.analysis.artifacts[0].visibility = "private"
 
         qiita_config.portal = self.portal
-        with open(self.biom_fp, 'w') as f:
+        with open(self.biom_fp, "w") as f:
             f.write("")
 
-        fp = self.get_fp('testfile.txt')
+        fp = self.get_fp("testfile.txt")
         if exists(fp):
             remove(fp)
 
         if self.table_fp:
             mp = qdb.util.get_mountpoint("processed_data")[0][1]
             if exists(self.table_fp):
-                move(self.table_fp,
-                     join(mp, "2_study_1001_closed_reference_otu_table.biom"))
+                move(
+                    self.table_fp,
+                    join(mp, "2_study_1001_closed_reference_otu_table.biom"),
+                )
 
         qiita_config.portal = self._old_portal
 
     def _wait_for_jobs(self, analysis):
         for j in analysis.jobs:
             wait_for_processing_job(j.id)
-            if j.status == 'error':
+            if j.status == "error":
                 print(j.log.msg)
 
-    def _create_analyses_with_samples(self, user='demo@microbio.me',
-                                      merge=False):
+    def _create_analyses_with_samples(self, user="demo@microbio.me", merge=False):
         """Aux function to create an analysis with samples
 
         Parameters
@@ -103,19 +108,31 @@ class TestAnalysis(TestCase):
         dflt_analysis = user.default_analysis
 
         dflt_analysis.add_samples(
-            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                 '1.SKM9.640192', '1.SKM4.640180']})
+            {
+                4: [
+                    "1.SKB8.640193",
+                    "1.SKD8.640184",
+                    "1.SKB7.640196",
+                    "1.SKM9.640192",
+                    "1.SKM4.640180",
+                ]
+            }
+        )
 
         new = qdb.analysis.Analysis.create(
-            user, "newAnalysis", "A New Analysis", from_default=True,
-            merge_duplicated_sample_ids=merge)
+            user,
+            "newAnalysis",
+            "A New Analysis",
+            from_default=True,
+            merge_duplicated_sample_ids=merge,
+        )
 
         self._wait_for_jobs(new)
 
         return new
 
     def test_lock_samples(self):
-        dflt = qdb.user.User('demo@microbio.me').default_analysis
+        dflt = qdb.user.User("demo@microbio.me").default_analysis
         # The default analysis can have samples added/removed
         dflt._lock_samples()
 
@@ -124,31 +141,27 @@ class TestAnalysis(TestCase):
             qdb.analysis.Analysis(1)._lock_samples()
 
     def test_get_by_status(self):
-        qiita_config.portal = 'QIITA'
-        self.assertEqual(
-            qdb.analysis.Analysis.get_by_status('public'), set([]))
-        qiita_config.portal = 'EMP'
-        self.assertEqual(
-            qdb.analysis.Analysis.get_by_status('public'), set([]))
+        qiita_config.portal = "QIITA"
+        self.assertEqual(qdb.analysis.Analysis.get_by_status("public"), set([]))
+        qiita_config.portal = "EMP"
+        self.assertEqual(qdb.analysis.Analysis.get_by_status("public"), set([]))
 
-        qiita_config.portal = 'QIITA'
-        self.analysis.artifacts[0].visibility = 'public'
+        qiita_config.portal = "QIITA"
+        self.analysis.artifacts[0].visibility = "public"
 
-        self.assertEqual(qdb.analysis.Analysis.get_by_status('public'),
-                         {self.analysis})
-        qiita_config.portal = 'EMP'
-        self.assertEqual(
-            qdb.analysis.Analysis.get_by_status('public'), set([]))
+        self.assertEqual(qdb.analysis.Analysis.get_by_status("public"), {self.analysis})
+        qiita_config.portal = "EMP"
+        self.assertEqual(qdb.analysis.Analysis.get_by_status("public"), set([]))
 
     def test_can_be_publicized(self):
         analysis = qdb.analysis.Analysis(1)
         self.assertEqual(analysis.can_be_publicized, (False, [4, 5, 6]))
         a4 = qdb.artifact.Artifact(4)
 
-        a4.visibility = 'public'
+        a4.visibility = "public"
         self.assertEqual(analysis.can_be_publicized, (True, []))
 
-        a4.visibility = 'private'
+        a4.visibility = "private"
         self.assertEqual(analysis.can_be_publicized, (False, [4, 5, 6]))
 
     def test_add_artifact(self):
@@ -159,46 +172,41 @@ class TestAnalysis(TestCase):
 
     def test_has_access_public(self):
         analysis = self._create_analyses_with_samples("admin@foo.bar")
-        analysis.artifacts[0].visibility = 'public'
+        analysis.artifacts[0].visibility = "public"
 
-        qiita_config.portal = 'QIITA'
-        self.assertTrue(
-            analysis.has_access(qdb.user.User("demo@microbio.me")))
-        qiita_config.portal = 'EMP'
-        self.assertFalse(
-            analysis.has_access(qdb.user.User("demo@microbio.me")))
+        qiita_config.portal = "QIITA"
+        self.assertTrue(analysis.has_access(qdb.user.User("demo@microbio.me")))
+        qiita_config.portal = "EMP"
+        self.assertFalse(analysis.has_access(qdb.user.User("demo@microbio.me")))
 
     def test_has_access_shared(self):
-        self.assertTrue(
-            self.analysis.has_access(qdb.user.User("shared@foo.bar")))
+        self.assertTrue(self.analysis.has_access(qdb.user.User("shared@foo.bar")))
 
     def test_has_access_private(self):
-        self.assertTrue(
-            self.analysis.has_access(qdb.user.User("test@foo.bar")))
+        self.assertTrue(self.analysis.has_access(qdb.user.User("test@foo.bar")))
 
     def test_has_access_admin(self):
-        qiita_config.portal = 'QIITA'
-        self.assertTrue(
-            self.analysis.has_access(qdb.user.User("admin@foo.bar")))
-        qiita_config.portal = 'EMP'
+        qiita_config.portal = "QIITA"
+        self.assertTrue(self.analysis.has_access(qdb.user.User("admin@foo.bar")))
+        qiita_config.portal = "EMP"
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.analysis.Analysis(1).has_access(qdb.user.User("admin@foo.bar"))
 
     def test_has_access_no_access(self):
-        self.assertFalse(
-            self.analysis.has_access(qdb.user.User("demo@microbio.me")))
+        self.assertFalse(self.analysis.has_access(qdb.user.User("demo@microbio.me")))
 
     def test_can_edit(self):
         a = qdb.analysis.Analysis(1)
-        self.assertTrue(a.can_edit(qdb.user.User('test@foo.bar')))
-        self.assertTrue(a.can_edit(qdb.user.User('shared@foo.bar')))
-        self.assertTrue(a.can_edit(qdb.user.User('admin@foo.bar')))
-        self.assertFalse(a.can_edit(qdb.user.User('demo@microbio.me')))
+        self.assertTrue(a.can_edit(qdb.user.User("test@foo.bar")))
+        self.assertTrue(a.can_edit(qdb.user.User("shared@foo.bar")))
+        self.assertTrue(a.can_edit(qdb.user.User("admin@foo.bar")))
+        self.assertFalse(a.can_edit(qdb.user.User("demo@microbio.me")))
 
     def test_create_nonqiita_portal(self):
         qiita_config.portal = "EMP"
         obs = qdb.analysis.Analysis.create(
-            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis")
+            qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis"
+        )
 
         # make sure portal is associated
         self.assertCountEqual(obs._portals, ["QIITA", "EMP"])
@@ -211,7 +219,8 @@ class TestAnalysis(TestCase):
 
         owner = qdb.user.User("test@foo.bar")
         obs = qdb.analysis.Analysis.create(
-            owner, "newAnalysis", "A New Analysis", from_default=True)
+            owner, "newAnalysis", "A New Analysis", from_default=True
+        )
 
         self.assertEqual(obs.owner, owner)
         self.assertEqual(obs.name, "newAnalysis")
@@ -220,9 +229,10 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs.description, "A New Analysis")
         self.assertCountEqual(obs.samples, [4])
         self.assertCountEqual(
-            obs.samples[4], ['1.SKD8.640184', '1.SKB7.640196',
-                             '1.SKM9.640192', '1.SKM4.640180'])
-        self.assertEqual(obs.data_types, ['18S'])
+            obs.samples[4],
+            ["1.SKD8.640184", "1.SKB7.640196", "1.SKM9.640192", "1.SKM4.640180"],
+        )
+        self.assertEqual(obs.data_types, ["18S"])
         self.assertEqual(obs.shared_with, [])
         self.assertEqual(obs.mapping_file, None)
         self.assertEqual(obs.tgz, None)
@@ -230,18 +240,18 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs.pmid, None)
 
     def test_exists(self):
-        qiita_config.portal = 'QIITA'
+        qiita_config.portal = "QIITA"
         self.assertTrue(qdb.analysis.Analysis.exists(1))
         self.assertFalse(qdb.analysis.Analysis.exists(1000))
-        qiita_config.portal = 'EMP'
+        qiita_config.portal = "EMP"
         self.assertFalse(qdb.analysis.Analysis.exists(1))
         self.assertFalse(qdb.analysis.Analysis.exists(1000))
 
     def test_delete(self):
         # successful delete
         new = qdb.analysis.Analysis.create(
-            qdb.user.User('demo@microbio.me'), "newAnalysis",
-            "A New Analysis")
+            qdb.user.User("demo@microbio.me"), "newAnalysis", "A New Analysis"
+        )
         self.assertTrue(qdb.analysis.Analysis.exists(new.id))
         qdb.analysis.Analysis.delete(new.id)
         self.assertFalse(qdb.analysis.Analysis.exists(new.id))
@@ -269,24 +279,40 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.description, "New description")
 
     def test_retrieve_samples(self):
-        exp = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                   '1.SKM9.640192', '1.SKM4.640180'],
-               5: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                   '1.SKM9.640192', '1.SKM4.640180'],
-               6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                   '1.SKM9.640192', '1.SKM4.640180']}
+        exp = {
+            4: [
+                "1.SKB8.640193",
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+            ],
+            5: [
+                "1.SKB8.640193",
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+            ],
+            6: [
+                "1.SKB8.640193",
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+            ],
+        }
         self.assertCountEqual(self.analysis.samples, exp)
 
     def test_retrieve_portal(self):
         self.assertEqual(self.analysis._portals, ["QIITA"])
 
     def test_retrieve_data_types(self):
-        exp = ['18S', '16S']
+        exp = ["18S", "16S"]
         self.assertCountEqual(self.analysis.data_types, exp)
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.analysis.shared_with,
-                         [qdb.user.User("shared@foo.bar")])
+        self.assertEqual(self.analysis.shared_with, [qdb.user.User("shared@foo.bar")])
 
     def test_retrieve_jobs(self):
         self.assertEqual(self.analysis.jobs, [])
@@ -304,31 +330,71 @@ class TestAnalysis(TestCase):
         exp = join(self.fp, "1_analysis_mapping.txt")
         obs = self.analysis.mapping_file
         self.assertIsNotNone(obs)
-        self.assertEqual(
-            qdb.util.get_filepath_information(obs)['fullpath'], exp)
+        self.assertEqual(qdb.util.get_filepath_information(obs)["fullpath"], exp)
         self.assertTrue(exists(exp))
 
     def test_metadata_categories(self):
-        exp = {1: {
-            'sample': {
-                'env_package', 'water_content_soil', 'collection_timestamp',
-                'anonymized_name', 'sample_type', 'env_biome', 'host_taxid',
-                'ph', 'env_feature', 'temp', 'country', 'scientific_name',
-                'assigned_from_geo', 'physical_specimen_location',
-                'common_name', 'longitude', 'depth', 'season_environment',
-                'description', 'tot_org_carb', 'tot_nitro', 'dna_extracted',
-                'texture', 'samp_salinity', 'taxon_id', 'host_subject_id',
-                'description_duplicate', 'latitude',
-                'physical_specimen_remaining', 'altitude', 'elevation'},
-            'prep': {
-                'run_prefix', 'platform', 'study_center',
-                'library_construction_protocol', 'emp_status',
-                'target_subfragment', 'target_gene', 'center_project_name',
-                'illumina_technology', 'experiment_title', 'instrument_model',
-                'run_date', 'run_center', 'pcr_primers', 'sequencing_meth',
-                'experiment_center', 'experiment_design_description',
-                'barcode', 'samp_size', 'sample_center', 'primer',
-                'center_name'}}}
+        exp = {
+            1: {
+                "sample": {
+                    "env_package",
+                    "water_content_soil",
+                    "collection_timestamp",
+                    "anonymized_name",
+                    "sample_type",
+                    "env_biome",
+                    "host_taxid",
+                    "ph",
+                    "env_feature",
+                    "temp",
+                    "country",
+                    "scientific_name",
+                    "assigned_from_geo",
+                    "physical_specimen_location",
+                    "common_name",
+                    "longitude",
+                    "depth",
+                    "season_environment",
+                    "description",
+                    "tot_org_carb",
+                    "tot_nitro",
+                    "dna_extracted",
+                    "texture",
+                    "samp_salinity",
+                    "taxon_id",
+                    "host_subject_id",
+                    "description_duplicate",
+                    "latitude",
+                    "physical_specimen_remaining",
+                    "altitude",
+                    "elevation",
+                },
+                "prep": {
+                    "run_prefix",
+                    "platform",
+                    "study_center",
+                    "library_construction_protocol",
+                    "emp_status",
+                    "target_subfragment",
+                    "target_gene",
+                    "center_project_name",
+                    "illumina_technology",
+                    "experiment_title",
+                    "instrument_model",
+                    "run_date",
+                    "run_center",
+                    "pcr_primers",
+                    "sequencing_meth",
+                    "experiment_center",
+                    "experiment_design_description",
+                    "barcode",
+                    "samp_size",
+                    "sample_center",
+                    "primer",
+                    "center_name",
+                },
+            }
+        }
         obs = self.analysis.metadata_categories
         self.assertDictEqual(obs, exp)
 
@@ -336,10 +402,10 @@ class TestAnalysis(TestCase):
         # generating here as the tgz is only generated once the analysis runs
         # to completion (un)successfully
         analysis = self._create_analyses_with_samples("admin@foo.bar")
-        fp = self.get_fp('test.tgz')
-        with open(fp, 'w') as f:
-            f.write('')
-        analysis._add_file(fp, 'tgz')
+        fp = self.get_fp("test.tgz")
+        with open(fp, "w") as f:
+            f.write("")
+        analysis._add_file(fp, "tgz")
         self.assertEqual(analysis.tgz, fp)
 
     def test_retrieve_tgz_none(self):
@@ -347,50 +413,77 @@ class TestAnalysis(TestCase):
 
     def test_summary_data(self):
         obs = self.analysis.summary_data()
-        exp = {'studies': 1,
-               'artifacts': 3,
-               'samples': 5}
+        exp = {"studies": 1, "artifacts": 3, "samples": 5}
         self.assertEqual(obs, exp)
 
     def test_add_remove_samples(self):
-        analysis = qdb.user.User('shared@foo.bar').default_analysis
-        exp = {4: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180', '1.SKB8.640193'],
-               5: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180', '1.SKB8.640193'],
-               6: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180', '1.SKB8.640193']}
+        analysis = qdb.user.User("shared@foo.bar").default_analysis
+        exp = {
+            4: [
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+                "1.SKB8.640193",
+            ],
+            5: [
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+                "1.SKB8.640193",
+            ],
+            6: [
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+                "1.SKB8.640193",
+            ],
+        }
         analysis.add_samples(exp)
         obs = analysis.samples
         self.assertCountEqual(list(obs.keys()), exp.keys())
         for k in obs:
             self.assertCountEqual(obs[k], exp[k])
 
-        analysis.remove_samples(artifacts=(qdb.artifact.Artifact(4), ),
-                                samples=('1.SKB8.640193', ))
-        exp = {4: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180'],
-               5: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180', '1.SKB8.640193'],
-               6: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180', '1.SKB8.640193']}
+        analysis.remove_samples(
+            artifacts=(qdb.artifact.Artifact(4),), samples=("1.SKB8.640193",)
+        )
+        exp = {
+            4: ["1.SKD8.640184", "1.SKB7.640196", "1.SKM9.640192", "1.SKM4.640180"],
+            5: [
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+                "1.SKB8.640193",
+            ],
+            6: [
+                "1.SKD8.640184",
+                "1.SKB7.640196",
+                "1.SKM9.640192",
+                "1.SKM4.640180",
+                "1.SKB8.640193",
+            ],
+        }
         obs = analysis.samples
         self.assertCountEqual(list(obs.keys()), exp.keys())
         for k in obs:
             self.assertCountEqual(obs[k], exp[k])
 
-        analysis.remove_samples(samples=('1.SKD8.640184', ))
-        exp = {4: ['1.SKB7.640196', '1.SKM9.640192', '1.SKM4.640180'],
-               5: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180'],
-               6: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
-                   '1.SKM4.640180']}
+        analysis.remove_samples(samples=("1.SKD8.640184",))
+        exp = {
+            4: ["1.SKB7.640196", "1.SKM9.640192", "1.SKM4.640180"],
+            5: ["1.SKB8.640193", "1.SKB7.640196", "1.SKM9.640192", "1.SKM4.640180"],
+            6: ["1.SKB8.640193", "1.SKB7.640196", "1.SKM9.640192", "1.SKM4.640180"],
+        }
         self.assertCountEqual(analysis.samples, exp)
 
         analysis.remove_samples(
-            artifacts=(qdb.artifact.Artifact(4), qdb.artifact.Artifact(5)))
-        exp = {6: {'1.SKB7.640196', '1.SKB8.640193',
-                   '1.SKM4.640180', '1.SKM9.640192'}}
+            artifacts=(qdb.artifact.Artifact(4), qdb.artifact.Artifact(5))
+        )
+        exp = {6: {"1.SKB7.640196", "1.SKB8.640193", "1.SKM4.640180", "1.SKM9.640192"}}
         self.assertCountEqual(analysis.samples, exp)
 
     def test_share_unshare(self):
@@ -405,19 +498,20 @@ class TestAnalysis(TestCase):
 
     def test_build_mapping_file(self):
         analysis = self._create_analyses_with_samples()
-        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        samples = {4: ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]}
 
         analysis._build_mapping_file(samples)
-        obs = qdb.util.get_filepath_information(
-            analysis.mapping_file)['fullpath']
+        obs = qdb.util.get_filepath_information(analysis.mapping_file)["fullpath"]
 
         exp = self.get_fp("%s_analysis_mapping.txt" % analysis.id)
         self.assertEqual(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
-            obs, index='#SampleID')
+            obs, index="#SampleID"
+        )
         exp = qdb.metadata_template.util.load_template_to_dataframe(
-            self.map_exp_fp, index='#SampleID')
+            self.map_exp_fp, index="#SampleID"
+        )
 
         # assert_frame_equal assumes same order on the rows, thus sorting
         # frames by index
@@ -431,30 +525,41 @@ class TestAnalysis(TestCase):
 
         # testing categories
         analysis._build_mapping_file(
-            samples, categories=set(
-                ['env_package', 'experiment_design_description']))
-        obs = qdb.util.get_filepath_information(
-            analysis.mapping_file)['fullpath']
+            samples, categories=set(["env_package", "experiment_design_description"])
+        )
+        obs = qdb.util.get_filepath_information(analysis.mapping_file)["fullpath"]
         obs = qdb.metadata_template.util.load_template_to_dataframe(
-            obs, index='#SampleID').columns
-        exp = ['experiment_design_description', 'env_package',
-               'qiita_artifact_id', 'qiita_prep_deprecated',
-               'qiita_study_title', 'qiita_study_alias', 'qiita_owner',
-               'qiita_principal_investigator']
+            obs, index="#SampleID"
+        ).columns
+        exp = [
+            "experiment_design_description",
+            "env_package",
+            "qiita_artifact_id",
+            "qiita_prep_deprecated",
+            "qiita_study_title",
+            "qiita_study_alias",
+            "qiita_owner",
+            "qiita_principal_investigator",
+        ]
         self.assertCountEqual(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_no_merge(self):
         analysis = self._create_analyses_with_samples()
-        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
-                   3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        samples = {
+            4: ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"],
+            3: ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"],
+        }
         analysis._build_mapping_file(samples, True)
 
-        mapping_fp = qdb.util.get_filepath_information(
-            analysis.mapping_file)['fullpath']
+        mapping_fp = qdb.util.get_filepath_information(analysis.mapping_file)[
+            "fullpath"
+        ]
         obs = qdb.metadata_template.util.load_template_to_dataframe(
-            mapping_fp, index='#SampleID')
+            mapping_fp, index="#SampleID"
+        )
         exp = qdb.metadata_template.util.load_template_to_dataframe(
-            self.duplicated_samples_not_merged, index='#SampleID')
+            self.duplicated_samples_not_merged, index="#SampleID"
+        )
 
         # assert_frame_equal assumes same order on the rows, thus sorting
         # frames by index
@@ -468,15 +573,20 @@ class TestAnalysis(TestCase):
 
     def test_build_mapping_file_duplicated_samples_merge(self):
         analysis = self._create_analyses_with_samples()
-        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
-                   3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        samples = {
+            4: ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"],
+            3: ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"],
+        }
         analysis._build_mapping_file(samples)
-        mapping_fp = qdb.util.get_filepath_information(
-            analysis.mapping_file)['fullpath']
+        mapping_fp = qdb.util.get_filepath_information(analysis.mapping_file)[
+            "fullpath"
+        ]
         obs = qdb.metadata_template.util.load_template_to_dataframe(
-            mapping_fp, index='#SampleID')
+            mapping_fp, index="#SampleID"
+        )
         exp = qdb.metadata_template.util.load_template_to_dataframe(
-            self.map_exp_fp, index='#SampleID')
+            self.map_exp_fp, index="#SampleID"
+        )
 
         # assert_frame_equal assumes same order on the rows, thus sorting
         # frames by index
@@ -491,74 +601,98 @@ class TestAnalysis(TestCase):
     def test_build_biom_tables(self):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {
-            '18S || algorithm': [
-                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+            "18S || algorithm": [
+                (4, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"])
+            ]
+        }
         obs_bioms = analysis._build_biom_tables(grouped_samples)
-        biom_fp = self.get_fp(
-            "%s_analysis_18S_algorithm.biom" % analysis.id)
+        biom_fp = self.get_fp("%s_analysis_18S_algorithm.biom" % analysis.id)
         obs = [(a, basename(b)) for a, b, _ in obs_bioms]
-        self.assertEqual(obs, [('18S', basename(biom_fp))])
+        self.assertEqual(obs, [("18S", basename(biom_fp))])
 
         table = load_table(obs_bioms[0][1])
-        obs = set(table.ids(axis='sample'))
-        exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
+        obs = set(table.ids(axis="sample"))
+        exp = {"1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"}
         self.assertEqual(obs, exp)
 
     def test_build_biom_tables_with_references(self):
         analysis = self._create_analyses_with_samples()
         analysis_id = analysis.id
         grouped_samples = {
-            ('18S || Pick closed-reference OTUs (reference: 1) | '
-             'Split libraries FASTQ'): [
-                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])],
-            ('18S || Pick closed-reference OTUs (reference: 1) | '
-             'Trim (lenght: 150)'): [
-                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])],
-            ('16S || Pick closed-reference OTUs (reference: 2) | '
-             'Trim (lenght: 100)'): [
-                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+            (
+                "18S || Pick closed-reference OTUs (reference: 1) | "
+                "Split libraries FASTQ"
+            ): [
+                (4, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+                (5, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+            ],
+            ("18S || Pick closed-reference OTUs (reference: 1) | Trim (lenght: 150)"): [
+                (4, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+                (5, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+            ],
+            ("16S || Pick closed-reference OTUs (reference: 2) | Trim (lenght: 100)"): [
+                (4, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+                (5, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+            ],
+        }
         obs_bioms = analysis._build_biom_tables(grouped_samples)
         obs = [(a, basename(b)) for a, b, _ in obs_bioms]
         exp = [
-            ('16S', '%s_analysis_16S_PickclosedreferenceOTUsreference2'
-             'Trimlenght100.biom' % analysis_id),
-            ('18S', '%s_analysis_18S_PickclosedreferenceOTUsreference1'
-             'SplitlibrariesFASTQ.biom' % analysis_id),
-            ('18S', '%s_analysis_18S_PickclosedreferenceOTUsreference1'
-             'Trimlenght150.biom' % analysis_id)]
+            (
+                "16S",
+                "%s_analysis_16S_PickclosedreferenceOTUsreference2"
+                "Trimlenght100.biom" % analysis_id,
+            ),
+            (
+                "18S",
+                "%s_analysis_18S_PickclosedreferenceOTUsreference1"
+                "SplitlibrariesFASTQ.biom" % analysis_id,
+            ),
+            (
+                "18S",
+                "%s_analysis_18S_PickclosedreferenceOTUsreference1"
+                "Trimlenght150.biom" % analysis_id,
+            ),
+        ]
         self.assertCountEqual(obs, exp)
 
-        exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
+        exp = {"1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"}
         for dt, fp, _ in obs_bioms:
             table = load_table(fp)
-            obs = set(table.ids(axis='sample'))
+            obs = set(table.ids(axis="sample"))
             self.assertEqual(obs, exp)
 
     def test_build_biom_tables_duplicated_samples_not_merge(self):
         analysis = self._create_analyses_with_samples()
         grouped_samples = {
-            '18S || algorithm': [
-                (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
-                (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+            "18S || algorithm": [
+                (4, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+                (5, ["1.SKB8.640193", "1.SKD8.640184", "1.SKB7.640196"]),
+            ]
+        }
         obs_bioms = analysis._build_biom_tables(grouped_samples, True)
         obs = [(a, basename(b)) for a, b, _ in obs_bioms]
-        biom_fp = (
-            "%s_analysis_18S_algorithm.biom" % analysis.id)
-        self.assertEqual(obs, [('18S', biom_fp)])
+        biom_fp = "%s_analysis_18S_algorithm.biom" % analysis.id
+        self.assertEqual(obs, [("18S", biom_fp)])
 
         table = load_table(obs_bioms[0][1])
-        obs = set(table.ids(axis='sample'))
-        exp = {'4.1.SKD8.640184', '4.1.SKB7.640196', '4.1.SKB8.640193',
-               '5.1.SKB8.640193', '5.1.SKB7.640196', '5.1.SKD8.640184'}
+        obs = set(table.ids(axis="sample"))
+        exp = {
+            "4.1.SKD8.640184",
+            "4.1.SKB7.640196",
+            "4.1.SKB8.640193",
+            "5.1.SKB8.640193",
+            "5.1.SKB7.640196",
+            "5.1.SKD8.640184",
+        }
         self.assertCountEqual(obs, exp)
 
     def test_build_biom_tables_raise_error_due_to_sample_selection(self):
         grouped_samples = {
-            '18S || algorithm': [
-                (4, ['sample_name_1', 'sample_name_2', 'sample_name_3'])]}
+            "18S || algorithm": [
+                (4, ["sample_name_1", "sample_name_2", "sample_name_3"])
+            ]
+        }
         with self.assertRaises(RuntimeError):
             self.analysis._build_biom_tables(grouped_samples)
 
@@ -568,17 +702,24 @@ class TestAnalysis(TestCase):
 
         # testing that the generated files have the same sample ids
         biom_fp = biom_tables[0][1]
-        biom_ids = load_table(biom_fp).ids(axis='sample')
-        mapping_fp = qdb.util.get_filepath_information(
-            analysis.mapping_file)['fullpath']
+        biom_ids = load_table(biom_fp).ids(axis="sample")
+        mapping_fp = qdb.util.get_filepath_information(analysis.mapping_file)[
+            "fullpath"
+        ]
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
-            mapping_fp, index='#SampleID').index
+            mapping_fp, index="#SampleID"
+        ).index
 
         self.assertCountEqual(biom_ids, mf_ids)
 
         # now that the samples have been prefixed
-        exp = ['1.SKM9.640192', '1.SKM4.640180', '1.SKD8.640184',
-               '1.SKB8.640193', '1.SKB7.640196']
+        exp = [
+            "1.SKM9.640192",
+            "1.SKM4.640180",
+            "1.SKD8.640184",
+            "1.SKB8.640193",
+            "1.SKB7.640196",
+        ]
         self.assertCountEqual(biom_ids, exp)
 
     def test_build_files_post_processing_cmd(self):
@@ -589,11 +730,11 @@ class TestAnalysis(TestCase):
         # to a known value. Then test for it.
         # qiita_db/test/support_files/worker.py will work w/py2.7 & 3.6 envs.
         results = {}
-        results['script_env'] = 'source deactivate; source activate qiita;'
-        results['script_path'] = 'qiita_db/test/support_files/worker.py'
+        results["script_env"] = "source deactivate; source activate qiita;"
+        results["script_path"] = "qiita_db/test/support_files/worker.py"
         # no additional parameters are needed for worker.py
         # fp_biom and fp_archive will be generated by build_files()
-        results['script_params'] = {}
+        results["script_params"] = {}
 
         # convert to json representation and store in PostgreSQL
         results = dumps(results)
@@ -612,13 +753,20 @@ class TestAnalysis(TestCase):
         # output archive-artifact data.
         self.assertEqual(2, len(biom_files))
         aid = analysis.id
-        exp = [('%d_analysis_18S_PickclosedreferenceOTUsSplitlibraries'
-                'FASTQ.biom' % aid, None),
-               ('%d_analysis_18S_PickclosedreferenceOTUsSplitlibraries'
-                'FASTQ.biom' % aid, 'archive_%d.tre' % aid)]
-        obs = [(basename(fp1),
-                basename(fp2) if fp2 is not None else None)
-               for _, fp1, fp2 in biom_files]
+        exp = [
+            (
+                "%d_analysis_18S_PickclosedreferenceOTUsSplitlibrariesFASTQ.biom" % aid,
+                None,
+            ),
+            (
+                "%d_analysis_18S_PickclosedreferenceOTUsSplitlibrariesFASTQ.biom" % aid,
+                "archive_%d.tre" % aid,
+            ),
+        ]
+        obs = [
+            (basename(fp1), basename(fp2) if fp2 is not None else None)
+            for _, fp1, fp2 in biom_files
+        ]
         self.assertEqual(obs, exp)
 
         # cleanup (assume command was NULL previously)
@@ -631,15 +779,37 @@ class TestAnalysis(TestCase):
         user = qdb.user.User("demo@microbio.me")
         dflt_analysis = user.default_analysis
         dflt_analysis.add_samples(
-            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                 '1.SKM9.640192', '1.SKM4.640180'],
-             5: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
-                 '1.SKM4.640180', '1.SKD8.640184'],
-             6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
-                 '1.SKM9.640192', '1.SKM4.640180']})
+            {
+                4: [
+                    "1.SKB8.640193",
+                    "1.SKD8.640184",
+                    "1.SKB7.640196",
+                    "1.SKM9.640192",
+                    "1.SKM4.640180",
+                ],
+                5: [
+                    "1.SKB8.640193",
+                    "1.SKB7.640196",
+                    "1.SKM9.640192",
+                    "1.SKM4.640180",
+                    "1.SKD8.640184",
+                ],
+                6: [
+                    "1.SKB8.640193",
+                    "1.SKD8.640184",
+                    "1.SKB7.640196",
+                    "1.SKM9.640192",
+                    "1.SKM4.640180",
+                ],
+            }
+        )
         new = qdb.analysis.Analysis.create(
-            user, "newAnalysis", "A New Analysis", from_default=True,
-            merge_duplicated_sample_ids=True)
+            user,
+            "newAnalysis",
+            "A New Analysis",
+            from_default=True,
+            merge_duplicated_sample_ids=True,
+        )
 
         self._wait_for_jobs(new)
 
@@ -648,22 +818,33 @@ class TestAnalysis(TestCase):
         # testing that the generated files have the same sample ids
         biom_ids = []
         for _, fp, _ in biom_tables:
-            biom_ids.extend(load_table(fp).ids(axis='sample'))
+            biom_ids.extend(load_table(fp).ids(axis="sample"))
 
-        mapping_fp = qdb.util.get_filepath_information(
-            new.mapping_file)['fullpath']
+        mapping_fp = qdb.util.get_filepath_information(new.mapping_file)["fullpath"]
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
-            mapping_fp, index='#SampleID').index
+            mapping_fp, index="#SampleID"
+        ).index
 
         self.assertCountEqual(biom_ids, mf_ids)
 
         # now that the samples have been prefixed
-        exp = ['4.1.SKM9.640192', '4.1.SKM4.640180', '4.1.SKD8.640184',
-               '4.1.SKB8.640193', '4.1.SKB7.640196',
-               '5.1.SKM9.640192', '5.1.SKM4.640180', '5.1.SKD8.640184',
-               '5.1.SKB8.640193', '5.1.SKB7.640196',
-               '6.1.SKM9.640192', '6.1.SKM4.640180', '6.1.SKD8.640184',
-               '6.1.SKB8.640193', '6.1.SKB7.640196']
+        exp = [
+            "4.1.SKM9.640192",
+            "4.1.SKM4.640180",
+            "4.1.SKD8.640184",
+            "4.1.SKB8.640193",
+            "4.1.SKB7.640196",
+            "5.1.SKM9.640192",
+            "5.1.SKM4.640180",
+            "5.1.SKD8.640184",
+            "5.1.SKB8.640193",
+            "5.1.SKB7.640196",
+            "6.1.SKM9.640192",
+            "6.1.SKM4.640180",
+            "6.1.SKD8.640184",
+            "6.1.SKB8.640193",
+            "6.1.SKB7.640196",
+        ]
         self.assertCountEqual(biom_ids, exp)
 
     def test_add_file(self):
@@ -680,7 +861,7 @@ class TestAnalysis(TestCase):
 
         # testing successfully making public
         # 4 is the only artifact being used in _create_analyses_with_samples
-        qdb.artifact.Artifact(4).visibility = 'public'
+        qdb.artifact.Artifact(4).visibility = "public"
         analysis.make_public()
 
         self.assertTrue(analysis.is_public)
@@ -688,7 +869,7 @@ class TestAnalysis(TestCase):
     def test_slurm_reservation(self):
         analysis = qdb.analysis.Analysis(1)
         self.assertIsNone(analysis.slurm_reservation)
-        text = 'thisisatest'
+        text = "thisisatest"
         analysis.slurm_reservation = text
         self.assertEqual(analysis._slurm_reservation(), [text])
         self.assertIsNone(analysis.slurm_reservation)

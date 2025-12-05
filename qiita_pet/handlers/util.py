@@ -5,14 +5,14 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from functools import partial
 from contextlib import contextmanager
+from functools import partial
 
 from tornado.web import HTTPError
 
-from qiita_pet.util import linkify
-from qiita_pet.exceptions import QiitaHTTPError
 from qiita_core.util import execute_as_transaction
+from qiita_pet.exceptions import QiitaHTTPError
+from qiita_pet.util import linkify
 
 
 @contextmanager
@@ -34,8 +34,10 @@ def check_access(user, study, no_public=False, raise_error=False):
     """make sure user has access to the study requested"""
     if not study.has_access(user, no_public):
         if raise_error:
-            raise HTTPError(403, reason="User %s does not have access to "
-                            "study %d" % (user.id, study.id))
+            raise HTTPError(
+                403,
+                reason="User %s does not have access to study %d" % (user.id, study.id),
+            )
         else:
             return False
     return True
@@ -64,21 +66,24 @@ def download_link_or_path(is_local_request, filepath, fp_id, label):
     if is_local_request:
         resp = "<b>%s:</b> %s" % (label, filepath)
     else:
-        resp = ('<a class="btn btn-default glyphicon glyphicon-download-alt" '
-                'href="/download/%s" style="word-spacing: -10px;"> %s</a>'
-                % (fp_id, label))
+        resp = (
+            '<a class="btn btn-default glyphicon glyphicon-download-alt" '
+            'href="/download/%s" style="word-spacing: -10px;"> %s</a>' % (fp_id, label)
+        )
     return resp
 
 
 study_person_linkifier = partial(
-    linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
+    linkify, '<a target="_blank" href="mailto:{0}">{1}</a>'
+)
 
 pubmed_linkifier = partial(
-    linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
-    "pubmed/{0}\">{0}</a>")
+    linkify, '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/pubmed/{0}">{0}</a>'
+)
 
 doi_linkifier = partial(
-    linkify, "<a target=\"_blank\" href=\"http://dx.doi.org/{0}\">{0}</a>")
+    linkify, '<a target="_blank" href="http://dx.doi.org/{0}">{0}</a>'
+)
 
 
 def to_int(value, reason=None):
@@ -102,8 +107,7 @@ def to_int(value, reason=None):
     try:
         res = int(value)
     except ValueError:
-        msg = f"{value} cannot be converted to an integer" if reason is None \
-              else reason
+        msg = f"{value} cannot be converted to an integer" if reason is None else reason
         raise HTTPError(400, reason=msg)
     return res
 
@@ -125,13 +129,11 @@ def get_shared_links(obj):
     """
     shared = []
     for person in obj.shared_with:
-        name = person.info['name']
+        name = person.info["name"]
         email = person.email
         # Name is optional, so default to email if non existant
         if name:
-            shared.append(study_person_linkifier(
-                (email, name)))
+            shared.append(study_person_linkifier((email, name)))
         else:
-            shared.append(study_person_linkifier(
-                (email, email)))
+            shared.append(study_person_linkifier((email, email)))
     return ", ".join(shared)

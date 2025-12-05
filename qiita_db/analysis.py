@@ -16,21 +16,21 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from itertools import product
-from os.path import join, exists
-from os import mkdir
 from collections import defaultdict
-
-from biom import load_table
-from biom.util import biom_open
-from biom.exception import DisjointIDError
+from itertools import product
+from json import dump, loads
+from os import mkdir
+from os.path import exists, join
 from re import sub
-import pandas as pd
 
+import pandas as pd
+from biom import load_table
+from biom.exception import DisjointIDError
+from biom.util import biom_open
+
+import qiita_db as qdb
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-import qiita_db as qdb
-from json import loads, dump
 
 
 class Analysis(qdb.base.QiitaObject):
@@ -67,7 +67,7 @@ class Analysis(qdb.base.QiitaObject):
 
     _table = "analysis"
     _portal_table = "analysis_portal"
-    _analysis_id_column = 'analysis_id'
+    _analysis_id_column = "analysis_id"
 
     @classmethod
     def iter(cls):
@@ -102,7 +102,7 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # Sandboxed analyses are the analyses that have not been started
             # and hence they don't have an artifact yet
-            if status == 'sandbox':
+            if status == "sandbox":
                 sql = """SELECT DISTINCT analysis
                          FROM qiita.analysis
                             JOIN qiita.analysis_portal USING (analysis_id)
@@ -122,13 +122,20 @@ class Analysis(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
 
             return set(
-                cls(aid)
-                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
+                cls(aid) for aid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     @classmethod
-    def create(cls, owner, name, description, from_default=False,
-               merge_duplicated_sample_ids=False, categories=None,
-               reservation=None):
+    def create(
+        cls,
+        owner,
+        name,
+        description,
+        from_default=False,
+        merge_duplicated_sample_ids=False,
+        categories=None,
+        reservation=None,
+    ):
         """Creates a new analysis on the database
 
         Parameters
@@ -158,15 +165,15 @@ class Analysis(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             portal_id = qdb.util.convert_to_id(
-                qiita_config.portal, 'portal_type', 'portal')
+                qiita_config.portal, "portal_type", "portal"
+            )
 
             # Create the row in the analysis table
             sql = """INSERT INTO qiita.{0}
                         (email, name, description)
                     VALUES (%s, %s, %s)
                     RETURNING analysis_id""".format(cls._table)
-            qdb.sql_connection.TRN.add(
-                sql, [owner.id, name, description])
+            qdb.sql_connection.TRN.add(sql, [owner.id, name, description])
             a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             if from_default:
@@ -183,9 +190,8 @@ class Analysis(qdb.base.QiitaObject):
                      VALUES (%s, %s)"""
             args = [[a_id, portal_id]]
 
-            if qiita_config.portal != 'QIITA':
-                qp_id = qdb.util.convert_to_id(
-                    'QIITA', 'portal_type', 'portal')
+            if qiita_config.portal != "QIITA":
+                qp_id = qdb.util.convert_to_id("QIITA", "portal_type", "portal")
                 args.append([a_id, qp_id])
             qdb.sql_connection.TRN.add(sql, args, many=True)
 
@@ -195,16 +201,17 @@ class Analysis(qdb.base.QiitaObject):
 
             # Once the analysis is created, we can create the mapping file and
             # the initial set of artifacts
-            plugin = qdb.software.Software.from_name_and_version(
-                'Qiita', 'alpha')
-            cmd = plugin.get_command('build_analysis_files')
+            plugin = qdb.software.Software.from_name_and_version("Qiita", "alpha")
+            cmd = plugin.get_command("build_analysis_files")
             params = qdb.software.Parameters.load(
-                cmd, values_dict={
-                    'analysis': a_id,
-                    'merge_dup_sample_ids': merge_duplicated_sample_ids,
-                    'categories': categories})
-            job = qdb.processing_job.ProcessingJob.create(
-                owner, params, True)
+                cmd,
+                values_dict={
+                    "analysis": a_id,
+                    "merge_dup_sample_ids": merge_duplicated_sample_ids,
+                    "categories": categories,
+                },
+            )
+            job = qdb.processing_job.ProcessingJob.create(owner, params, True)
             sql = """INSERT INTO qiita.analysis_processing_job
                         (analysis_id, processing_job_id)
                      VALUES (%s, %s)"""
@@ -257,20 +264,23 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [_id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Can't delete analysis %d, has artifacts attached"
-                    % _id)
+                    "Can't delete analysis %d, has artifacts attached" % _id
+                )
 
             sql = "DELETE FROM qiita.analysis_filepath WHERE {0} = %s".format(
-                cls._analysis_id_column)
+                cls._analysis_id_column
+            )
             args = [_id]
             qdb.sql_connection.TRN.add(sql, args)
 
             sql = "DELETE FROM qiita.analysis_portal WHERE {0} = %s".format(
-                cls._analysis_id_column)
+                cls._analysis_id_column
+            )
             qdb.sql_connection.TRN.add(sql, args)
 
             sql = "DELETE FROM qiita.analysis_sample WHERE {0} = %s".format(
-                cls._analysis_id_column)
+                cls._analysis_id_column
+            )
             qdb.sql_connection.TRN.add(sql, args)
 
             sql = """DELETE FROM qiita.analysis_processing_job
@@ -280,7 +290,8 @@ class Analysis(qdb.base.QiitaObject):
             # TODO: issue #1176
 
             sql = """DELETE FROM qiita.{0} WHERE {1} = %s""".format(
-                cls._table, cls._analysis_id_column)
+                cls._table, cls._analysis_id_column
+            )
             qdb.sql_connection.TRN.add(sql, args)
 
             qdb.sql_connection.TRN.execute()
@@ -306,8 +317,9 @@ class Analysis(qdb.base.QiitaObject):
                             JOIN qiita.analysis_portal USING (analysis_id)
                             JOIN qiita.portal_type USING (portal_type_id)
                         WHERE {1}=%s
-                            AND portal=%s)""".format(cls._table,
-                                                     cls._analysis_id_column)
+                            AND portal=%s)""".format(
+                cls._table, cls._analysis_id_column
+            )
             qdb.sql_connection.TRN.add(sql, [analysis_id, qiita_config.portal])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -322,7 +334,8 @@ class Analysis(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = "SELECT email FROM qiita.{0} WHERE analysis_id = %s".format(
-                self._table)
+                self._table
+            )
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.user.User(qdb.sql_connection.TRN.execute_fetchlast())
 
@@ -337,7 +350,8 @@ class Analysis(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = "SELECT name FROM qiita.{0} WHERE analysis_id = %s".format(
-                self._table)
+                self._table
+            )
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -450,8 +464,10 @@ class Analysis(qdb.base.QiitaObject):
             sql = """SELECT email FROM qiita.analysis_users
                      WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return [qdb.user.User(uid)
-                    for uid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [
+                qdb.user.User(uid)
+                for uid in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     @property
     def artifacts(self):
@@ -460,8 +476,10 @@ class Analysis(qdb.base.QiitaObject):
                      FROM qiita.analysis_artifact
                      WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return [qdb.artifact.Artifact(aid)
-                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [
+                qdb.artifact.Artifact(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     @property
     def mapping_file(self):
@@ -473,9 +491,13 @@ class Analysis(qdb.base.QiitaObject):
             The filepath id of the analysis mapping file or None
             if not generated
         """
-        fp = [x['fp_id'] for x in qdb.util.retrieve_filepaths(
-                "analysis_filepath", "analysis_id", self._id)
-              if x['fp_type'] == 'plain_text']
+        fp = [
+            x["fp_id"]
+            for x in qdb.util.retrieve_filepaths(
+                "analysis_filepath", "analysis_id", self._id
+            )
+            if x["fp_type"] == "plain_text"
+        ]
 
         if fp:
             # returning the actual filepath id vs. an array
@@ -506,11 +528,12 @@ class Analysis(qdb.base.QiitaObject):
             metadata = defaultdict(dict)
             for sid, aid in qdb.sql_connection.TRN.execute_fetchindex():
                 if sid not in metadata:
-                    metadata[sid]['sample'] = set(ST(sid).categories)
-                    metadata[sid]['prep'] = set()
+                    metadata[sid]["sample"] = set(ST(sid).categories)
+                    metadata[sid]["prep"] = set()
                 for pt in qdb.artifact.Artifact(aid).prep_templates:
-                    metadata[sid]['prep'] = metadata[sid]['prep'] | set(
-                        PT(pt.id).categories)
+                    metadata[sid]["prep"] = metadata[sid]["prep"] | set(
+                        PT(pt.id).categories
+                    )
 
         return metadata
 
@@ -523,9 +546,13 @@ class Analysis(qdb.base.QiitaObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        fp = [x['fp'] for x in qdb.util.retrieve_filepaths(
-            "analysis_filepath", "analysis_id", self._id)
-            if x['fp_type'] == 'tgz']
+        fp = [
+            x["fp"]
+            for x in qdb.util.retrieve_filepaths(
+                "analysis_filepath", "analysis_id", self._id
+            )
+            if x["fp_type"] == "tgz"
+        ]
 
         if fp:
             # returning the actual path vs. an array
@@ -547,8 +574,10 @@ class Analysis(qdb.base.QiitaObject):
                      FROM qiita.analysis_processing_job
                      WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return [qdb.processing_job.ProcessingJob(jid)
-                    for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [
+                qdb.processing_job.ProcessingJob(jid)
+                for jid in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     @property
     def pmid(self):
@@ -561,7 +590,8 @@ class Analysis(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = "SELECT pmid FROM qiita.{0} WHERE analysis_id = %s".format(
-                self._table)
+                self._table
+            )
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -608,7 +638,7 @@ class Analysis(qdb.base.QiitaObject):
                      ORDER BY artifact_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             for aid in qdb.sql_connection.TRN.execute_fetchflatten():
-                if qdb.artifact.Artifact(aid).visibility != 'public':
+                if qdb.artifact.Artifact(aid).visibility != "public":
                     non_public.append(aid)
 
             return (non_public == [], non_public)
@@ -632,7 +662,7 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             visibilities = set(qdb.sql_connection.TRN.execute_fetchflatten())
 
-            return visibilities == {'public'}
+            return visibilities == {"public"}
 
     def make_public(self):
         """Makes an analysis public
@@ -645,9 +675,10 @@ class Analysis(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             can_be_publicized, non_public = self.can_be_publicized
             if not can_be_publicized:
-                raise ValueError('Not all artifacts that generated this '
-                                 'analysis are public: %s' % ', '.join(
-                                     map(str, non_public)))
+                raise ValueError(
+                    "Not all artifacts that generated this "
+                    "analysis are public: %s" % ", ".join(map(str, non_public))
+                )
 
             # getting all root artifacts / command_id IS NULL
             sql = """SELECT artifact_id
@@ -657,7 +688,7 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             aids = qdb.sql_connection.TRN.execute_fetchflatten()
             for aid in aids:
-                qdb.artifact.Artifact(aid).visibility = 'public'
+                qdb.artifact.Artifact(aid).visibility = "public"
 
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis
@@ -675,8 +706,9 @@ class Analysis(qdb.base.QiitaObject):
                                       FROM qiita.analysis_artifact
                                       WHERE analysis_id = %s
                                         AND artifact_id = %s)"""
-            qdb.sql_connection.TRN.add(sql, [self.id, artifact.id,
-                                             self.id, artifact.id])
+            qdb.sql_connection.TRN.add(
+                sql, [self.id, artifact.id, self.id, artifact.id]
+            )
 
     def set_error(self, error_msg):
         """Sets the analysis error
@@ -686,7 +718,7 @@ class Analysis(qdb.base.QiitaObject):
         error_msg : str
             The error message
         """
-        le = qdb.logger.LogEntry.create('Runtime', error_msg)
+        le = qdb.logger.LogEntry.create("Runtime", error_msg)
         sql = """UPDATE qiita.analysis
                  SET logging_id = %s
                  WHERE analysis_id = %s"""
@@ -707,11 +739,15 @@ class Analysis(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # if admin or superuser, just return true
-            if user.level in {'superuser', 'admin'}:
+            if user.level in {"superuser", "admin"}:
                 return True
 
-            return self in Analysis.get_by_status('public') | \
-                user.private_analyses | user.shared_analyses
+            return (
+                self
+                in Analysis.get_by_status("public")
+                | user.private_analyses
+                | user.shared_analyses
+            )
 
     def can_edit(self, user):
         """Returns whether the given user can edit the analysis
@@ -728,8 +764,11 @@ class Analysis(qdb.base.QiitaObject):
         """
         # The analysis is editable only if the user is the owner, is in the
         # shared list or the user is an admin
-        return (user.level in {'superuser', 'admin'} or self.owner == user or
-                user in self.shared_with)
+        return (
+            user.level in {"superuser", "admin"}
+            or self.owner == user
+            or user in self.shared_with
+        )
 
     def summary_data(self):
         """Return number of studies, artifacts, and samples selected
@@ -791,7 +830,8 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             if not qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Can't add/remove samples from this analysis")
+                    "Can't add/remove samples from this analysis"
+                )
 
     def add_samples(self, samples):
         """Adds samples to the analysis
@@ -849,8 +889,7 @@ class Analysis(qdb.base.QiitaObject):
                             AND sample_id = %s"""
                 # Build the SQL arguments to remove the samples of the
                 # given artifacts.
-                args = [[self._id, a.id, s]
-                        for a, s in product(artifacts, samples)]
+                args = [[self._id, a.id, s] for a, s in product(artifacts, samples)]
             elif artifacts:
                 sql = """DELETE FROM qiita.analysis_sample
                          WHERE analysis_id = %s AND artifact_id = %s"""
@@ -861,8 +900,8 @@ class Analysis(qdb.base.QiitaObject):
                 args = [[self._id, s] for s in samples]
             else:
                 raise IncompetentQiitaDeveloperError(
-                    "Must provide list of samples and/or proc_data for "
-                    "removal")
+                    "Must provide list of samples and/or proc_data for removal"
+                )
 
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
@@ -909,12 +948,11 @@ class Analysis(qdb.base.QiitaObject):
             post_processing_cmds = dict()
             for aid, asamples in samples.items():
                 # find the artifact info, [0] there should be only one info
-                ainfo = [bi for bi in bioms_info
-                         if bi['artifact_id'] == aid][0]
-                data_type = ainfo['data_type']
+                ainfo = [bi for bi in bioms_info if bi["artifact_id"] == aid][0]
+                data_type = ainfo["data_type"]
 
                 # ainfo['algorithm'] is the original merging scheme
-                label = "%s || %s" % (data_type, ainfo['algorithm'])
+                label = "%s || %s" % (data_type, ainfo["algorithm"])
                 if label not in grouped_samples:
                     aparams = qdb.artifact.Artifact(aid).processing_parameters
                     if aparams is not None:
@@ -922,52 +960,51 @@ class Analysis(qdb.base.QiitaObject):
                         if cmd is not None:
                             # preserve label, in case it's needed.
                             merging_scheme = sub(
-                                ', BIOM: [0-9a-zA-Z-.]+', '',
-                                ainfo['algorithm'])
-                            post_processing_cmds[ainfo['algorithm']] = (
-                                merging_scheme, cmd)
+                                ", BIOM: [0-9a-zA-Z-.]+", "", ainfo["algorithm"]
+                            )
+                            post_processing_cmds[ainfo["algorithm"]] = (
+                                merging_scheme,
+                                cmd,
+                            )
                     grouped_samples[label] = []
                 grouped_samples[label].append((aid, asamples))
 
             # We need to negate merge_duplicated_sample_ids because in
             # _build_mapping_file is acually rename: merge yes == rename no
             rename_dup_samples = not merge_duplicated_sample_ids
-            self._build_mapping_file(
-                samples, rename_dup_samples, categories=categories)
+            self._build_mapping_file(samples, rename_dup_samples, categories=categories)
 
             if post_processing_cmds:
                 biom_files = self._build_biom_tables(
-                                    grouped_samples,
-                                    rename_dup_samples,
-                                    post_processing_cmds=post_processing_cmds)
+                    grouped_samples,
+                    rename_dup_samples,
+                    post_processing_cmds=post_processing_cmds,
+                )
             else:
                 # preserve the legacy path
                 biom_files = self._build_biom_tables(
-                                                    grouped_samples,
-                                                    rename_dup_samples)
+                    grouped_samples, rename_dup_samples
+                )
 
             # if post_processing_cmds exists, biom_files will be a triplet,
             # instead of a pair; the final element in the tuple will be an
             # file path to the new phylogenetic tree.
             return biom_files
 
-    def _build_biom_tables(self,
-                           grouped_samples,
-                           rename_dup_samples=False,
-                           post_processing_cmds=None):
+    def _build_biom_tables(
+        self, grouped_samples, rename_dup_samples=False, post_processing_cmds=None
+    ):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             # creating per analysis output folder
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            base_fp = join(base_fp, 'analysis_%d' % self.id)
+            base_fp = join(base_fp, "analysis_%d" % self.id)
             if not exists(base_fp):
                 mkdir(base_fp)
 
             biom_files = []
             for label, tables in grouped_samples.items():
-
-                data_type, algorithm = [
-                    line.strip() for line in label.split('||')]
+                data_type, algorithm = [line.strip() for line in label.split("||")]
 
                 new_table = None
                 artifact_ids = []
@@ -981,28 +1018,28 @@ class Analysis(qdb.base.QiitaObject):
                     # only have one biom
                     biom_table_fp = None
                     for x in artifact.filepaths:
-                        if x['fp_type'] == 'biom':
-                            biom_table_fp = x['fp']
+                        if x["fp_type"] == "biom":
+                            biom_table_fp = x["fp"]
                             break
                     if not biom_table_fp:
                         raise RuntimeError(
-                            "Artifact %s does not have a biom table associated"
-                            % aid)
+                            "Artifact %s does not have a biom table associated" % aid
+                        )
 
                     # loading the found biom table
                     biom_table = load_table(biom_table_fp)
                     # filtering samples to keep those selected by the user
                     biom_table_samples = set(biom_table.ids())
                     selected_samples = biom_table_samples.intersection(samples)
-                    biom_table.filter(selected_samples, axis='sample',
-                                      inplace=True)
+                    biom_table.filter(selected_samples, axis="sample", inplace=True)
                     if len(biom_table.ids()) == 0:
                         continue
 
                     if rename_dup_samples:
-                        ids_map = {_id: "%d.%s" % (aid, _id)
-                                   for _id in biom_table.ids()}
-                        biom_table.update_ids(ids_map, 'sample', True, True)
+                        ids_map = {
+                            _id: "%d.%s" % (aid, _id) for _id in biom_table.ids()
+                        }
+                        biom_table.update_ids(ids_map, "sample", True, True)
 
                     if new_table is None:
                         new_table = biom_table
@@ -1015,44 +1052,52 @@ class Analysis(qdb.base.QiitaObject):
                 if not new_table or len(new_table.ids()) == 0:
                     # if we get to this point the only reason for failure is
                     # rarefaction
-                    raise RuntimeError("All samples filtered out from "
-                                       "analysis due to rarefaction level")
+                    raise RuntimeError(
+                        "All samples filtered out from "
+                        "analysis due to rarefaction level"
+                    )
 
                 # write out the file
                 # data_type and algorithm values become part of the file
                 # name(s).
                 info = "%s_%s" % (
-                    sub('[^0-9a-zA-Z]+', '', data_type),
-                    sub('[^0-9a-zA-Z]+', '', algorithm))
+                    sub("[^0-9a-zA-Z]+", "", data_type),
+                    sub("[^0-9a-zA-Z]+", "", algorithm),
+                )
                 fn = "%d_analysis_%s.biom" % (self._id, info)
                 biom_fp = join(base_fp, fn)
                 # save final biom here
-                with biom_open(biom_fp, 'w') as f:
+                with biom_open(biom_fp, "w") as f:
                     new_table.to_hdf5(
-                        f, "Generated by Qiita, analysis id: %d, info: %s" % (
-                            self._id, label))
+                        f,
+                        "Generated by Qiita, analysis id: %d, info: %s"
+                        % (self._id, label),
+                    )
 
                 # let's add the regular biom without post processing
                 biom_files.append((data_type, biom_fp, None))
 
                 # post_processing_cmds can be None, default, or a dict of
                 # algorithm: merging_scheme, command
-                if (post_processing_cmds is not None and
-                        algorithm in post_processing_cmds):
+                if (
+                    post_processing_cmds is not None
+                    and algorithm in post_processing_cmds
+                ):
                     merging_scheme, pp_cmd = post_processing_cmds[algorithm]
                     # assuming all commands require archives, obtain
                     # archives once, instead of for every cmd.
-                    features = load_table(biom_fp).ids(axis='observation')
+                    features = load_table(biom_fp).ids(axis="observation")
                     features = list(features)
                     archives = qdb.archive.Archive.retrieve_feature_values(
-                        archive_merging_scheme=merging_scheme,
-                        features=features)
+                        archive_merging_scheme=merging_scheme, features=features
+                    )
 
                     # remove archives that SEPP could not match
-                    archives = {f: loads(archives[f])
-                                for f, plc
-                                in archives.items()
-                                if plc != ''}
+                    archives = {
+                        f: loads(archives[f])
+                        for f, plc in archives.items()
+                        if plc != ""
+                    }
 
                     # since biom_fp uses base_fp as its location, assume it's
                     # suitable for other files as well.
@@ -1060,10 +1105,9 @@ class Analysis(qdb.base.QiitaObject):
                     if not exists(output_dir):
                         mkdir(output_dir)
 
-                    fp_archive = join(output_dir,
-                                      'archive_%d.json' % (self._id))
+                    fp_archive = join(output_dir, "archive_%d.json" % (self._id))
 
-                    with open(fp_archive, 'w') as out_file:
+                    with open(fp_archive, "w") as out_file:
                         dump(archives, out_file)
 
                     # assume archives file is passed as:
@@ -1074,13 +1118,17 @@ class Analysis(qdb.base.QiitaObject):
                     # --fp_biom=<path_to_biom_file>
 
                     # concatenate any other parameters into a string
-                    params = ' '.join(["%s=%s" % (k, v) for k, v in
-                                      pp_cmd['script_params'].items()])
+                    params = " ".join(
+                        ["%s=%s" % (k, v) for k, v in pp_cmd["script_params"].items()]
+                    )
 
                     # append archives file and output dir parameters
-                    params = ("%s --fp_biom=%s --fp_archive=%s "
-                              "--output_dir=%s" % (
-                                  params, biom_fp, fp_archive, output_dir))
+                    params = "%s --fp_biom=%s --fp_archive=%s --output_dir=%s" % (
+                        params,
+                        biom_fp,
+                        fp_archive,
+                        output_dir,
+                    )
 
                     # if environment is successfully activated,
                     # run script with parameters
@@ -1088,7 +1136,10 @@ class Analysis(qdb.base.QiitaObject):
                     # script_path e.g.:
                     # python 'qiita_db/test/support_files/worker.py'
                     cmd = "%s %s %s" % (
-                        pp_cmd['script_env'], pp_cmd['script_path'], params)
+                        pp_cmd["script_env"],
+                        pp_cmd["script_path"],
+                        params,
+                    )
                     p_out, p_err, rv = qdb.processing_job._system_call(cmd)
                     p_out = p_out.rstrip()
                     # based on the set of commands ran, we could get a
@@ -1098,21 +1149,19 @@ class Analysis(qdb.base.QiitaObject):
                     # the file path to the new tree, depending on p's
                     # return code.
                     if rv != 0:
-                        raise ValueError('Error %d: %s' % (rv, p_err))
+                        raise ValueError("Error %d: %s" % (rv, p_err))
                     p_out = loads(p_out)
 
-                    if p_out['archive'] is not None:
-                        biom_files.append(
-                            (data_type, p_out['biom'], p_out['archive']))
+                    if p_out["archive"] is not None:
+                        biom_files.append((data_type, p_out["biom"], p_out["archive"]))
 
         # return the biom files, either with or without needed tree, to
         # the user.
         return biom_files
 
-    def _build_mapping_file(self, samples, rename_dup_samples=False,
-                            categories=None):
+    def _build_mapping_file(self, samples, rename_dup_samples=False, categories=None):
         """Builds the combined mapping file for all samples
-           Code modified slightly from qiime.util.MetadataMap.__add__"""
+        Code modified slightly from qiime.util.MetadataMap.__add__"""
         with qdb.sql_connection.TRN:
             all_ids = set()
             to_concat = []
@@ -1123,26 +1172,24 @@ class Analysis(qdb.base.QiitaObject):
                 if si not in sample_infos:
                     si_df = si.to_dataframe()
                     if categories is not None:
-                        si_df = si_df[list(set(categories) &
-                                      set(si_df.columns))]
+                        si_df = si_df[list(set(categories) & set(si_df.columns))]
                     sample_infos[si] = si_df
                 pt = artifact.prep_templates[0]
                 pt_df = pt.to_dataframe()
                 if categories is not None:
-                    pt_df = pt_df[list(set(categories) &
-                                       set(pt_df.columns))]
+                    pt_df = pt_df[list(set(categories) & set(pt_df.columns))]
 
                 qm = pt_df.join(sample_infos[si], lsuffix="_prep")
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
-                qm['qiita_artifact_id'] = aid
-                qm['qiita_prep_deprecated'] = pt.deprecated
+                qm["qiita_artifact_id"] = aid
+                qm["qiita_prep_deprecated"] = pt.deprecated
                 if rename_dup_samples:
-                    qm['original_SampleID'] = qm.index
-                    qm['#SampleID'] = "%d." % aid + qm.index
-                    samps = set(['%d.%s' % (aid, _id) for _id in samps])
-                    qm.set_index('#SampleID', inplace=True, drop=True)
+                    qm["original_SampleID"] = qm.index
+                    qm["#SampleID"] = "%d." % aid + qm.index
+                    samps = set(["%d.%s" % (aid, _id) for _id in samps])
+                    qm.set_index("#SampleID", inplace=True, drop=True)
                 else:
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
@@ -1151,11 +1198,11 @@ class Analysis(qdb.base.QiitaObject):
                 study = qdb.artifact.Artifact(aid).study
                 study_owner = study.owner
                 study_info = study.info
-                pi = study_info['principal_investigator']
-                qm['qiita_study_title'] = study.title
-                qm['qiita_study_alias'] = study.info['study_alias']
-                qm['qiita_owner'] = study_owner.info['name']
-                qm['qiita_principal_investigator'] = pi.name
+                pi = study_info["principal_investigator"]
+                qm["qiita_study_title"] = study.title
+                qm["qiita_study_alias"] = study.info["study_alias"]
+                qm["qiita_owner"] = study_owner.info["name"]
+                qm["qiita_principal_investigator"] = pi.name
 
                 qm = qm.loc[list(samps)]
                 to_concat.append(qm)
@@ -1165,8 +1212,13 @@ class Analysis(qdb.base.QiitaObject):
             # Save the mapping file
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
             mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
-            merged_map.to_csv(mapping_fp, index_label='#SampleID',
-                              na_rep='unknown', sep='\t', encoding='utf-8')
+            merged_map.to_csv(
+                mapping_fp,
+                index_label="#SampleID",
+                na_rep="unknown",
+                sep="\t",
+                encoding="utf-8",
+            )
 
             self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
 
@@ -1181,11 +1233,11 @@ class Analysis(qdb.base.QiitaObject):
         data_type : str, optional
         """
         with qdb.sql_connection.TRN:
-            filetype_id = qdb.util.convert_to_id(filetype, 'filepath_type')
-            _, mp = qdb.util.get_mountpoint('analysis')[0]
-            fpid = qdb.util.insert_filepaths([
-                (join(mp, filename), filetype_id)], -1, 'analysis',
-                move_files=False)[0]
+            filetype_id = qdb.util.convert_to_id(filetype, "filepath_type")
+            _, mp = qdb.util.get_mountpoint("analysis")[0]
+            fpid = qdb.util.insert_filepaths(
+                [(join(mp, filename), filetype_id)], -1, "analysis", move_files=False
+            )[0]
 
             col = ""
             dtid = ""
@@ -1219,10 +1271,10 @@ class Analysis(qdb.base.QiitaObject):
         """
         slurm_reservation = self._slurm_reservation()
 
-        if slurm_reservation and slurm_reservation[0] != '':
+        if slurm_reservation and slurm_reservation[0] != "":
             cmd = f"scontrol show reservations {slurm_reservation[0]}"
             p_out, p_err, rv = qdb.processing_job._system_call(cmd)
-            if rv == 0 and p_out != 'No reservations in the system\n':
+            if rv == 0 and p_out != "No reservations in the system\n":
                 return slurm_reservation[0]
 
         return None
@@ -1239,5 +1291,4 @@ class Analysis(qdb.base.QiitaObject):
         sql = """UPDATE qiita.{0}
                  SET slurm_reservation = %s
                  WHERE analysis_id = %s""".format(self._table)
-        qdb.sql_connection.perform_as_transaction(
-            sql, [slurm_reservation, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [slurm_reservation, self._id])

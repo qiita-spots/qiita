@@ -6,25 +6,24 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import basename, relpath
 from json import dumps
-from humanize import naturalsize
+from os.path import basename, relpath
 
-from tornado.web import authenticated, StaticFileHandler
+from humanize import naturalsize
+from tornado.web import StaticFileHandler, authenticated
 
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.util import safe_execution
-from qiita_pet.exceptions import QiitaHTTPError
 from qiita_db.artifact import Artifact
-from qiita_db.software import Command, Software, Parameters
-from qiita_db.processing_job import ProcessingJob
-from qiita_db.util import get_visibilities, send_email
 from qiita_db.logger import LogEntry
 from qiita_db.meta_util import RAW_DATA_ARTIFACT_TYPE
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.software import Command, Parameters, Software
+from qiita_db.util import get_visibilities, send_email
+from qiita_pet.exceptions import QiitaHTTPError
+from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.util import safe_execution
 
-
-PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
+PREP_TEMPLATE_KEY_FORMAT = "prep_template_%s"
 
 
 def check_artifact_access(user, artifact):
@@ -42,30 +41,26 @@ def check_artifact_access(user, artifact):
     QiitaHTTPError
         If the user doesn't have access to the given artifact
     """
-    if user.level in ('admin', 'wet-lab admin'):
+    if user.level in ("admin", "wet-lab admin"):
         return
 
     study = artifact.study
-    if artifact.visibility == 'public':
+    if artifact.visibility == "public":
         # if it's public we need to confirm that this artifact has no possible
         # human sequences
         if artifact.has_human and not study.has_access(user, True):
-            raise QiitaHTTPError(403, "Access denied to artifact %s"
-                                      % artifact.id)
+            raise QiitaHTTPError(403, "Access denied to artifact %s" % artifact.id)
     else:
         analysis = artifact.analysis
         if study:
             if not study.has_access(user):
-                raise QiitaHTTPError(403, "Access denied to study %s"
-                                          % artifact.id)
+                raise QiitaHTTPError(403, "Access denied to study %s" % artifact.id)
         elif analysis:
             if not analysis.has_access(user):
-                raise QiitaHTTPError(403, "Access denied to artifact %s"
-                                          % artifact.id)
+                raise QiitaHTTPError(403, "Access denied to artifact %s" % artifact.id)
         else:
             # This can't happen but worth adding a check
-            raise QiitaHTTPError(500, "Error accessing artifact %s"
-                                      % artifact.id)
+            raise QiitaHTTPError(500, "Error accessing artifact %s" % artifact.id)
 
 
 def artifact_summary_get_request(user, artifact_id):
@@ -120,9 +115,9 @@ def artifact_summary_get_request(user, artifact_id):
         jobs = []
         errored_summary_jobs = []
         for j in all_jobs:
-            if j.status in ['queued', 'running']:
+            if j.status in ["queued", "running"]:
                 jobs.append(j)
-            elif j.status in ['error']:
+            elif j.status in ["error"]:
                 errored_summary_jobs.append(j)
         if jobs:
             # There is already a job generating the HTML. Also, there should be
@@ -136,59 +131,63 @@ def artifact_summary_get_request(user, artifact_id):
     analysis = artifact.analysis
     # if is a folder and has no parents, it means that is an SPP job and
     # nobody should be able to change anything about it
-    if artifact_type == 'job-output-folder' and not artifact.parents:
+    if artifact_type == "job-output-folder" and not artifact.parents:
         editable = False
     else:
         editable = study.can_edit(user) if study else analysis.can_edit(user)
 
     buttons = []
     btn_base = (
-        '<button onclick="if (confirm(\'Are you sure you want to %s '
-        'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
-        'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
-    if not analysis and artifact_type != 'job-output-folder':
+        "<button onclick=\"if (confirm('Are you sure you want to %s "
+        "artifact id: {0}?')) {{ set_artifact_visibility('%s', {0}) }}\" "
+        'class="btn btn-primary btn-sm">%s</button>'
+    ).format(artifact_id)
+    if not analysis and artifact_type != "job-output-folder":
         # If the artifact is part of a study, the buttons shown depend in
         # multiple factors (see each if statement for an explanation of those)
         if qiita_config.require_approval:
-            if visibility == 'sandbox' and artifact.parents:
+            if visibility == "sandbox" and artifact.parents:
                 # The request approval button only appears if the artifact is
                 # sandboxed and the qiita_config specifies that the approval
                 # should be requested
                 buttons.append(
-                    btn_base % ('request approval for', 'awaiting_approval',
-                                'Request approval'))
-            elif user.level == 'admin' and visibility == 'awaiting_approval':
+                    btn_base
+                    % ("request approval for", "awaiting_approval", "Request approval")
+                )
+            elif user.level == "admin" and visibility == "awaiting_approval":
                 # The approve artifact button only appears if the user is an
                 # admin the artifact is waiting to be approvaed and the qiita
                 # config requires artifact approval
-                buttons.append(btn_base % ('approve', 'private',
-                                           'Approve artifact'))
+                buttons.append(btn_base % ("approve", "private", "Approve artifact"))
 
-        if visibility == 'private':
+        if visibility == "private":
             # The make public button only appears if the artifact is private
-            buttons.append(btn_base % ('make public', 'public', 'Make public'))
+            buttons.append(btn_base % ("make public", "public", "Make public"))
 
         # The revert to sandbox button only appears if the artifact is not
         # sandboxed nor public
-        if visibility not in {'sandbox', 'public'}:
-            buttons.append(btn_base % ('revert to sandbox', 'sandbox',
-                                       'Revert to sandbox'))
+        if visibility not in {"sandbox", "public"}:
+            buttons.append(
+                btn_base % ("revert to sandbox", "sandbox", "Revert to sandbox")
+            )
 
-        if user.level == 'admin' and not study.autoloaded:
+        if user.level == "admin" and not study.autoloaded:
             if artifact.can_be_submitted_to_ebi:
                 buttons.append(
                     '<a class="btn btn-primary btn-sm" '
                     'href="/ebi_submission/%d">'
                     '<span class="glyphicon glyphicon-export"></span>'
-                    ' Submit to EBI</a>' % artifact_id)
+                    " Submit to EBI</a>" % artifact_id
+                )
             if artifact.can_be_submitted_to_vamps:
                 if not artifact.is_submitted_to_vamps:
                     buttons.append(
                         '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
                         '<span class="glyphicon glyphicon-export"></span>'
-                        ' Submit to VAMPS</a>' % artifact_id)
+                        " Submit to VAMPS</a>" % artifact_id
+                    )
 
-    if visibility != 'public':
+    if visibility != "public":
         # Have no fear, this is just python to generate html with an onclick in
         # javascript that makes an ajax call to a separate url, takes the
         # response and writes it to the newly uncollapsed div.  Do note that
@@ -200,13 +199,20 @@ def artifact_summary_get_request(user, artifact_id):
             'Download Link</button><div class="collapse" '
             'id="privateDownloadLink"><div class="card card-body" '
             'id="privateDownloadText">Generating Download Link...'
-            '</div></div>') % artifact_id
+            "</div></div>"
+        ) % artifact_id
         buttons.append(private_download)
 
-    files = [(x['fp_id'], "%s (%s)" % (basename(x['fp']),
-                                       x['fp_type'].replace('_', ' ')),
-              x['checksum'], naturalsize(x['fp_size'], gnu=True))
-             for x in artifact.filepaths if x['fp_type'] != 'directory']
+    files = [
+        (
+            x["fp_id"],
+            "%s (%s)" % (basename(x["fp"]), x["fp_type"].replace("_", " ")),
+            x["checksum"],
+            naturalsize(x["fp_size"], gnu=True),
+        )
+        for x in artifact.filepaths
+        if x["fp_type"] != "directory"
+    ]
 
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
     # values to actually get the information from the database once it stores
@@ -216,7 +222,7 @@ def artifact_summary_get_request(user, artifact_id):
         # study and users that has been shared with can see the files
         study = artifact.study
         has_access = study.has_access(user, no_public=True)
-        if (not study.public_raw_download and not has_access):
+        if not study.public_raw_download and not has_access:
             files = []
 
     proc_params = artifact.processing_parameters
@@ -224,32 +230,33 @@ def artifact_summary_get_request(user, artifact_id):
         cmd = proc_params.command
         sw = cmd.software
         processing_info = {
-            'command': cmd.name,
-            'software': sw.name,
-            'software_version': sw.version,
-            'processing_parameters': proc_params.values,
-            'command_active': cmd.active,
-            'software_deprecated': sw.deprecated,
-            'software_description': sw.description
-            }
+            "command": cmd.name,
+            "software": sw.name,
+            "software_version": sw.version,
+            "processing_parameters": proc_params.values,
+            "command_active": cmd.active,
+            "software_deprecated": sw.deprecated,
+            "software_description": sw.description,
+        }
     else:
         processing_info = {}
 
-    return {'name': artifact.name,
-            'artifact_id': artifact_id,
-            'artifact_type': artifact_type,
-            'visibility': visibility,
-            'editable': editable,
-            'buttons': ' '.join(buttons),
-            'processing_info': processing_info,
-            'files': files,
-            'is_from_analysis': artifact.analysis is not None,
-            'summary': summary,
-            'job': job_info,
-            'artifact_timestamp': artifact.timestamp.strftime(
-                "%Y-%m-%d %H:%m"),
-            'being_deleted': artifact.being_deleted_by is not None,
-            'errored_summary_jobs': errored_summary_jobs}
+    return {
+        "name": artifact.name,
+        "artifact_id": artifact_id,
+        "artifact_type": artifact_type,
+        "visibility": visibility,
+        "editable": editable,
+        "buttons": " ".join(buttons),
+        "processing_info": processing_info,
+        "files": files,
+        "is_from_analysis": artifact.analysis is not None,
+        "summary": summary,
+        "job": job_info,
+        "artifact_timestamp": artifact.timestamp.strftime("%Y-%m-%d %H:%m"),
+        "being_deleted": artifact.being_deleted_by is not None,
+        "errored_summary_jobs": errored_summary_jobs,
+    }
 
 
 def artifact_summary_post_request(user, artifact_id, force_creation=False):
@@ -278,7 +285,7 @@ def artifact_summary_post_request(user, artifact_id, force_creation=False):
     # Check if the summary is being generated or has been already generated
     command = Command.get_html_generator(artifact.artifact_type)
     jobs = artifact.jobs(cmd=command)
-    jobs = [j for j in jobs if j.status in ['queued', 'running', 'success']]
+    jobs = [j for j in jobs if j.status in ["queued", "running", "success"]]
     if not force_creation and jobs:
         # The HTML summary is either being generated or already generated.
         # Return the information of that job so we only generate the HTML
@@ -289,11 +296,14 @@ def artifact_summary_post_request(user, artifact_id, force_creation=False):
     else:
         # Create a new job to generate the HTML summary and return the newly
         # created job information
-        job = ProcessingJob.create(user, Parameters.load(
-            command, values_dict={'input_data': artifact_id}), True)
+        job = ProcessingJob.create(
+            user,
+            Parameters.load(command, values_dict={"input_data": artifact_id}),
+            True,
+        )
         job.submit()
 
-    return {'job': [job.id, job.status, job.step]}
+    return {"job": [job.id, job.status, job.step]}
 
 
 class ArtifactSummaryAJAX(BaseHandler):
@@ -311,8 +321,9 @@ class ArtifactSummaryAJAX(BaseHandler):
         self.write(res)
 
 
-def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
-                           req_from=None):
+def artifact_patch_request(
+    user, artifact_id, req_op, req_path, req_value=None, req_from=None
+):
     """Modifies an attribute of the artifact
 
     Parameters
@@ -338,10 +349,10 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
         If missing req_value
         If the attribute to replace is not known
     """
-    if req_op == 'replace':
-        req_path = [v for v in req_path.split('/') if v]
+    if req_op == "replace":
+        req_path = [v for v in req_path.split("/") if v]
         if len(req_path) != 1:
-            raise QiitaHTTPError(404, 'Incorrect path parameter')
+            raise QiitaHTTPError(404, "Incorrect path parameter")
 
         attribute = req_path[0]
 
@@ -350,53 +361,71 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
         check_artifact_access(user, artifact)
 
         if not req_value:
-            raise QiitaHTTPError(404, 'Missing value to replace')
+            raise QiitaHTTPError(404, "Missing value to replace")
 
-        if attribute == 'name':
+        if attribute == "name":
             artifact.name = req_value
             return
-        elif attribute == 'visibility':
+        elif attribute == "visibility":
             if req_value not in get_visibilities():
-                raise QiitaHTTPError(400, 'Unknown visibility value: %s'
-                                          % req_value)
+                raise QiitaHTTPError(400, "Unknown visibility value: %s" % req_value)
 
-            if (req_value == 'private' and qiita_config.require_approval
-                    and not user.level == 'admin'):
-                raise QiitaHTTPError(403, 'User does not have permissions '
-                                          'to approve change')
+            if (
+                req_value == "private"
+                and qiita_config.require_approval
+                and not user.level == "admin"
+            ):
+                raise QiitaHTTPError(
+                    403, "User does not have permissions to approve change"
+                )
 
             try:
                 artifact.visibility = req_value
             except Exception as e:
-                raise QiitaHTTPError(403, str(e).replace('\n', '<br/>'))
+                raise QiitaHTTPError(403, str(e).replace("\n", "<br/>"))
 
             sid = artifact.study.id
-            if artifact.visibility == 'awaiting_approval':
+            if artifact.visibility == "awaiting_approval":
                 email_to = qiita_config.help_email
-                subject = ('QIITA: Artifact %s awaiting_approval. Study %d, '
-                           'Prep %d' % (artifact_id, sid,
-                                        artifact.prep_templates[0].id))
-                message = ('%s requested approval. <a '
-                           'href="https://qiita.ucsd.edu/study/description/'
-                           '%d">Study %d</a>.' % (user.email, sid, sid))
+                subject = "QIITA: Artifact %s awaiting_approval. Study %d, Prep %d" % (
+                    artifact_id,
+                    sid,
+                    artifact.prep_templates[0].id,
+                )
+                message = (
+                    "%s requested approval. <a "
+                    'href="https://qiita.ucsd.edu/study/description/'
+                    '%d">Study %d</a>.' % (user.email, sid, sid)
+                )
                 try:
                     send_email(email_to, subject, message)
                 except Exception:
-                    msg = ("Couldn't send email to admins, please email us "
-                           "directly to <a href='mailto:{0}'>{0}</a>.".format(
-                               email_to))
+                    msg = (
+                        "Couldn't send email to admins, please email us "
+                        "directly to <a href='mailto:{0}'>{0}</a>.".format(email_to)
+                    )
                     raise QiitaHTTPError(400, msg)
             else:
-                msg = '%s changed artifact %s (study %d) to %s' % (
-                    user.email, artifact_id, sid, req_value)
-                LogEntry.create('Warning', msg)
+                msg = "%s changed artifact %s (study %d) to %s" % (
+                    user.email,
+                    artifact_id,
+                    sid,
+                    req_value,
+                )
+                LogEntry.create("Warning", msg)
         else:
             # We don't understand the attribute so return an error
-            raise QiitaHTTPError(404, 'Attribute "%s" not found. Please, '
-                                      'check the path parameter' % attribute)
+            raise QiitaHTTPError(
+                404,
+                'Attribute "%s" not found. Please, '
+                "check the path parameter" % attribute,
+            )
     else:
-        raise QiitaHTTPError(400, 'Operation "%s" not supported. Current '
-                                  'supported operations: replace' % req_op)
+        raise QiitaHTTPError(
+            400,
+            'Operation "%s" not supported. Current '
+            "supported operations: replace" % req_op,
+        )
 
 
 def artifact_post_req(user, artifact_id):
@@ -426,19 +455,18 @@ def artifact_post_req(user, artifact_id):
             pt_id = artifact.prep_templates[0].id
             redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
 
-        qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-        cmd = qiita_plugin.get_command('delete_artifact')
-        params = Parameters.load(cmd, values_dict={'artifact': artifact_id})
+        qiita_plugin = Software.from_name_and_version("Qiita", "alpha")
+        cmd = qiita_plugin.get_command("delete_artifact")
+        params = Parameters.load(cmd, values_dict={"artifact": artifact_id})
         job = ProcessingJob.create(user, params, True)
 
-        r_client.set(
-            redis_key, dumps({'job_id': job.id, 'is_qiita_job': True}))
+        r_client.set(redis_key, dumps({"job_id": job.id, "is_qiita_job": True}))
 
         job.submit()
     else:
         job = being_deleted_by
 
-    return {'job': job.id}
+    return {"job": job.id}
 
 
 class ArtifactAJAX(BaseHandler):
@@ -456,14 +484,15 @@ class ArtifactAJAX(BaseHandler):
         Follows the JSON PATCH specification:
         https://tools.ietf.org/html/rfc6902
         """
-        req_op = self.get_argument('op')
-        req_path = self.get_argument('path')
-        req_value = self.get_argument('value', None)
-        req_from = self.get_argument('from', None)
+        req_op = self.get_argument("op")
+        req_path = self.get_argument("path")
+        req_value = self.get_argument("value", None)
+        req_from = self.get_argument("from", None)
 
         with safe_execution():
-            artifact_patch_request(self.current_user, artifact_id, req_op,
-                                   req_path, req_value, req_from)
+            artifact_patch_request(
+                self.current_user, artifact_id, req_op, req_path, req_value, req_from
+            )
 
         self.finish()
 
@@ -476,7 +505,7 @@ class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
 
         # we are going to inverse traverse the absolute_path and find the first
         # instance of an int, which is the artifact_id
-        for s in reversed(absolute_path.split('/')):
+        for s in reversed(absolute_path.split("/")):
             try:
                 artifact_id = int(s)
                 break
@@ -490,4 +519,5 @@ class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
 
         # If we reach this point the user has access to the file - return it
         return super(ArtifactSummaryHandler, self).validate_absolute_path(
-            root, absolute_path)
+            root, absolute_path
+        )

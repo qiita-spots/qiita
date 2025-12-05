@@ -6,55 +6,54 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from copy import deepcopy
 from unittest import main
-from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 from mock import Mock
-from copy import deepcopy
 
-from qiita_db.sql_connection import TRN
-from qiita_db.user import User
 from qiita_db.software import DefaultWorkflow
-from qiita_db.sql_connection import perform_as_transaction
+from qiita_db.sql_connection import TRN, perform_as_transaction
+from qiita_db.user import User
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.software import _retrive_workflows
+from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class TestSoftware(TestHandlerBase):
     def test_get(self):
-        response = self.get('/software/')
+        response = self.get("/software/")
         self.assertEqual(response.code, 200)
-        body = response.body.decode('ascii')
+        body = response.body.decode("ascii")
         self.assertNotEqual(body, "")
         # checking that this software is not displayed
-        self.assertNotIn('Target Gene', body)
+        self.assertNotIn("Target Gene", body)
 
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
-        response = self.get('/software/')
+        response = self.get("/software/")
         self.assertEqual(response.code, 200)
-        body = response.body.decode('ascii')
+        body = response.body.decode("ascii")
         self.assertNotEqual(body, "")
         # checking that this software is displayed
-        self.assertIn('Target Gene', body)
+        self.assertIn("Target Gene", body)
 
 
 class TestWorkflowsHandler(TestHandlerBase):
     def test_get(self):
         DefaultWorkflow(2).active = False
-        response = self.get('/workflows/')
+        response = self.get("/workflows/")
         self.assertEqual(response.code, 200)
-        body = response.body.decode('ascii')
+        body = response.body.decode("ascii")
         self.assertNotEqual(body, "")
         # checking that this software is not displayed
-        self.assertNotIn('FASTA upstream workflow', body)
+        self.assertNotIn("FASTA upstream workflow", body)
 
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
-        response = self.get('/workflows/')
+        response = self.get("/workflows/")
         self.assertEqual(response.code, 200)
-        body = response.body.decode('ascii')
+        body = response.body.decode("ascii")
         self.assertNotEqual(body, "")
         # checking that this software is displayed
-        self.assertIn('FASTA upstream workflow', body)
+        self.assertIn("FASTA upstream workflow", body)
         DefaultWorkflow(2).active = True
 
     def test_retrive_workflows_standalone(self):
@@ -81,11 +80,9 @@ class TestWorkflowsHandler(TestHandlerBase):
 
         # here we expect 1 input node and 1 edge
         obs = _retrive_workflows(True)[-1]
-        exp_value = f'input_params_{nid[0]}_per_sample_FASTQ'
-        self.assertEqual(1, len(
-            [x for x in obs['nodes'] if x[0] == exp_value]))
-        self.assertEqual(1, len(
-            [x for x in obs['edges'] if x[0] == exp_value]))
+        exp_value = f"input_params_{nid[0]}_per_sample_FASTQ"
+        self.assertEqual(1, len([x for x in obs["nodes"] if x[0] == exp_value]))
+        self.assertEqual(1, len([x for x in obs["edges"] if x[0] == exp_value]))
 
         # now let's insert another command using the same input
         with TRN:
@@ -98,10 +95,8 @@ class TestWorkflowsHandler(TestHandlerBase):
 
         # we should still have 1 node but now with 2 edges
         obs = _retrive_workflows(True)[-1]
-        self.assertEqual(1, len(
-            [x for x in obs['nodes'] if x[0] == exp_value]))
-        self.assertEqual(2, len(
-            [x for x in obs['edges'] if x[0] == exp_value]))
+        self.assertEqual(1, len([x for x in obs["nodes"] if x[0] == exp_value]))
+        self.assertEqual(2, len([x for x in obs["edges"] if x[0] == exp_value]))
 
     def test_retrive_workflows(self):
         # we should see all 3 workflows
@@ -111,8 +106,9 @@ class TestWorkflowsHandler(TestHandlerBase):
 
         # validating that the params_name is not being used
         self.assertNotIn(
-            'Split libraries | Defaults with Golay 12 barcodes',
-            [x[2] for x in _retrive_workflows(False)[1]['nodes']])
+            "Split libraries | Defaults with Golay 12 barcodes",
+            [x[2] for x in _retrive_workflows(False)[1]["nodes"]],
+        )
         # now it should be there
         with TRN:
             # Hard-coded values; 19 -> barcode_type
@@ -122,8 +118,9 @@ class TestWorkflowsHandler(TestHandlerBase):
             TRN.add(sql)
             TRN.execute()
         self.assertIn(
-            'Split libraries | Defaults with Golay 12 barcodes',
-            [x[2] for x in _retrive_workflows(False)[1]['nodes']])
+            "Split libraries | Defaults with Golay 12 barcodes",
+            [x[2] for x in _retrive_workflows(False)[1]["nodes"]],
+        )
         # and gone again
         with TRN:
             sql = """UPDATE qiita.command_parameter
@@ -132,8 +129,9 @@ class TestWorkflowsHandler(TestHandlerBase):
             TRN.add(sql)
             TRN.execute()
         self.assertNotIn(
-            'Split libraries | Defaults with Golay 12 barcodes',
-            [x[2] for x in _retrive_workflows(False)[1]['nodes']])
+            "Split libraries | Defaults with Golay 12 barcodes",
+            [x[2] for x in _retrive_workflows(False)[1]["nodes"]],
+        )
 
         # we should not see the middle one
         del exp[1]
@@ -181,119 +179,269 @@ class TestWorkflowsHandler(TestHandlerBase):
         # adding new expected values
         exp = deepcopy(WORKFLOWS)
         obs = _retrive_workflows(False)
-        exp[0]['nodes'].extend([
-            ['params_7', 1, 'Split libraries FASTQ', 'Defaults with reverse '
-             'complement mapping file barcodes', {
-                'max_bad_run_length': '3',
-                'min_per_read_length_fraction': '0.75',
-                'sequence_max_n': '0', 'rev_comp_barcode': 'False',
-                'rev_comp_mapping_barcodes': 'True', 'rev_comp': 'False',
-                'phred_quality_threshold': '3', 'barcode_type': 'golay_12',
-                'max_barcode_errors': '1.5', 'phred_offset': 'auto'}],
-            ['input_params_7_FASTQ | per_sample_FASTQ', 1,
-             'FASTQ | per_sample_FASTQ'],
-            ['output_params_7_demultiplexed | Demultiplexed', 1,
-             'demultiplexed | Demultiplexed'],
-            ['params_8', 3, 'Pick closed-reference OTUs', 'Defaults', {
-                'reference': '1', 'sortmerna_e_value': '1',
-                'sortmerna_max_pos': '10000', 'similarity': '0.97',
-                'sortmerna_coverage': '0.97', 'threads': '1'}],
-            ['output_params_8_OTU table | BIOM', 3, 'OTU table | BIOM']])
-        exp[0]['edges'].extend([
-            ['input_params_7_FASTQ | per_sample_FASTQ', 'params_7'],
-            ['params_7', 'output_params_7_demultiplexed | Demultiplexed'],
-            ['output_params_7_demultiplexed | Demultiplexed', 'params_8'],
-            ['params_8', 'output_params_8_OTU table | BIOM']])
-        exp[1]['nodes'].extend([
-            ['params_9', 3, 'Pick closed-reference OTUs', '100%', {
-                'reference': '1', 'sortmerna_e_value': '1',
-                'sortmerna_max_pos': '10000', 'similarity': '1.0',
-                'sortmerna_coverage': '1.0', 'threads': '1'}],
-            ['output_params_9_OTU table | BIOM', 3, 'OTU table | BIOM']])
-        exp[1]['edges'].extend([
-            ['output_params_3_demultiplexed | Demultiplexed', 'params_9'],
-            ['params_9', 'output_params_9_OTU table | BIOM']
-        ])
+        exp[0]["nodes"].extend(
+            [
+                [
+                    "params_7",
+                    1,
+                    "Split libraries FASTQ",
+                    "Defaults with reverse complement mapping file barcodes",
+                    {
+                        "max_bad_run_length": "3",
+                        "min_per_read_length_fraction": "0.75",
+                        "sequence_max_n": "0",
+                        "rev_comp_barcode": "False",
+                        "rev_comp_mapping_barcodes": "True",
+                        "rev_comp": "False",
+                        "phred_quality_threshold": "3",
+                        "barcode_type": "golay_12",
+                        "max_barcode_errors": "1.5",
+                        "phred_offset": "auto",
+                    },
+                ],
+                [
+                    "input_params_7_FASTQ | per_sample_FASTQ",
+                    1,
+                    "FASTQ | per_sample_FASTQ",
+                ],
+                [
+                    "output_params_7_demultiplexed | Demultiplexed",
+                    1,
+                    "demultiplexed | Demultiplexed",
+                ],
+                [
+                    "params_8",
+                    3,
+                    "Pick closed-reference OTUs",
+                    "Defaults",
+                    {
+                        "reference": "1",
+                        "sortmerna_e_value": "1",
+                        "sortmerna_max_pos": "10000",
+                        "similarity": "0.97",
+                        "sortmerna_coverage": "0.97",
+                        "threads": "1",
+                    },
+                ],
+                ["output_params_8_OTU table | BIOM", 3, "OTU table | BIOM"],
+            ]
+        )
+        exp[0]["edges"].extend(
+            [
+                ["input_params_7_FASTQ | per_sample_FASTQ", "params_7"],
+                ["params_7", "output_params_7_demultiplexed | Demultiplexed"],
+                ["output_params_7_demultiplexed | Demultiplexed", "params_8"],
+                ["params_8", "output_params_8_OTU table | BIOM"],
+            ]
+        )
+        exp[1]["nodes"].extend(
+            [
+                [
+                    "params_9",
+                    3,
+                    "Pick closed-reference OTUs",
+                    "100%",
+                    {
+                        "reference": "1",
+                        "sortmerna_e_value": "1",
+                        "sortmerna_max_pos": "10000",
+                        "similarity": "1.0",
+                        "sortmerna_coverage": "1.0",
+                        "threads": "1",
+                    },
+                ],
+                ["output_params_9_OTU table | BIOM", 3, "OTU table | BIOM"],
+            ]
+        )
+        exp[1]["edges"].extend(
+            [
+                ["output_params_3_demultiplexed | Demultiplexed", "params_9"],
+                ["params_9", "output_params_9_OTU table | BIOM"],
+            ]
+        )
         self.assertCountEqual(obs, exp)
 
 
 WORKFLOWS = [
-    {'name': 'FASTQ upstream workflow', 'id': 1, 'data_types': ['16S', '18S'],
-     'description': 'This accepts html <a href="https://qiita.ucsd.edu">Qiita!'
-                    '</a><br/><br/><b>BYE!</b>',
-     'active': True, 'parameters_sample': {}, 'parameters_prep': {},
-     'nodes': [
-        ['params_1', 1, 'Split libraries FASTQ', 'Defaults', {
-            'max_bad_run_length': '3', 'min_per_read_length_fraction': '0.75',
-            'sequence_max_n': '0', 'rev_comp_barcode': 'False',
-            'rev_comp_mapping_barcodes': 'False', 'rev_comp': 'False',
-            'phred_quality_threshold': '3', 'barcode_type': 'golay_12',
-            'max_barcode_errors': '1.5', 'phred_offset': 'auto'}],
-        ['input_params_1_FASTQ', 1,
-         'FASTQ'],
-        ['output_params_1_demultiplexed | Demultiplexed', 1,
-         'demultiplexed | Demultiplexed'],
-        ['params_2', 3, 'Pick closed-reference OTUs', 'Defaults', {
-            'reference': '1', 'sortmerna_e_value': '1',
-            'sortmerna_max_pos': '10000', 'similarity': '0.97',
-            'sortmerna_coverage': '0.97', 'threads': '1'}],
-        ['output_params_2_OTU table | BIOM', 3, 'OTU table | BIOM']],
-     'edges': [
-        ['input_params_1_FASTQ', 'params_1'],
-        ['params_1', 'output_params_1_demultiplexed | Demultiplexed'],
-        ['output_params_1_demultiplexed | Demultiplexed', 'params_2'],
-        ['params_2', 'output_params_2_OTU table | BIOM']]},
-    {'name': 'FASTA upstream workflow', 'id': 2, 'data_types': ['18S'],
-     'description': 'This is another description',
-     'active': False, 'parameters_sample': {}, 'parameters_prep': {},
-     'nodes': [
-        ['params_3', 2, 'Split libraries', 'Defaults with Golay 12 barcodes', {
-            'min_seq_len': '200', 'max_seq_len': '1000',
-            'trim_seq_length': 'False', 'min_qual_score': '25',
-            'max_ambig': '6', 'max_homopolymer': '6',
-            'max_primer_mismatch': '0', 'barcode_type': 'golay_12',
-            'max_barcode_errors': '1.5', 'disable_bc_correction': 'False',
-            'qual_score_window': '0', 'disable_primers': 'False',
-            'reverse_primers': 'disable', 'reverse_primer_mismatches': '0',
-            'truncate_ambi_bases': 'False'}],
-        ['input_params_3_** WARNING, NOT DEFINED **', 2,
-         '** WARNING, NOT DEFINED **'],
-        ['output_params_3_demultiplexed | Demultiplexed', 2,
-         'demultiplexed | Demultiplexed'],
-        ['params_4', 3, 'Pick closed-reference OTUs', 'Defaults', {
-            'reference': '1', 'sortmerna_e_value': '1',
-            'sortmerna_max_pos': '10000', 'similarity': '0.97',
-            'sortmerna_coverage': '0.97', 'threads': '1'}],
-        ['output_params_4_OTU table | BIOM', 3, 'OTU table | BIOM']],
-     'edges': [
-        ['input_params_3_** WARNING, NOT DEFINED **', 'params_3'],
-        ['params_3', 'output_params_3_demultiplexed | Demultiplexed'],
-        ['output_params_3_demultiplexed | Demultiplexed', 'params_4'],
-        ['params_4', 'output_params_4_OTU table | BIOM']]},
-    {'name': 'Per sample FASTQ upstream workflow', 'id': 3,
-     'data_types': ['ITS'], 'description': None,
-     'active': True, 'parameters_sample': {}, 'parameters_prep': {},
-     'nodes': [
-        ['params_5', 1, 'Split libraries FASTQ', 'per sample FASTQ defaults', {
-            'max_bad_run_length': '3', 'min_per_read_length_fraction': '0.75',
-            'sequence_max_n': '0', 'rev_comp_barcode': 'False',
-            'rev_comp_mapping_barcodes': 'False', 'rev_comp': 'False',
-            'phred_quality_threshold': '3', 'barcode_type': 'not-barcoded',
-            'max_barcode_errors': '1.5', 'phred_offset': 'auto'}],
-        ['input_params_5_FASTQ', 1,
-         'FASTQ'],
-        ['output_params_5_demultiplexed | Demultiplexed', 1,
-         'demultiplexed | Demultiplexed'],
-        ['params_6', 3, 'Pick closed-reference OTUs', 'Defaults', {
-            'reference': '1', 'sortmerna_e_value': '1',
-            'sortmerna_max_pos': '10000', 'similarity': '0.97',
-            'sortmerna_coverage': '0.97', 'threads': '1'}],
-        ['output_params_6_OTU table | BIOM', 3, 'OTU table | BIOM']],
-     'edges': [
-        ['input_params_5_FASTQ', 'params_5'],
-        ['params_5', 'output_params_5_demultiplexed | Demultiplexed'],
-        ['output_params_5_demultiplexed | Demultiplexed', 'params_6'],
-        ['params_6', 'output_params_6_OTU table | BIOM']]}]
+    {
+        "name": "FASTQ upstream workflow",
+        "id": 1,
+        "data_types": ["16S", "18S"],
+        "description": 'This accepts html <a href="https://qiita.ucsd.edu">Qiita!'
+        "</a><br/><br/><b>BYE!</b>",
+        "active": True,
+        "parameters_sample": {},
+        "parameters_prep": {},
+        "nodes": [
+            [
+                "params_1",
+                1,
+                "Split libraries FASTQ",
+                "Defaults",
+                {
+                    "max_bad_run_length": "3",
+                    "min_per_read_length_fraction": "0.75",
+                    "sequence_max_n": "0",
+                    "rev_comp_barcode": "False",
+                    "rev_comp_mapping_barcodes": "False",
+                    "rev_comp": "False",
+                    "phred_quality_threshold": "3",
+                    "barcode_type": "golay_12",
+                    "max_barcode_errors": "1.5",
+                    "phred_offset": "auto",
+                },
+            ],
+            ["input_params_1_FASTQ", 1, "FASTQ"],
+            [
+                "output_params_1_demultiplexed | Demultiplexed",
+                1,
+                "demultiplexed | Demultiplexed",
+            ],
+            [
+                "params_2",
+                3,
+                "Pick closed-reference OTUs",
+                "Defaults",
+                {
+                    "reference": "1",
+                    "sortmerna_e_value": "1",
+                    "sortmerna_max_pos": "10000",
+                    "similarity": "0.97",
+                    "sortmerna_coverage": "0.97",
+                    "threads": "1",
+                },
+            ],
+            ["output_params_2_OTU table | BIOM", 3, "OTU table | BIOM"],
+        ],
+        "edges": [
+            ["input_params_1_FASTQ", "params_1"],
+            ["params_1", "output_params_1_demultiplexed | Demultiplexed"],
+            ["output_params_1_demultiplexed | Demultiplexed", "params_2"],
+            ["params_2", "output_params_2_OTU table | BIOM"],
+        ],
+    },
+    {
+        "name": "FASTA upstream workflow",
+        "id": 2,
+        "data_types": ["18S"],
+        "description": "This is another description",
+        "active": False,
+        "parameters_sample": {},
+        "parameters_prep": {},
+        "nodes": [
+            [
+                "params_3",
+                2,
+                "Split libraries",
+                "Defaults with Golay 12 barcodes",
+                {
+                    "min_seq_len": "200",
+                    "max_seq_len": "1000",
+                    "trim_seq_length": "False",
+                    "min_qual_score": "25",
+                    "max_ambig": "6",
+                    "max_homopolymer": "6",
+                    "max_primer_mismatch": "0",
+                    "barcode_type": "golay_12",
+                    "max_barcode_errors": "1.5",
+                    "disable_bc_correction": "False",
+                    "qual_score_window": "0",
+                    "disable_primers": "False",
+                    "reverse_primers": "disable",
+                    "reverse_primer_mismatches": "0",
+                    "truncate_ambi_bases": "False",
+                },
+            ],
+            [
+                "input_params_3_** WARNING, NOT DEFINED **",
+                2,
+                "** WARNING, NOT DEFINED **",
+            ],
+            [
+                "output_params_3_demultiplexed | Demultiplexed",
+                2,
+                "demultiplexed | Demultiplexed",
+            ],
+            [
+                "params_4",
+                3,
+                "Pick closed-reference OTUs",
+                "Defaults",
+                {
+                    "reference": "1",
+                    "sortmerna_e_value": "1",
+                    "sortmerna_max_pos": "10000",
+                    "similarity": "0.97",
+                    "sortmerna_coverage": "0.97",
+                    "threads": "1",
+                },
+            ],
+            ["output_params_4_OTU table | BIOM", 3, "OTU table | BIOM"],
+        ],
+        "edges": [
+            ["input_params_3_** WARNING, NOT DEFINED **", "params_3"],
+            ["params_3", "output_params_3_demultiplexed | Demultiplexed"],
+            ["output_params_3_demultiplexed | Demultiplexed", "params_4"],
+            ["params_4", "output_params_4_OTU table | BIOM"],
+        ],
+    },
+    {
+        "name": "Per sample FASTQ upstream workflow",
+        "id": 3,
+        "data_types": ["ITS"],
+        "description": None,
+        "active": True,
+        "parameters_sample": {},
+        "parameters_prep": {},
+        "nodes": [
+            [
+                "params_5",
+                1,
+                "Split libraries FASTQ",
+                "per sample FASTQ defaults",
+                {
+                    "max_bad_run_length": "3",
+                    "min_per_read_length_fraction": "0.75",
+                    "sequence_max_n": "0",
+                    "rev_comp_barcode": "False",
+                    "rev_comp_mapping_barcodes": "False",
+                    "rev_comp": "False",
+                    "phred_quality_threshold": "3",
+                    "barcode_type": "not-barcoded",
+                    "max_barcode_errors": "1.5",
+                    "phred_offset": "auto",
+                },
+            ],
+            ["input_params_5_FASTQ", 1, "FASTQ"],
+            [
+                "output_params_5_demultiplexed | Demultiplexed",
+                1,
+                "demultiplexed | Demultiplexed",
+            ],
+            [
+                "params_6",
+                3,
+                "Pick closed-reference OTUs",
+                "Defaults",
+                {
+                    "reference": "1",
+                    "sortmerna_e_value": "1",
+                    "sortmerna_max_pos": "10000",
+                    "similarity": "0.97",
+                    "sortmerna_coverage": "0.97",
+                    "threads": "1",
+                },
+            ],
+            ["output_params_6_OTU table | BIOM", 3, "OTU table | BIOM"],
+        ],
+        "edges": [
+            ["input_params_5_FASTQ", "params_5"],
+            ["params_5", "output_params_5_demultiplexed | Demultiplexed"],
+            ["output_params_5_demultiplexed | Demultiplexed", "params_6"],
+            ["params_6", "output_params_6_OTU table | BIOM"],
+        ],
+    },
+]
 
 
 if __name__ == "__main__":

@@ -11,8 +11,9 @@
 import click
 
 import qiita_db as qdb
-from qiita_core.environment_manager import test as _test, TEST_RUNNERS
 from qiita_core.configuration_manager import ConfigurationManager
+from qiita_core.environment_manager import TEST_RUNNERS
+from qiita_core.environment_manager import test as _test
 
 _CONFIG = ConfigurationManager()
 
@@ -23,21 +24,30 @@ def env():
 
 
 @env.command()
-@click.option('--load-ontologies/--no-load-ontologies',
-              default=True, help='If True, ontologies will be loaded. '
-              'Cannot be True if this is a test environment.')
-@click.option('--download-reference/--no-download-reference',
-              default=False, help='If True, greengenes reference files will '
-                                  'be downloaded')
-@click.option('--add-demo-user/--no-add-demo-user',
-              default=False, help='If True, then demo@microbio.me will be '
-                                  'added to the database with password '
-                                  '"password"')
+@click.option(
+    "--load-ontologies/--no-load-ontologies",
+    default=True,
+    help="If True, ontologies will be loaded. "
+    "Cannot be True if this is a test environment.",
+)
+@click.option(
+    "--download-reference/--no-download-reference",
+    default=False,
+    help="If True, greengenes reference files will be downloaded",
+)
+@click.option(
+    "--add-demo-user/--no-add-demo-user",
+    default=False,
+    help="If True, then demo@microbio.me will be "
+    "added to the database with password "
+    '"password"',
+)
 def make(load_ontologies, download_reference, add_demo_user):
     """Creates the database specified in config"""
     try:
         qdb.environment_manager.make_environment(
-            load_ontologies, download_reference, add_demo_user)
+            load_ontologies, download_reference, add_demo_user
+        )
     except Exception as e:
         if "Database qiita_test already present on the system." not in str(e):
             # this will clean our environment so we can try again without
@@ -49,9 +59,12 @@ def make(load_ontologies, download_reference, add_demo_user):
 
 
 @env.command()
-@click.option('--ask-for-confirmation/--no-ask-for-confirmation',
-              default=True, help='If True, will ask for confirmation before '
-              'dropping the production environment.')
+@click.option(
+    "--ask-for-confirmation/--no-ask-for-confirmation",
+    default=True,
+    help="If True, will ask for confirmation before "
+    "dropping the production environment.",
+)
 def drop(ask_for_confirmation):
     """Drops the database specified in config"""
     try:
@@ -82,8 +95,13 @@ def patch():
 
 
 @env.command()
-@click.option('--runner', required=False, type=click.Choice(TEST_RUNNERS),
-              default='all', help='Test runner to use')
+@click.option(
+    "--runner",
+    required=False,
+    type=click.Choice(TEST_RUNNERS),
+    default="all",
+    help="Test runner to use",
+)
 def test(runner):
     """Test the environment
 
@@ -96,8 +114,8 @@ def test(runner):
 
 
 @env.command(name="create-portal")
-@click.argument('portal', required=True, type=str)
-@click.argument('description', required=True, type=str)
+@click.argument("portal", required=True, type=str)
+@click.argument("description", required=True, type=str)
 def add_portal(portal, description):
     """Creates a new portal on the database"""
     try:
@@ -107,7 +125,7 @@ def add_portal(portal, description):
 
 
 @env.command(name="remove-portal")
-@click.argument('portal', required=True, type=str)
+@click.argument("portal", required=True, type=str)
 def rem_portal(portal):
     """Removes a portal from the database"""
     try:
@@ -118,5 +136,5 @@ def rem_portal(portal):
         raise click.BadParameter("Portal name does not exist!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     env()

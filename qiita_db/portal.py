@@ -26,12 +26,13 @@ class Portal(qdb.base.QiitaObject):
     add_analyses
     remove_analyses
     """
-    _table = 'portal_type'
+
+    _table = "portal_type"
 
     def __init__(self, portal):
         with qdb.sql_connection.TRN:
             self.portal = portal
-            portal_id = qdb.util.convert_to_id(portal, 'portal_type', 'portal')
+            portal_id = qdb.util.convert_to_id(portal, "portal_type", "portal")
             super(Portal, self).__init__(portal_id)
 
     @staticmethod
@@ -119,7 +120,7 @@ class Portal(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Check if attached to any studies
-            portal_id = qdb.util.convert_to_id(portal, 'portal_type', 'portal')
+            portal_id = qdb.util.convert_to_id(portal, "portal_type", "portal")
             sql = """SELECT study_id
                      FROM qiita.study_portal
                      WHERE portal_type_id = %s"""
@@ -127,8 +128,9 @@ class Portal(qdb.base.QiitaObject):
             studies = qdb.sql_connection.TRN.execute_fetchflatten()
             if studies:
                 raise qdb.exceptions.QiitaDBError(
-                    " Cannot delete portal '%s', studies still attached: %s" %
-                    (portal, ', '.join(map(str, studies))))
+                    " Cannot delete portal '%s', studies still attached: %s"
+                    % (portal, ", ".join(map(str, studies)))
+                )
 
             # Check if attached to any analyses
             sql = """SELECT analysis_id
@@ -139,8 +141,9 @@ class Portal(qdb.base.QiitaObject):
             analyses = qdb.sql_connection.TRN.execute_fetchflatten()
             if analyses:
                 raise qdb.exceptions.QiitaDBError(
-                    " Cannot delete portal '%s', analyses still attached: %s" %
-                    (portal, ', '.join(map(str, analyses))))
+                    " Cannot delete portal '%s', analyses still attached: %s"
+                    % (portal, ", ".join(map(str, analyses)))
+                )
 
             # Remove portal and default analyses for all users
             sql = """DO $do$
@@ -182,7 +185,7 @@ class Portal(qdb.base.QiitaObject):
             Whether the portal exists or not
         """
         try:
-            qdb.util.convert_to_id(portal, 'portal_type', 'portal')
+            qdb.util.convert_to_id(portal, "portal_type", "portal")
         except qdb.exceptions.QiitaDBLookupError:
             return False
         else:
@@ -203,7 +206,8 @@ class Portal(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
             return set(
                 qdb.study.Study(sid)
-                for sid in qdb.sql_connection.TRN.execute_fetchflatten())
+                for sid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     def _check_studies(self, studies):
         with qdb.sql_connection.TRN:
@@ -214,7 +218,8 @@ class Portal(qdb.base.QiitaObject):
             if len(existing) != len(list(studies)):
                 bad = map(str, set(studies).difference(existing))
                 raise qdb.exceptions.QiitaDBError(
-                    "The following studies do not exist: %s" % ", ".join(bad))
+                    "The following studies do not exist: %s" % ", ".join(bad)
+                )
 
     def add_studies(self, studies):
         """Adds studies to given portal
@@ -245,8 +250,9 @@ class Portal(qdb.base.QiitaObject):
             if len(duplicates) > 0:
                 warnings.warn(
                     "The following studies are already part of %s: %s"
-                    % (self.portal, ', '.join(map(str, duplicates))),
-                    qdb.exceptions.QiitaDBWarning)
+                    % (self.portal, ", ".join(map(str, duplicates))),
+                    qdb.exceptions.QiitaDBWarning,
+                )
 
             # Add cleaned list to the portal
             clean_studies = set(studies).difference(duplicates)
@@ -254,7 +260,8 @@ class Portal(qdb.base.QiitaObject):
                      VALUES (%s, %s)"""
             if len(clean_studies) != 0:
                 qdb.sql_connection.TRN.add(
-                    sql, [[s, self._id] for s in clean_studies], many=True)
+                    sql, [[s, self._id] for s in clean_studies], many=True
+                )
             qdb.sql_connection.TRN.execute()
 
     def remove_studies(self, studies):
@@ -276,7 +283,7 @@ class Portal(qdb.base.QiitaObject):
             Some studies already do not exist in the given portal
         """
         if self.portal == "QIITA":
-            raise ValueError('Can not remove from main QIITA portal!')
+            raise ValueError("Can not remove from main QIITA portal!")
 
         with qdb.sql_connection.TRN:
             self._check_studies(studies)
@@ -293,7 +300,8 @@ class Portal(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBError(
                     "The following studies are used in an analysis on portal "
                     "%s and can't be removed: %s"
-                    % (self.portal, ", ".join(map(str, analysed))))
+                    % (self.portal, ", ".join(map(str, analysed)))
+                )
 
             # Clean list of studies down to ones associated with portal already
             sql = """SELECT study_id
@@ -306,8 +314,9 @@ class Portal(qdb.base.QiitaObject):
                 rem = map(str, set(studies).difference(clean_studies))
                 warnings.warn(
                     "The following studies are not part of %s: %s"
-                    % (self.portal, ', '.join(rem)),
-                    qdb.exceptions.QiitaDBWarning)
+                    % (self.portal, ", ".join(rem)),
+                    qdb.exceptions.QiitaDBWarning,
+                )
 
             sql = """DELETE FROM qiita.study_portal
                      WHERE study_id IN %s AND portal_type_id = %s"""
@@ -330,7 +339,8 @@ class Portal(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
             return set(
                 qdb.analysis.Analysis(aid)
-                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten()
+            )
 
     def _check_analyses(self, analyses):
         with qdb.sql_connection.TRN:
@@ -343,7 +353,8 @@ class Portal(qdb.base.QiitaObject):
             if len(existing) != len(analyses):
                 bad = map(str, set(analyses).difference(existing))
                 raise qdb.exceptions.QiitaDBError(
-                    "The following analyses do not exist: %s" % ", ".join(bad))
+                    "The following analyses do not exist: %s" % ", ".join(bad)
+                )
 
             # Check if any analyses given are default
             sql = """SELECT analysis_id
@@ -355,7 +366,8 @@ class Portal(qdb.base.QiitaObject):
                 bad = map(str, set(analyses).difference(default))
                 raise qdb.exceptions.QiitaDBError(
                     "The following analyses are default and can't be deleted "
-                    "or assigned to another portal: %s" % ", ".join(bad))
+                    "or assigned to another portal: %s" % ", ".join(bad)
+                )
 
     def add_analyses(self, analyses):
         """Adds analyses to given portal
@@ -395,7 +407,8 @@ class Portal(qdb.base.QiitaObject):
                     raise qdb.exceptions.QiitaDBError(
                         "Portal %s is mising studies used in the following "
                         "analyses: %s"
-                        % (self.portal, ", ".join(map(str, missing_info))))
+                        % (self.portal, ", ".join(map(str, missing_info)))
+                    )
 
             # Clean list of analyses to ones not already associated with portal
             sql = """SELECT analysis_id
@@ -409,8 +422,9 @@ class Portal(qdb.base.QiitaObject):
             if len(duplicates) > 0:
                 warnings.warn(
                     "The following analyses are already part of %s: %s"
-                    % (self.portal, ', '.join(map(str, duplicates))),
-                    qdb.exceptions.QiitaDBWarning)
+                    % (self.portal, ", ".join(map(str, duplicates))),
+                    qdb.exceptions.QiitaDBWarning,
+                )
 
             sql = """INSERT INTO qiita.analysis_portal
                         (analysis_id, portal_type_id)
@@ -418,7 +432,8 @@ class Portal(qdb.base.QiitaObject):
             clean_analyses = set(analyses).difference(duplicates)
             if len(clean_analyses) != 0:
                 qdb.sql_connection.TRN.add(
-                    sql, [[a, self._id] for a in clean_analyses], many=True)
+                    sql, [[a, self._id] for a in clean_analyses], many=True
+                )
             qdb.sql_connection.TRN.execute()
 
     def remove_analyses(self, analyses):
@@ -439,7 +454,7 @@ class Portal(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             self._check_analyses(analyses)
             if self.portal == "QIITA":
-                raise ValueError('Can not remove from main QIITA portal!')
+                raise ValueError("Can not remove from main QIITA portal!")
 
             # Clean list of analyses to ones already associated with portal
             sql = """SELECT analysis_id
@@ -454,12 +469,12 @@ class Portal(qdb.base.QiitaObject):
                 rem = map(str, set(analyses).difference(clean_analyses))
                 warnings.warn(
                     "The following analyses are not part of %s: %s"
-                    % (self.portal, ', '.join(rem)),
-                    qdb.exceptions.QiitaDBWarning)
+                    % (self.portal, ", ".join(rem)),
+                    qdb.exceptions.QiitaDBWarning,
+                )
 
             sql = """DELETE FROM qiita.analysis_portal
                      WHERE analysis_id IN %s AND portal_type_id = %s"""
             if len(clean_analyses) != 0:
-                qdb.sql_connection.TRN.add(
-                    sql, [tuple(clean_analyses), self._id])
+                qdb.sql_connection.TRN.add(sql, [tuple(clean_analyses), self._id])
             qdb.sql_connection.TRN.execute()

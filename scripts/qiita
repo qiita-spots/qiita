@@ -8,11 +8,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 import errno
+import signal
 import socket
+import sys
 from datetime import datetime, timedelta
-from os.path import join, abspath, dirname
-from time import ctime
 from multiprocessing import active_children
+from os.path import abspath, dirname, join
+from threading import Thread
+from time import ctime
 
 import click
 import tornado.httpserver
@@ -20,15 +23,10 @@ import tornado.ioloop
 from psycopg2 import OperationalError
 
 import qiita_db as qdb
-from qiita_core.util import update_redis_qiita_sha_version
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_ware.ebi import EBISubmission
+from qiita_core.util import update_redis_qiita_sha_version
 from qiita_ware.commands import submit_EBI as _submit_EBI
-
-from threading import Thread
-
-import signal
-import sys
+from qiita_ware.ebi import EBISubmission
 
 # identify gWatcher variable and signal handler globally.
 # Only the master process will instantiate a Watcher() process.
@@ -47,8 +45,8 @@ try:
     conn = qdb.sql_connection.TRN
 except OperationalError:
     raise qdb.exceptions.QiitaDBConnectionError(
-        "Database does not exist. See qiita-env make --help for more "
-        "information")
+        "Database does not exist. See qiita-env make --help for more information"
+    )
 else:
     del conn
 
@@ -64,24 +62,29 @@ def pet():
 
 
 @pet.group(invoke_without_command=True)
-@click.option('--build-docs/--no-build-docs', default=True, help="Controls "
-              "whether the docs are built and moved to the 'doc' folder under "
-              "the 'static' folder.")
+@click.option(
+    "--build-docs/--no-build-docs",
+    default=True,
+    help="Controls "
+    "whether the docs are built and moved to the 'doc' folder under "
+    "the 'static' folder.",
+)
 def webserver(build_docs):
     if build_docs:
         import qiita_pet
 
         base = abspath(dirname(qiita_pet.__file__))
-        sphinx_fp = join(base, 'support_files/doc/')
-        cmd = 'make -C %s html' % sphinx_fp
-        print('Building documentation ...')
+        sphinx_fp = join(base, "support_files/doc/")
+        cmd = "make -C %s html" % sphinx_fp
+        print("Building documentation ...")
         stdout, stderr, rv = qdb.processing_job._system_call(cmd)
         if rv != 0:
             raise click.ClickException(
-                'Could not build documentation:\n'
-                'Std output:%s\nStd error:%s' % (stdout, stderr))
+                "Could not build documentation:\n"
+                "Std output:%s\nStd error:%s" % (stdout, stderr)
+            )
         else:
-            print('Documentation successfully built')
+            print("Documentation successfully built")
 
 
 @qiita.group()
@@ -115,100 +118,166 @@ def ebi():
 
 
 @db.command()
-@click.option('--owner', required=True,
-              help="The email address of the owner of the study")
-@click.option('--title', help="The title of the study", required=True)
-@click.option('--info', type=click.File(mode='r'), required=True,
-              help="filepath of file with study information in python "
-              "config file format")
+@click.option(
+    "--owner", required=True, help="The email address of the owner of the study"
+)
+@click.option("--title", help="The title of the study", required=True)
+@click.option(
+    "--info",
+    type=click.File(mode="r"),
+    required=True,
+    help="filepath of file with study information in python config file format",
+)
 def load_study(owner, title, info):
     """Loads a study to the database"""
     study = qdb.commands.load_study_from_cmd(owner, title, info)
-    click.echo("Study successfully added to the database with id %s"
-               % study.id)
+    click.echo("Study successfully added to the database with id %s" % study.id)
 
 
 @db.command()
-@click.option('--fp', required=True, type=click.Path(resolve_path=True,
-              readable=True, exists=True), multiple=True,
-              help='Path to the artifact files. This option can be used '
-              'multiple times if there are multiple artifact files.')
-@click.option('--fp_type', required=True, multiple=True, help='Describes the '
-              'contents of the file. Pass one fp_type per fp.',
-              type=click.Choice(qdb.util.get_filepath_types().keys()))
-@click.option('--artifact_type', required=True, help="The artifact type",
-              type=click.Choice(qdb.util.get_artifact_types().keys()))
-@click.option('--prep_template', required=False,
-              help="The prep template to which the artifact is attached",
-              type=click.IntRange(1))
-@click.option('--parents', required=False, multiple=True,
-              help="The parent artifacts from which the new artifact has been "
-                   "processed",
-              type=click.IntRange(1))
-@click.option('--dflt_params', required=False,
-              help="The default parameter set used to process the new "
-                   "artifact",
-              type=click.IntRange(1))
-@click.option('--required_params', required=False,
-              help="JSON string containing the required parameters used to "
-                   "process the new artifact",
-              type=str)
-@click.option('--optional_params', required=False,
-              help="JSON string containing the optional parameters used to "
-                   "process the new artifact, if different from the "
-                   "defaults",
-              type=str)
-def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
-                  dflt_params, required_params, optional_params):
+@click.option(
+    "--fp",
+    required=True,
+    type=click.Path(resolve_path=True, readable=True, exists=True),
+    multiple=True,
+    help="Path to the artifact files. This option can be used "
+    "multiple times if there are multiple artifact files.",
+)
+@click.option(
+    "--fp_type",
+    required=True,
+    multiple=True,
+    help="Describes the contents of the file. Pass one fp_type per fp.",
+    type=click.Choice(qdb.util.get_filepath_types().keys()),
+)
+@click.option(
+    "--artifact_type",
+    required=True,
+    help="The artifact type",
+    type=click.Choice(qdb.util.get_artifact_types().keys()),
+)
+@click.option(
+    "--prep_template",
+    required=False,
+    help="The prep template to which the artifact is attached",
+    type=click.IntRange(1),
+)
+@click.option(
+    "--parents",
+    required=False,
+    multiple=True,
+    help="The parent artifacts from which the new artifact has been processed",
+    type=click.IntRange(1),
+)
+@click.option(
+    "--dflt_params",
+    required=False,
+    help="The default parameter set used to process the new artifact",
+    type=click.IntRange(1),
+)
+@click.option(
+    "--required_params",
+    required=False,
+    help="JSON string containing the required parameters used to "
+    "process the new artifact",
+    type=str,
+)
+@click.option(
+    "--optional_params",
+    required=False,
+    help="JSON string containing the optional parameters used to "
+    "process the new artifact, if different from the "
+    "defaults",
+    type=str,
+)
+def load_artifact(
+    fp,
+    fp_type,
+    artifact_type,
+    prep_template,
+    parents,
+    dflt_params,
+    required_params,
+    optional_params,
+):
     """Loads an artifact to the database"""
     artifact = qdb.commands.load_artifact_from_cmd(
-        fp, fp_type, artifact_type, prep_template=prep_template,
-        parents=parents, dflt_params_id=dflt_params,
-        required_params=required_params, optional_params=optional_params)
+        fp,
+        fp_type,
+        artifact_type,
+        prep_template=prep_template,
+        parents=parents,
+        dflt_params_id=dflt_params,
+        required_params=required_params,
+        optional_params=optional_params,
+    )
     click.echo("Artifact %s successfully created" % artifact.id)
 
 
 @db.command()
-@click.argument('fp', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--study', required=True, type=int,
-              help='Associate the sample template with this study')
+@click.argument(
+    "fp", required=True, type=click.Path(resolve_path=True, readable=True, exists=True)
+)
+@click.option(
+    "--study",
+    required=True,
+    type=int,
+    help="Associate the sample template with this study",
+)
 def load_sample_template(fp, study):
     """Loads a sample template to the database"""
     sample_temp = qdb.commands.load_sample_template_from_cmd(fp, study)
-    click.echo("Sample template successfully added to the database with id %s"
-               % sample_temp.id)
+    click.echo(
+        "Sample template successfully added to the database with id %s" % sample_temp.id
+    )
 
 
 @db.command()
-@click.argument('fp', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--study', required=True, type=int,
-              help='Associate the prep template with this study')
-@click.option('--data_type', required=True,
-              type=click.Choice(qdb.util.get_data_types()),
-              help="The data type of data")
+@click.argument(
+    "fp", required=True, type=click.Path(resolve_path=True, readable=True, exists=True)
+)
+@click.option(
+    "--study",
+    required=True,
+    type=int,
+    help="Associate the prep template with this study",
+)
+@click.option(
+    "--data_type",
+    required=True,
+    type=click.Choice(qdb.util.get_data_types()),
+    help="The data type of data",
+)
 def load_prep_template(fp, study, data_type):
     """Loads a sample template to the database"""
-    prep_template = qdb.commands.load_prep_template_from_cmd(
-        fp, study, data_type)
-    click.echo("Prep template successfully added to the database with id %s"
-               % prep_template.id)
+    prep_template = qdb.commands.load_prep_template_from_cmd(fp, study, data_type)
+    click.echo(
+        "Prep template successfully added to the database with id %s" % prep_template.id
+    )
 
 
 # #############################################################################
 # EBI COMMANDS
 # #############################################################################
 
+
 @ebi.command()
-@click.option('--artifact-id', required=True, type=int)
-@click.option('--action', type=click.Choice(EBISubmission.valid_ebi_actions),
-              default='submit', help='The generated XML files will specify '
-              'this "action", which controls how the EBI servers handle the '
-              'metadata')
-@click.option('--send/--no-send', default=False, help="Controls whether or "
-              "not sequence files and metadata will actually be sent to EBI "
-              "(default is to generate all the files, but not to send)")
+@click.option("--artifact-id", required=True, type=int)
+@click.option(
+    "--action",
+    type=click.Choice(EBISubmission.valid_ebi_actions),
+    default="submit",
+    help="The generated XML files will specify "
+    'this "action", which controls how the EBI servers handle the '
+    "metadata",
+)
+@click.option(
+    "--send/--no-send",
+    default=False,
+    help="Controls whether or "
+    "not sequence files and metadata will actually be sent to EBI "
+    "(default is to generate all the files, but not to send)",
+)
 def submit(artifact_id, action, send):
     _submit_EBI(artifact_id, action, send)
 
@@ -217,16 +286,23 @@ def submit(artifact_id, action, send):
 # MAINTENANCE COMMANDS
 # #############################################################################
 
+
 @maintenance.command()
-@click.option('--time', required=True, type=int,
-              help='The amount of time to show message, in hours')
-@click.option('--message', required=True, type=str,
-              help="Message to show users")
-@click.option('--banner', is_flag=True,
-              help="If set, show as site banner instead of a standard message")
+@click.option(
+    "--time",
+    required=True,
+    type=int,
+    help="The amount of time to show message, in hours",
+)
+@click.option("--message", required=True, type=str, help="Message to show users")
+@click.option(
+    "--banner",
+    is_flag=True,
+    help="If set, show as site banner instead of a standard message",
+)
 def sysmessage(message, time, banner):
     if banner:
-        r_client.setex('sysmessage', time * 60 * 60, message)
+        r_client.setex("sysmessage", time * 60 * 60, message)
     else:
         expires = datetime.now() + timedelta(seconds=(time * 60 * 60))
         qdb.util.add_system_message(message, expires)
@@ -234,43 +310,47 @@ def sysmessage(message, time, banner):
 
 @maintenance.command()
 def clear_sysmessage():
-    r_client.delete('sysmessage')
+    r_client.delete("sysmessage")
     qdb.util.clear_system_messages()
 
 
 @maintenance.command()
 def status():
-    sys_status = r_client.get('sysmessage')
+    sys_status = r_client.get("sysmessage")
 
     if sys_status is None:
         click.echo("Site has no system message")
     else:
         click.echo("Site has system message:")
         click.echo(sys_status)
-        click.echo(r_client.ttl('sysmessage'), "seconds remaining")
+        click.echo(r_client.ttl("sysmessage"), "seconds remaining")
 
 
 @maintenance.command()
-@click.option('--n', required=False, type=click.IntRange(0, None), default=10,
-              help="Number of most recent log entries to retrieve.",
-              show_default=True)
+@click.option(
+    "--n",
+    required=False,
+    type=click.IntRange(0, None),
+    default=10,
+    help="Number of most recent log entries to retrieve.",
+    show_default=True,
+)
 def log(n):
-
     width = click.get_terminal_size()[0]
 
-    template = width*"=" + "\nTime: {}\nMessage:\n{}\nInfo:{}\n"
+    template = width * "=" + "\nTime: {}\nMessage:\n{}\nInfo:{}\n"
 
     lines = []
     for e in qdb.logger.LogEntry.newest_records(n):
-
         info = []
         for i in e.info:
             for field, value in i.items():
-                info.append('{}:{}'.format(field, value))
+                info.append("{}:{}".format(field, value))
 
-        lines.append(template.format(e.time, e.msg, '\n'.join(info)))
+        lines.append(template.format(e.time, e.msg, "\n".join(info)))
 
-    click.echo_via_pager('\n'.join(lines))
+    click.echo_via_pager("\n".join(lines))
+
 
 # #############################################################################
 # WEBSERVER COMMANDS
@@ -278,38 +358,43 @@ def log(n):
 
 
 @webserver.command()
-@click.option('--port', required=False, type=int, help='Port where the '
-              'webserver will start', default=21174)
+@click.option(
+    "--port",
+    required=False,
+    type=int,
+    help="Port where the webserver will start",
+    default=21174,
+)
 # (cursive Q)iita = 21174 in 1337sp34k
-@click.option('--master', is_flag=True,
-              help="If set, update available plugins")
+@click.option("--master", is_flag=True, help="If set, update available plugins")
 def start(port, master):
-    from qiita_pet.webserver import Application
-    from tornado.options import options, parse_command_line
     from tornado.ioloop import PeriodicCallback
+    from tornado.options import options, parse_command_line
+
+    from qiita_pet.webserver import Application
 
     def update_database_func():
         while True:
             # blocking call waits on new job info
             msg = gWatcher.queue.get(True)
-            if msg == 'QUIT':
+            if msg == "QUIT":
                 break
 
             # TODO: add method to update Qiita of a job's status
             # beyond completion. Review qclient.update_job_step.
 
             # get state of job
-            job_state = msg['job_state']
+            job_state = msg["job_state"]
 
             # currently, we are only informing Qiita of when a
             # job has completed, either successfully or unsuccessfully.
-            if job_state != 'completed' and job_state != 'DROPPED':
+            if job_state != "completed" and job_state != "DROPPED":
                 continue
 
-            if job_state == 'completed':
+            if job_state == "completed":
                 # get returned exit_status from job's process
                 # all completed jobs should have an exit_status
-                job_state = int(msg['exit_status']) == 0
+                job_state = int(msg["exit_status"]) == 0
             else:
                 # Assume job is validator job that was DROPPED.
                 # Assume DROPPED job does not have an exit_status.
@@ -317,12 +402,11 @@ def start(port, master):
 
             job_error = None
             # get error message, if one is present
-            if 'error_msg' in msg:
-                job_error = msg['error_msg']
+            if "error_msg" in msg:
+                job_error = msg["error_msg"]
 
             try:
-                qjob = qdb.processing_job.ProcessingJob.by_external_id(
-                    msg['Job_Id'])
+                qjob = qdb.processing_job.ProcessingJob.by_external_id(msg["Job_Id"])
             except qdb.exceptions.QiitaDBUnknownIDError:
                 # ignore any job owned by Qiita, but can't be
                 # mapped to a ProcessJob.
@@ -333,7 +417,7 @@ def start(port, master):
                 # register the job's changed status in Qiita.
                 qjob.complete(job_state, error=job_error)
 
-    if qiita_config.plugin_launcher == 'qiita-plugin-launcher-slurm':
+    if qiita_config.plugin_launcher == "qiita-plugin-launcher-slurm":
         if master:
             # Only a single Watcher() process is desired
             gWatcher = qdb.processing_job.Watcher()
@@ -363,11 +447,11 @@ def start(port, master):
         # all workers and possibly hit this error:
         # redis.exceptions.ResponseError: OOM command not allowed when
         # used memory > 'maxmemory'.
-        r_client.delete('qiita-usernames')
+        r_client.delete("qiita-usernames")
         users = [email for email, name in qdb.user.User.iter()]
 
         if users:
-            r_client.zadd('qiita-usernames', {u: 0 for u in users})
+            r_client.zadd("qiita-usernames", {u: 0 for u in users})
 
         # Deactivate all the plugins and only activate those that are currently
         # available in the config file folder
@@ -375,14 +459,14 @@ def start(port, master):
         qdb.util.activate_or_update_plugins()
 
     if qiita_config.log_dir:
-        options.log_file_prefix = join(qiita_config.log_dir,
-                                       'qiita_%d.log' % port)
-        options.logging = 'debug'
+        options.log_file_prefix = join(qiita_config.log_dir, "qiita_%d.log" % port)
+        options.logging = "debug"
         parse_command_line()
-    ssl_options = {"certfile": qiita_config.certificate_file,
-                   "keyfile": qiita_config.key_file}
-    http_server = tornado.httpserver.HTTPServer(
-        Application(), ssl_options=ssl_options)
+    ssl_options = {
+        "certfile": qiita_config.certificate_file,
+        "keyfile": qiita_config.key_file,
+    }
+    http_server = tornado.httpserver.HTTPServer(Application(), ssl_options=ssl_options)
 
     try:
         http_server.listen(port)
@@ -390,42 +474,47 @@ def start(port, master):
         if e.errno == errno.EADDRINUSE:
             raise ValueError(
                 "Port %d is already in use. Please choose another port with "
-                "--port." % port)
+                "--port." % port
+            )
         else:
             raise
     base_url = qiita_config.base_url
 
-    click.echo("Qiita started on base_url: %s, port: %d @ %s" % (
-        base_url, port, ctime()))
+    click.echo(
+        "Qiita started on base_url: %s, port: %d @ %s" % (base_url, port, ctime())
+    )
 
     ioloop = tornado.ioloop.IOLoop.instance()
 
     if master:
+
         def callback_function():
             active_software = list(qdb.software.Software.iter())
-            sdefinition = [s for s in active_software
-                           if s.type == 'artifact definition']
+            sdefinition = [
+                s for s in active_software if s.type == "artifact definition"
+            ]
             # this will load the artifact transformation and private plugins
-            stransformation = [s for s in active_software
-                               if s.type != 'artifact definition']
+            stransformation = [
+                s for s in active_software if s.type != "artifact definition"
+            ]
 
             for s in sdefinition:
-                print('Registering: %s...' % (s.name))
+                print("Registering: %s..." % (s.name))
                 try:
                     s.register_commands()
                 except ValueError as e:
                     print(e)
 
-            print('Definition artifacts registration complete')
+            print("Definition artifacts registration complete")
 
             for s in stransformation:
-                print('Registering: %s...' % (s.name))
+                print("Registering: %s..." % (s.name))
                 try:
                     s.register_commands()
                 except ValueError as e:
                     print(e)
 
-            print('Command artifacts registration complete')
+            print("Command artifacts registration complete")
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
 
@@ -440,6 +529,7 @@ def start(port, master):
     if master:
         gWatcher.stop()
 
+
 # #############################################################################
 # PLUGIN COMMANDS
 # #############################################################################
@@ -451,5 +541,5 @@ def update():
     qdb.util.activate_or_update_plugins(update=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     qiita()

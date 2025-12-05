@@ -33,16 +33,17 @@ def user_jobs_get_req(user, limit=30):
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
         pjw = j.processing_job_workflow
-        wid = '' if pjw is None else pjw.id
-        response.append({
-            'id': j.id,
-            'name': name,
-            'params': j.parameters.values,
-            'status': j.status,
-            'heartbeat': hb,
-            'step': j.step,
-            'processing_job_workflow_id': wid})
+        wid = "" if pjw is None else pjw.id
+        response.append(
+            {
+                "id": j.id,
+                "name": name,
+                "params": j.parameters.values,
+                "status": j.status,
+                "heartbeat": hb,
+                "step": j.step,
+                "processing_job_workflow_id": wid,
+            }
+        )
 
-    return {'status': 'success',
-            'message': '',
-            'jobs': response}
+    return {"status": "success", "message": "", "jobs": response}

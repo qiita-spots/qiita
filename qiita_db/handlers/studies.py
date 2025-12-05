@@ -9,6 +9,7 @@
 from tornado.web import HTTPError
 
 from qiita_db.sql_connection import TRN
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
@@ -25,7 +26,7 @@ def _generate_study_list_for_api(visibility, only_biom=True):
     list of dict
         The list of studies and their information
     """
-    artifact_type = ''
+    artifact_type = ""
     if only_biom:
         artifact_type = "AND artifact_type = 'BIOM'"
 
@@ -58,10 +59,10 @@ class APIStudiesListing(OauthBaseHandler):
         -------
         see qiita_db.util.generate_study_list
         """
-        if visibility not in {'public', 'private'}:
+        if visibility not in {"public", "private"}:
             raise HTTPError(
-                403, reason='You can only request public or private studies')
+                403, reason="You can only request public or private studies"
+            )
 
-        response = {
-            'data': _generate_study_list_for_api(visibility=visibility)}
+        response = {"data": _generate_study_list_for_api(visibility=visibility)}
         self.write(response)

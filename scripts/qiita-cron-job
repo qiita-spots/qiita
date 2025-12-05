@@ -10,17 +10,20 @@
 
 import click
 
-from qiita_db.util import (
-    purge_filepaths as qiita_purge_filepaths,
-    empty_trash_upload_folder as qiita_empty_trash_upload_folder,
-    quick_mounts_purge as qiita_quick_mounts_purge)
-from qiita_db.meta_util import (
-    update_redis_stats as qiita_update_redis_stats,
-    update_resource_allocation_redis as qiita_update_resource_allocation_redis,
-    generate_biom_and_metadata_release as
-    qiita_generate_biom_and_metadata_release,
-    generate_plugin_releases as qiita_generate_plugin_releases)
 from qiita_db.download_link import DownloadLink
+from qiita_db.meta_util import (
+    generate_biom_and_metadata_release as qiita_generate_biom_and_metadata_release,
+)
+from qiita_db.meta_util import (
+    generate_plugin_releases as qiita_generate_plugin_releases,
+)
+from qiita_db.meta_util import update_redis_stats as qiita_update_redis_stats
+from qiita_db.meta_util import (
+    update_resource_allocation_redis as qiita_update_resource_allocation_redis,
+)
+from qiita_db.util import empty_trash_upload_folder as qiita_empty_trash_upload_folder
+from qiita_db.util import purge_filepaths as qiita_purge_filepaths
+from qiita_db.util import quick_mounts_purge as qiita_quick_mounts_purge
 
 
 @click.group()
@@ -29,17 +32,22 @@ def commands():
 
 
 @commands.command()
-@click.option('--remove/--no-remove', default=True,
-              help='remove any filepaths from the qiita.filepath table that '
-              'are not linked to any other table')
+@click.option(
+    "--remove/--no-remove",
+    default=True,
+    help="remove any filepaths from the qiita.filepath table that "
+    "are not linked to any other table",
+)
 def purge_filepaths(remove):
     qiita_purge_filepaths(remove)
 
 
 @commands.command()
-@click.option('--remove/--no-remove', default=True,
-              help='remove files from the trash folder within the upload '
-              'folders')
+@click.option(
+    "--remove/--no-remove",
+    default=True,
+    help="remove files from the trash folder within the upload folders",
+)
 def empty_trash_upload_folder(remove):
     qiita_empty_trash_upload_folder(remove)
 
@@ -56,7 +64,7 @@ def update_resource_allocation_redis():
 
 @commands.command()
 def generate_biom_and_metadata_release():
-    qiita_generate_biom_and_metadata_release('public')
+    qiita_generate_biom_and_metadata_release("public")
 
 
 @commands.command()

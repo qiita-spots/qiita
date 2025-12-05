@@ -5,15 +5,15 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_pet.handlers.util import to_int
+from qiita_db.study import Study
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.util import to_int
 
 
 class RESTHandler(BaseHandler):
     def fail(self, msg, status, **kwargs):
-        out = {'message': msg}
+        out = {"message": msg}
         out.update(kwargs)
 
         self.write(out)
@@ -26,6 +26,6 @@ class RESTHandler(BaseHandler):
         try:
             s = Study(study_id)
         except QiitaDBUnknownIDError:
-            self.fail('Study not found', 404)
+            self.fail("Study not found", 404)
         finally:
             return s

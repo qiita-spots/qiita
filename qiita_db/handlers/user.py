@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 import qiita_db as qdb
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 from .util import _get_instance
 
@@ -27,11 +28,15 @@ class UserInfoDBHandler(OauthBaseHandler):
             The user information as a dict
         """
         with qdb.sql_connection.TRN:
-            user = _get_instance(qdb.user.User, email,
-                                 'Error instantiating user')
-            response = {'data': {'email': email, 'level': user.level,
-                                 'password': user.password,
-                                 'name': user.info['name']}}
+            user = _get_instance(qdb.user.User, email, "Error instantiating user")
+            response = {
+                "data": {
+                    "email": email,
+                    "level": user.level,
+                    "password": user.password,
+                    "name": user.info["name"],
+                }
+            }
 
             self.write(response)
 
@@ -47,6 +52,6 @@ class UsersListDBHandler(OauthBaseHandler):
             The user information as a dict
         """
         with qdb.sql_connection.TRN:
-            response = {'data': [dict(d) for d in qdb.user.User.iter()]}
+            response = {"data": [dict(d) for d in qdb.user.User.iter()]}
 
             self.write(response)

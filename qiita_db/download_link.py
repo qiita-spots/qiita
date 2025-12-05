@@ -6,10 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import qiita_db as qdb
+from datetime import datetime, timezone
 
 from jose import jwt as jose_jwt
-from datetime import datetime, timezone
+
+import qiita_db as qdb
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -46,16 +47,13 @@ class DownloadLink(qdb.base.QiitaObject):
             If the jti already exists in the database
         """
 
-        jwt_data = jose_jwt.decode(jwt,
-                                   qiita_config.jwt_secret,
-                                   algorithms='HS256')
+        jwt_data = jose_jwt.decode(jwt, qiita_config.jwt_secret, algorithms="HS256")
         jti = jwt_data["jti"]
         exp = datetime.utcfromtimestamp(jwt_data["exp"] / 1000)
 
         with qdb.sql_connection.TRN:
             if cls.exists(jti):
-                raise qdb.exceptions.QiitaDBDuplicateError(
-                    "JTI Already Exists")
+                raise qdb.exceptions.QiitaDBDuplicateError("JTI Already Exists")
 
             # insert token into database
             sql = """INSERT INTO qiita.{0} (jti, jwt, exp)

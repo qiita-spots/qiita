@@ -12,23 +12,25 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 class TestNewPrepTemplateAjax(TestHandlerBase):
     def test_get(self):
-        response = self.get('/study/new_prep_template/', {'study_id': '1'})
+        response = self.get("/study/new_prep_template/", {"study_id": "1"})
         self.assertEqual(response.code, 200)
 
 
 class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
     def test_get(self):
-        response = self.get('/study/description/prep_template/',
-                            {'prep_id': 1, 'study_id': 1})
+        response = self.get(
+            "/study/description/prep_template/", {"prep_id": 1, "study_id": 1}
+        )
         self.assertEqual(response.code, 200)
-        self.assertNotEqual(response.body, '')
+        self.assertNotEqual(response.body, "")
 
 
 class TestPrepFilesHandler(TestHandlerBase):
     def test_get_files_not_allowed(self):
         response = self.post(
-            '/study/prep_files/',
-            {'type': 'BIOM', 'prep_file': 'uploaded_file.txt', 'study_id': 1})
+            "/study/prep_files/",
+            {"type": "BIOM", "prep_file": "uploaded_file.txt", "study_id": 1},
+        )
         self.assertEqual(response.code, 405)
 
 

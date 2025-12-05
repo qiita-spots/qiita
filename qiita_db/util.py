@@ -36,6 +36,7 @@ Methods
     generate_analysis_list
     human_merging_scheme
 """
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -43,43 +44,43 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from random import SystemRandom
-from string import ascii_letters, digits, punctuation
+import hashlib
 from binascii import crc32
-from bcrypt import hashpw, gensalt
-from functools import partial
-from os.path import join, basename, isdir, exists, getsize
-from os import walk, remove, listdir, stat, makedirs
-from glob import glob
-from shutil import move, rmtree, copy as shutil_copy
-from openpyxl import load_workbook
-from tempfile import mkstemp
+from contextlib import contextmanager
 from csv import writer as csv_writer
 from datetime import datetime, timedelta
-from time import time as now
-from itertools import chain
-from contextlib import contextmanager
-import h5py
-from humanize import naturalsize
-import hashlib
-from smtplib import SMTP, SMTP_SSL, SMTPException
-
-from errno import EEXIST
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.qiita_settings import qiita_config
-from subprocess import check_output
-import qiita_db as qdb
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from errno import EEXIST
+from functools import partial
+from glob import glob
+from io import StringIO
+from itertools import chain
+from json import loads
+from os import listdir, makedirs, remove, stat, walk
+from os.path import basename, exists, getsize, isdir, join
+from random import SystemRandom
+from shutil import copy as shutil_copy
+from shutil import move, rmtree
+from smtplib import SMTP, SMTP_SSL, SMTPException
+from string import ascii_letters, digits, punctuation
+from subprocess import check_output
+from tempfile import mkstemp
+from time import time as now
 
+import h5py
 import matplotlib.pyplot as plt
-from matplotlib import colormaps
 import numpy as np
 import pandas as pd
-from io import StringIO
-from json import loads
+from bcrypt import gensalt, hashpw
+from humanize import naturalsize
+from matplotlib import colormaps
+from openpyxl import load_workbook
 from scipy.optimize import minimize
+
+import qiita_db as qdb
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 
 
 def scrub_data(s):
@@ -138,8 +139,9 @@ def convert_type(obj):
             else:
                 break
     if item is None:
-        raise IncompetentQiitaDeveloperError("Can't convert item of type %s!" %
-                                             str(type(obj)))
+        raise IncompetentQiitaDeveloperError(
+            "Can't convert item of type %s!" % str(type(obj))
+        )
     return item
 
 
@@ -160,14 +162,17 @@ def get_artifact_types(key_by_id=False):
         {artifact_type: artifact_type_id}
     """
     with qdb.sql_connection.TRN:
-        cols = ('artifact_type_id, artifact_type'
-                if key_by_id else 'artifact_type, artifact_type_id')
+        cols = (
+            "artifact_type_id, artifact_type"
+            if key_by_id
+            else "artifact_type, artifact_type_id"
+        )
         sql = "SELECT {} FROM qiita.artifact_type".format(cols)
         qdb.sql_connection.TRN.add(sql)
         return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
 
-def get_filepath_types(key='filepath_type'):
+def get_filepath_types(key="filepath_type"):
     """Gets the list of possible filepath types from the filetype table
 
     Parameters
@@ -185,20 +190,20 @@ def get_filepath_types(key='filepath_type'):
           {filepath_type_id: filepath_type}
     """
     with qdb.sql_connection.TRN:
-        if key == 'filepath_type':
-            cols = 'filepath_type, filepath_type_id'
-        elif key == 'filepath_type_id':
-            cols = 'filepath_type_id, filepath_type'
+        if key == "filepath_type":
+            cols = "filepath_type, filepath_type_id"
+        elif key == "filepath_type_id":
+            cols = "filepath_type_id, filepath_type"
         else:
             raise qdb.exceptions.QiitaDBColumnError(
-                "Unknown key. Pass either 'filepath_type' or "
-                "'filepath_type_id'.")
-        sql = 'SELECT {} FROM qiita.filepath_type'.format(cols)
+                "Unknown key. Pass either 'filepath_type' or 'filepath_type_id'."
+            )
+        sql = "SELECT {} FROM qiita.filepath_type".format(cols)
         qdb.sql_connection.TRN.add(sql)
         return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
 
-def get_data_types(key='data_type'):
+def get_data_types(key="data_type"):
     """Gets the list of possible data types from the data_type table
 
     Parameters
@@ -215,14 +220,15 @@ def get_data_types(key='data_type'):
           {data_type_id: data_type}
     """
     with qdb.sql_connection.TRN:
-        if key == 'data_type':
-            cols = 'data_type, data_type_id'
-        elif key == 'data_type_id':
-            cols = 'data_type_id, data_type'
+        if key == "data_type":
+            cols = "data_type, data_type_id"
+        elif key == "data_type_id":
+            cols = "data_type_id, data_type"
         else:
             raise qdb.exceptions.QiitaDBColumnError(
-                "Unknown key. Pass either 'data_type_id' or 'data_type'.")
-        sql = 'SELECT {} FROM qiita.data_type'.format(cols)
+                "Unknown key. Pass either 'data_type_id' or 'data_type'."
+            )
+        sql = "SELECT {} FROM qiita.data_type".format(cols)
         qdb.sql_connection.TRN.add(sql)
         return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
@@ -241,7 +247,7 @@ def create_rand_string(length, punct=True):
     if punct:
         chars += punctuation
     sr = SystemRandom()
-    return ''.join(sr.choice(chars) for i in range(length))
+    return "".join(sr.choice(chars) for i in range(length))
 
 
 def hash_password(password, hashedpw=None):
@@ -270,8 +276,8 @@ def hash_password(password, hashedpw=None):
     if hashedpw is None:
         hashedpw = gensalt()
     else:
-        hashedpw = hashedpw.encode('utf-8')
-    password = password.encode('utf-8')
+        hashedpw = hashedpw.encode("utf-8")
+    password = password.encode("utf-8")
     output = hashpw(password, hashedpw)
     if isinstance(output, bytes):
         output = output.decode("utf-8")
@@ -303,12 +309,12 @@ def check_required_columns(keys, table):
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
-            raise RuntimeError("Unable to fetch column names for table %s"
-                               % table)
-        required = set(x[1] for x in cols if x[0] == 'NO' and x[2] is None)
+            raise RuntimeError("Unable to fetch column names for table %s" % table)
+        required = set(x[1] for x in cols if x[0] == "NO" and x[2] is None)
         if len(required.difference(keys)) > 0:
             raise qdb.exceptions.QiitaDBColumnError(
-                "Required keys missing: %s" % required.difference(keys))
+                "Required keys missing: %s" % required.difference(keys)
+            )
 
 
 def check_table_cols(keys, table):
@@ -336,11 +342,11 @@ def check_table_cols(keys, table):
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
-            raise RuntimeError("Unable to fetch column names for table %s"
-                               % table)
+            raise RuntimeError("Unable to fetch column names for table %s" % table)
         if len(set(keys).difference(cols)) > 0:
             raise qdb.exceptions.QiitaDBColumnError(
-                "Non-database keys found: %s" % set(keys).difference(cols))
+                "Non-database keys found: %s" % set(keys).difference(cols)
+            )
 
 
 def get_table_cols(table):
@@ -423,8 +429,7 @@ def max_preparation_samples():
         The max number of samples allowed in a single preparation
     """
     with qdb.sql_connection.TRN:
-        qdb.sql_connection.TRN.add(
-            "SELECT max_preparation_samples FROM settings")
+        qdb.sql_connection.TRN.add("SELECT max_preparation_samples FROM settings")
         return qdb.sql_connection.TRN.execute_fetchlast()
 
 
@@ -437,8 +442,7 @@ def max_artifacts_in_workflow():
         The max number of artifacts allowed in a single workflow
     """
     with qdb.sql_connection.TRN:
-        qdb.sql_connection.TRN.add(
-            "SELECT max_artifacts_in_workflow FROM settings")
+        qdb.sql_connection.TRN.add("SELECT max_artifacts_in_workflow FROM settings")
         return qdb.sql_connection.TRN.execute_fetchlast()
 
 
@@ -466,7 +470,7 @@ def compute_checksum(path):
     buffersize = 65536
     crcvalue = 0
     for fp in filepaths:
-        with open(fp, 'rb') as f:
+        with open(fp, "rb") as f:
             buffr = f.read(buffersize)
             while len(buffr) > 0:
                 crcvalue = crc32(buffr, crcvalue)
@@ -496,7 +500,7 @@ def get_files_from_uploads_folders(study_id):
         if exists(t):
             for f in listdir(t):
                 d = join(t, f)
-                if not f.startswith('.') and not isdir(d):
+                if not f.startswith(".") and not isdir(d):
                     fp.append((pid, f, naturalsize(getsize(d), gnu=True)))
 
     return fp
@@ -518,22 +522,25 @@ def move_upload_files_to_trash(study_id, files_to_move):
         If folder_id or the study folder don't exist and if the filename to
         erase matches the trash_folder, internal variable
     """
-    trash_folder = 'trash'
+    trash_folder = "trash"
     folders = {k: v for k, v in get_mountpoint("uploads", retrieve_all=True)}
 
     for fid, filename in files_to_move:
         if filename == trash_folder:
             raise qdb.exceptions.QiitaDBError(
-                "You can not erase the trash folder: %s" % trash_folder)
+                "You can not erase the trash folder: %s" % trash_folder
+            )
 
         if fid not in folders:
             raise qdb.exceptions.QiitaDBError(
-                "The filepath id: %d doesn't exist in the database" % fid)
+                "The filepath id: %d doesn't exist in the database" % fid
+            )
 
         foldername = join(folders[fid], str(study_id))
         if not exists(foldername):
             raise qdb.exceptions.QiitaDBError(
-                "The upload folder for study id: %d doesn't exist" % study_id)
+                "The upload folder for study id: %d doesn't exist" % study_id
+            )
 
         trashpath = join(foldername, trash_folder)
         create_nested_path(trashpath)
@@ -546,7 +553,7 @@ def move_upload_files_to_trash(study_id, files_to_move):
 
 
 def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
-    r""" Returns the most recent values from data directory for the given type
+    r"""Returns the most recent values from data directory for the given type
 
     Parameters
     ----------
@@ -583,7 +590,7 @@ def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
 
 
 def get_mountpoint_path_by_id(mount_id):
-    r""" Returns the mountpoint path for the mountpoint with id = mount_id
+    r"""Returns the mountpoint path for the mountpoint with id = mount_id
 
     Parameters
     ----------
@@ -645,14 +652,15 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
                 dirname = db_path(str(obj_id))
                 create_nested_path(dirname)
                 new_filepaths = [
-                    (join(dirname, basename(path)), id_)
-                    for path, id_ in filepaths]
+                    (join(dirname, basename(path)), id_) for path, id_ in filepaths
+                ]
             else:
                 # Generate the new fileapths. format:
                 # mountpoint/DataId_OriginalName
                 new_filepaths = [
                     (db_path("%s_%s" % (obj_id, basename(path))), id_)
-                    for path, id_ in filepaths]
+                    for path, id_ in filepaths
+                ]
             # Move the original files to the controlled DB directory
             transfer_function = shutil_copy if copy else move
             for old_fp, new_fp in zip(filepaths, new_filepaths):
@@ -660,14 +668,24 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
                 # In case the transaction executes a rollback, we need to
                 # make sure the files have not been moved
                 qdb.sql_connection.TRN.add_post_rollback_func(
-                    move, new_fp[0], old_fp[0])
+                    move, new_fp[0], old_fp[0]
+                )
 
         def str_to_id(x):
-            return (x if isinstance(x, int)
-                    else convert_to_id(x, "filepath_type"))
+            return x if isinstance(x, int) else convert_to_id(x, "filepath_type")
+
         # 1 is the checksum algorithm, which we only have one implemented
-        values = [[basename(path), str_to_id(id_), compute_checksum(path),
-                   getsize(path), 1, dd_id] for path, id_ in new_filepaths]
+        values = [
+            [
+                basename(path),
+                str_to_id(id_),
+                compute_checksum(path),
+                getsize(path),
+                1,
+                dd_id,
+            ]
+            for path, id_ in new_filepaths
+        ]
         # Insert all the filepaths at once and get the filepath_id back
         sql = """INSERT INTO qiita.filepath
                     (filepath, filepath_type_id, checksum, fp_size,
@@ -678,8 +696,11 @@ def insert_filepaths(filepaths, obj_id, table, move_files=True, copy=False):
         qdb.sql_connection.TRN.add(sql, values, many=True)
         # Since we added the query with many=True, we've added len(values)
         # queries to the transaction, so the ids are in the last idx queries
-        return list(chain.from_iterable(
-            chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
+        return list(
+            chain.from_iterable(
+                chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])
+            )
+        )
 
 
 def _path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
@@ -709,8 +730,7 @@ def _path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
         return join(db_dir, mountpoint, filepath)
 
 
-def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
-                       fp_type=None):
+def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None, fp_type=None):
     """Retrieves the filepaths for the given object id
 
     Parameters
@@ -734,14 +754,15 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
     """
 
     sql_sort = ""
-    if sort == 'ascending':
+    if sort == "ascending":
         sql_sort = " ORDER BY filepath_id"
-    elif sort == 'descending':
+    elif sort == "descending":
         sql_sort = " ORDER BY filepath_id DESC"
     elif sort is not None:
         raise qdb.exceptions.QiitaDBError(
             "Unknown sorting direction: %s. Please choose from 'ascending' or "
-            "'descending'" % sort)
+            "'descending'" % sort
+        )
 
     sql_args = [obj_id]
 
@@ -757,15 +778,23 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
                     JOIN qiita.{0} USING (filepath_id)
-                 WHERE {1} = %s{2}{3}""".format(obj_fp_table, obj_id_column,
-                                                sql_type, sql_sort)
+                 WHERE {1} = %s{2}{3}""".format(
+            obj_fp_table, obj_id_column, sql_type, sql_sort
+        )
         qdb.sql_connection.TRN.add(sql, sql_args)
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [{'fp_id': fpid, 'fp': _path_builder(db_dir, fp, m, s, obj_id),
-                 'fp_type': fp_type_, 'checksum': c, 'fp_size': fpsize}
-                for fpid, fp, fp_type_, m, s, c, fpsize in results]
+        return [
+            {
+                "fp_id": fpid,
+                "fp": _path_builder(db_dir, fp, m, s, obj_id),
+                "fp_type": fp_type_,
+                "checksum": c,
+                "fp_size": fpsize,
+            }
+            for fpid, fp, fp_type_, m, s, c, fpsize in results
+        ]
 
 
 def _rm_files(TRN, fp):
@@ -799,9 +828,9 @@ def purge_filepaths(delete_files=True):
         #    so we can recover them (this has happened before) but let's remove
         #    those from deleted studies. Note that we need to check for sample,
         #    prep and qiime info files
-        st_id = qdb.util.convert_to_id('sample_template', "filepath_type")
-        pt_id = qdb.util.convert_to_id('prep_template', "filepath_type")
-        qt_id = qdb.util.convert_to_id('qiime_map', "filepath_type")
+        st_id = qdb.util.convert_to_id("sample_template", "filepath_type")
+        pt_id = qdb.util.convert_to_id("prep_template", "filepath_type")
+        qt_id = qdb.util.convert_to_id("qiime_map", "filepath_type")
         sql = """SELECT filepath_id, filepath FROM qiita.filepath
                  WHERE filepath_type_id IN %s AND filepath ~ '^[0-9]' AND
                     data_directory_id = %s AND filepath_id NOT IN (
@@ -809,27 +838,24 @@ def purge_filepaths(delete_files=True):
                         UNION
                         SELECT filepath_id FROM qiita.sample_template_filepath)
               """
-        for mp_id, mp in get_mountpoint('templates'):
-            qdb.sql_connection.TRN.add(
-                sql, [tuple([st_id, pt_id, qt_id]), mp_id])
+        for mp_id, mp in get_mountpoint("templates"):
+            qdb.sql_connection.TRN.add(sql, [tuple([st_id, pt_id, qt_id]), mp_id])
             studies_exits = []
             studies_erased = []
             for fid, fp in qdb.sql_connection.TRN.execute_fetchindex():
                 # making sure the studies do _not_ exist, remember info files
                 # are prepended by the study id
-                study_id = int(fp.split('_')[0])
+                study_id = int(fp.split("_")[0])
                 if study_id in studies_exits:
                     continue
                 elif study_id in studies_erased:
-                    fpath = qdb.util.get_filepath_information(
-                        fid)['fullpath']
+                    fpath = qdb.util.get_filepath_information(fid)["fullpath"]
                     files_to_remove.append([fid, fpath])
                 else:
                     try:
                         qdb.study.Study(study_id)
                     except qdb.exceptions.QiitaDBUnknownIDError:
-                        fpath = qdb.util.get_filepath_information(
-                            fid)['fullpath']
+                        fpath = qdb.util.get_filepath_information(fid)["fullpath"]
                         files_to_remove.append([fid, fpath])
                         studies_erased.append(study_id)
                     else:
@@ -872,10 +898,10 @@ def purge_filepaths(delete_files=True):
               """
         qdb.sql_connection.TRN.add(sql)
         for fid in qdb.sql_connection.TRN.execute_fetchflatten():
-            fpath = qdb.util.get_filepath_information(fid)['fullpath']
-            aid = fpath.split('/')[-2]
+            fpath = qdb.util.get_filepath_information(fid)["fullpath"]
+            aid = fpath.split("/")[-2]
             # making sure the artifact doesn't exist any more
-            if aid == 'None':
+            if aid == "None":
                 files_to_remove.append([fid, None])
 
         # 4. analysis: we need to select all the filepaths that are not in
@@ -894,10 +920,10 @@ def purge_filepaths(delete_files=True):
         qdb.sql_connection.TRN.add(sql)
         for fid in qdb.sql_connection.TRN.execute_fetchflatten():
             fdata = qdb.util.get_filepath_information(fid)
-            analysis_id = int(fdata['filepath'].split('_')[0])
+            analysis_id = int(fdata["filepath"].split("_")[0])
             # making sure the Analysis doesn't exist
             if not qdb.analysis.Analysis.exists(analysis_id):
-                fpath = fdata['fullpath']
+                fpath = fdata["fullpath"]
                 files_to_remove.append([fid, fpath])
 
         # 5. working directory: this is done internally in the Qiita system via
@@ -912,7 +938,7 @@ def purge_filepaths(delete_files=True):
                 if fpath is not None:
                     _rm_files(qdb.sql_connection.TRN, fpath)
             else:
-                print('%s: %s' % (fid, fpath))
+                print("%s: %s" % (fid, fpath))
 
         if delete_files:
             # there is a chance that we will never enter the above
@@ -941,16 +967,15 @@ def quick_mounts_purge():
         qdb.sql_connection.TRN.add(main_sql)
         mp_ids = qdb.sql_connection.TRN.execute_fetchflatten()
         mounts = [qdb.util.get_mountpoint_path_by_id(x) for x in mp_ids]
-        folders = [join(x, f) for x in mounts for f in listdir(x)
-                   if f.isnumeric()]
+        folders = [join(x, f) for x in mounts for f in listdir(x) if f.isnumeric()]
 
     # getting all unlinked folders
     to_delete = []
     for i, f in enumerate(folders):
-        vals = f.split('/')
+        vals = f.split("/")
         aid = int(vals[-1])
         artifact_type = vals[-2]
-        if artifact_type == 'FeatureData[Taxonomy]':
+        if artifact_type == "FeatureData[Taxonomy]":
             continue
 
         try:
@@ -959,35 +984,34 @@ def quick_mounts_purge():
             to_delete.append(f)
             continue
         if not a.artifact_type.startswith(artifact_type):
-            raise ValueError('Review artifact type: '
-                             f'{a.id} {artifact_type} {a.artifact_type}')
+            raise ValueError(
+                f"Review artifact type: {a.id} {artifact_type} {a.artifact_type}"
+            )
 
     # now, let's just keep those older than 30 days (in seconds)
-    ignore = now() - (30*86400)
+    ignore = now() - (30 * 86400)
     to_keep = [x for x in to_delete if stat(x).st_mtime >= ignore]
     to_delete = set(to_delete) - set(to_keep)
 
     # get stats to report
     stats = dict()
     for td in to_delete:
-        f = td.split('/')[-2]
+        f = td.split("/")[-2]
         if f not in stats:
             stats[f] = 0
-        stats[f] += sum([getsize(join(p, fp)) for p, ds, fs in walk(td)
-                         for fp in fs])
+        stats[f] += sum([getsize(join(p, fp)) for p, ds, fs in walk(td) for fp in fs])
 
-    report = ['----------------------']
+    report = ["----------------------"]
     for f, s in stats.items():
-        report.append(f'{f}\t{naturalsize(s)}')
-    report.append(
-        f'Total files {len(to_delete)} {naturalsize(sum(stats.values()))}')
-    report.append('----------------------')
+        report.append(f"{f}\t{naturalsize(s)}")
+    report.append(f"Total files {len(to_delete)} {naturalsize(sum(stats.values()))}")
+    report.append("----------------------")
 
     for td in list(to_delete):
         if exists(td):
             rmtree(td)
 
-    return '\n'.join(report)
+    return "\n".join(report)
 
 
 def _rm_exists(fp, obj, _id, delete_files):
@@ -1022,7 +1046,7 @@ def empty_trash_upload_folder(delete_files=True):
 
         for mp in qdb.sql_connection.TRN.execute_fetchflatten():
             for path, dirs, files in walk(gfp(mp)):
-                if path.endswith('/trash'):
+                if path.endswith("/trash"):
                     if delete_files:
                         for f in files:
                             fp = join(path, f)
@@ -1053,25 +1077,32 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         path_builder = partial(join, uploads_fp)
 
         # do not move these files-types back to upload folder.
-        do_not_move = ['preprocessed_fasta', 'preprocessed_fastq',
-                       'preprocessed_demux', 'directory', 'log',
-                       'html_summary', 'tgz', 'html_summary_dir', 'qzv', 'qza']
+        do_not_move = [
+            "preprocessed_fasta",
+            "preprocessed_fastq",
+            "preprocessed_demux",
+            "directory",
+            "log",
+            "html_summary",
+            "tgz",
+            "html_summary_dir",
+            "qzv",
+            "qza",
+        ]
 
         # We can now go over and remove all the filepaths
         sql = """DELETE FROM qiita.filepath WHERE filepath_id = %s"""
         for x in filepaths:
-            qdb.sql_connection.TRN.add(sql, [x['fp_id']])
+            qdb.sql_connection.TRN.add(sql, [x["fp_id"]])
 
-            if x['fp_type'] in do_not_move:
-                _rm_files(qdb.sql_connection.TRN, x['fp'])
+            if x["fp_type"] in do_not_move:
+                _rm_files(qdb.sql_connection.TRN, x["fp"])
                 continue
 
             # if files were not removed, then they should be moved.
-            destination = path_builder(basename(x['fp']))
-            qdb.sql_connection.TRN.add_post_rollback_func(move,
-                                                          destination,
-                                                          x['fp'])
-            move(x['fp'], destination)
+            destination = path_builder(basename(x["fp"]))
+            qdb.sql_connection.TRN.add_post_rollback_func(move, destination, x["fp"])
+            move(x["fp"], destination)
 
         qdb.sql_connection.TRN.execute()
 
@@ -1101,10 +1132,14 @@ def get_filepath_information(filepath_id):
         qdb.sql_connection.TRN.add(sql, [filepath_id])
         res = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
 
-        obj_id = res.pop('artifact_id')
-        res['fullpath'] = _path_builder(get_db_files_base_dir(),
-                                        res['filepath'], res['mountpoint'],
-                                        res['subdirectory'], obj_id)
+        obj_id = res.pop("artifact_id")
+        res["fullpath"] = _path_builder(
+            get_db_files_base_dir(),
+            res["filepath"],
+            res["mountpoint"],
+            res["subdirectory"],
+            obj_id,
+        )
         return res
 
 
@@ -1218,13 +1253,13 @@ def convert_to_id(value, table, text_col=None):
     """
     text_col = table if text_col is None else text_col
     with qdb.sql_connection.TRN:
-        sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(
-            table, text_col)
+        sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(table, text_col)
         qdb.sql_connection.TRN.add(sql, [value])
         _id = qdb.sql_connection.TRN.execute_fetchindex()
         if not _id:
             raise qdb.exceptions.QiitaDBLookupError(
-                "%s not valid for table %s" % (value, table))
+                "%s not valid for table %s" % (value, table)
+            )
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
         return _id[0][0]
@@ -1256,7 +1291,8 @@ def convert_from_id(value, table):
         string = qdb.sql_connection.TRN.execute_fetchindex()
         if not string:
             raise qdb.exceptions.QiitaDBLookupError(
-                "%s not valid for table %s" % (value, table))
+                "%s not valid for table %s" % (value, table)
+            )
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
         return string[0][0]
@@ -1361,8 +1397,7 @@ def get_pubmed_ids_from_dois(doi_ids):
     with qdb.sql_connection.TRN:
         sql = "SELECT doi, pubmed_id FROM qiita.publication WHERE doi IN %s"
         qdb.sql_connection.TRN.add(sql, [tuple(doi_ids)])
-        return {row[0]: row[1]
-                for row in qdb.sql_connection.TRN.execute_fetchindex()}
+        return {row[0]: row[1] for row in qdb.sql_connection.TRN.execute_fetchindex()}
 
 
 def infer_status(statuses):
@@ -1389,15 +1424,15 @@ def infer_status(statuses):
     """
     if statuses:
         statuses = set(s[0] for s in statuses)
-        if 'public' in statuses:
-            return 'public'
-        if 'private' in statuses:
-            return 'private'
-        if 'awaiting_approval' in statuses:
-            return 'awaiting_approval'
+        if "public" in statuses:
+            return "public"
+        if "private" in statuses:
+            return "private"
+        if "awaiting_approval" in statuses:
+            return "awaiting_approval"
     # If there are no statuses, or any of the previous ones have been found
     # then the inferred status is 'sandbox'
-    return 'sandbox'
+    return "sandbox"
 
 
 def add_message(message, users):
@@ -1543,19 +1578,21 @@ def generate_study_list(user, visibility):
                 WHERE email=qiita.study.email) AS owner
     """
 
-    visibility_sql = ''
+    visibility_sql = ""
     sids = set(s.id for s in user.user_studies.union(user.shared_studies))
-    if visibility == 'user':
-        if user.level == 'admin':
-            sids = (sids |
-                    qdb.study.Study.get_ids_by_status('sandbox') |
-                    qdb.study.Study.get_ids_by_status('private') |
-                    qdb.study.Study.get_ids_by_status('awaiting_approval'))
-    elif visibility == 'public':
-        sids = qdb.study.Study.get_ids_by_status('public') - sids
+    if visibility == "user":
+        if user.level == "admin":
+            sids = (
+                sids
+                | qdb.study.Study.get_ids_by_status("sandbox")
+                | qdb.study.Study.get_ids_by_status("private")
+                | qdb.study.Study.get_ids_by_status("awaiting_approval")
+            )
+    elif visibility == "public":
+        sids = qdb.study.Study.get_ids_by_status("public") - sids
         visibility_sql = "visibility = 'public' AND"
     else:
-        raise ValueError('Not a valid visibility: %s' % visibility)
+        raise ValueError("Not a valid visibility: %s" % visibility)
 
     sql = """
         SELECT metadata_complete, study_abstract, study_id, study_alias,
@@ -1611,57 +1648,56 @@ def generate_study_list(user, visibility):
             info = dict(info)
 
             # cleaning owners name
-            if info['owner'] in (None, ''):
-                info['owner'] = info['owner_email']
-            del info['owner_email']
+            if info["owner"] in (None, ""):
+                info["owner"] = info["owner_email"]
+            del info["owner_email"]
 
             preparation_data_types = []
             artifact_biom_ids = []
-            if info['preparation_information'] is not None:
-                for pinfo in info['preparation_information']:
+            if info["preparation_information"] is not None:
+                for pinfo in info["preparation_information"]:
                     # 'f1': prep_template_id, 'f2': data_type,
                     # 'f3': artifact_id, 'f4': artifact_type,
                     # 'f5':deprecated, 'f6': biom artifacts
-                    if pinfo['f5']:
+                    if pinfo["f5"]:
                         continue
-                    preparation_data_types.append(pinfo['f2'])
-                    if pinfo['f4'] == 'BIOM':
-                        artifact_biom_ids.append(pinfo['f3'])
-                    if pinfo['f6'] is not None:
-                        artifact_biom_ids.extend(
-                            map(int, pinfo['f6'].split(',')))
-            del info['preparation_information']
-            info['artifact_biom_ids'] = list(set(artifact_biom_ids))
-            info['preparation_data_types'] = list(set(
-                preparation_data_types))
+                    preparation_data_types.append(pinfo["f2"])
+                    if pinfo["f4"] == "BIOM":
+                        artifact_biom_ids.append(pinfo["f3"])
+                    if pinfo["f6"] is not None:
+                        artifact_biom_ids.extend(map(int, pinfo["f6"].split(",")))
+            del info["preparation_information"]
+            info["artifact_biom_ids"] = list(set(artifact_biom_ids))
+            info["preparation_data_types"] = list(set(preparation_data_types))
 
             # publication info
-            info['publication_doi'] = []
-            info['publication_pid'] = []
-            if info['publications'] is not None:
-                for p in info['publications']:
+            info["publication_doi"] = []
+            info["publication_pid"] = []
+            if info["publications"] is not None:
+                for p in info["publications"]:
                     # f1-2 are the default names given by pgsql
-                    pub = p['f1']
-                    is_doi = p['f2']
+                    pub = p["f1"]
+                    is_doi = p["f2"]
                     if is_doi:
-                        info['publication_doi'].append(pub)
+                        info["publication_doi"].append(pub)
                     else:
-                        info['publication_pid'].append(pub)
-            del info['publications']
+                        info["publication_pid"].append(pub)
+            del info["publications"]
 
             # pi info
-            info["pi"] = (info['pi_email'], info['pi_name'])
+            info["pi"] = (info["pi_email"], info["pi_name"])
             del info["pi_email"]
             del info["pi_name"]
 
             # shared with
-            info['shared'] = []
-            if info['shared_with_name'] and info['shared_with_email']:
-                for name, email in zip(info['shared_with_name'],
-                                       info['shared_with_email']):
+            info["shared"] = []
+            if info["shared_with_name"] and info["shared_with_email"]:
+                for name, email in zip(
+                    info["shared_with_name"], info["shared_with_email"]
+                ):
                     if not name:
                         name = email
-                    info['shared'].append((email, name))
+                    info["shared"].append((email, name))
             del info["shared_with_name"]
             del info["shared_with_email"]
 
@@ -1691,7 +1727,7 @@ def generate_study_list(user, visibility):
             #             qdb.sql_connection.TRN.add(sql)
             #             hsn = qdb.sql_connection.TRN.execute_fetchflatten()
             #             info['host_scientific_name'] = hsn
-            del info['has_sample_info']
+            del info["has_sample_info"]
 
             infolist.append(info)
     return infolist
@@ -1756,21 +1792,21 @@ def generate_study_list_without_artifacts(study_ids, portal=None):
             info = dict(info)
 
             # publication info
-            info['publication_doi'] = []
-            info['publication_pid'] = []
-            if info['publications'] is not None:
-                for p in info['publications']:
+            info["publication_doi"] = []
+            info["publication_pid"] = []
+            if info["publications"] is not None:
+                for p in info["publications"]:
                     # f1-2 are the default names given
-                    pub = p['f1']
-                    is_doi = p['f2']
+                    pub = p["f1"]
+                    is_doi = p["f2"]
                     if is_doi:
-                        info['publication_doi'].append(pub)
+                        info["publication_doi"].append(pub)
                     else:
-                        info['publication_pid'].append(pub)
-            del info['publications']
+                        info["publication_pid"].append(pub)
+            del info["publications"]
 
             # pi info
-            info["pi"] = (info['pi_email'], info['pi_name'])
+            info["pi"] = (info["pi_email"], info["pi_name"])
             del info["pi_email"]
             del info["pi_name"]
 
@@ -1862,10 +1898,11 @@ def get_artifacts_information(artifact_ids, only_biom=True):
         for cid, params in qdb.sql_connection.TRN.execute_fetchindex():
             cmd = qdb.software.Command(cid)
             commands[cid] = {
-                'params': params,
-                'merging_scheme': cmd.merging_scheme,
-                'active': cmd.active,
-                'deprecated': cmd.software.deprecated}
+                "params": params,
+                "merging_scheme": cmd.merging_scheme,
+                "active": cmd.active,
+                "deprecated": cmd.software.deprecated,
+            }
 
         # Now let's get the actual artifacts. Note that ts is a cache
         # (prep id : target subfragment) so we don't have to query
@@ -1874,13 +1911,28 @@ def get_artifacts_information(artifact_ids, only_biom=True):
         # file; thus we can have a None prep id (key)
         ts = {None: []}
         ps = {}
-        algorithm_az = {'': ''}
+        algorithm_az = {"": ""}
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        qdb.sql_connection.TRN.add(sql, [
-            tuple(artifact_ids), qdb.util.artifact_visibilities_to_skip()])
+        qdb.sql_connection.TRN.add(
+            sql, [tuple(artifact_ids), qdb.util.artifact_visibilities_to_skip()]
+        )
         for row in qdb.sql_connection.TRN.execute_fetchindex():
-            aid, name, cid, cname, gt, aparams, dt, pid, pcid, pname, \
-                pparams, filepaths, _, prep_template_id = row
+            (
+                aid,
+                name,
+                cid,
+                cname,
+                gt,
+                aparams,
+                dt,
+                pid,
+                pcid,
+                pname,
+                pparams,
+                filepaths,
+                _,
+                prep_template_id,
+            ) = row
 
             # cleaning up aparams & pparams
             # - [0] due to the array_agg
@@ -1890,34 +1942,39 @@ def get_artifacts_information(artifact_ids, only_biom=True):
                 aparams = {}
             else:
                 # we are going to remove any artifacts from the parameters
-                for ti in commands[cid]['params']:
+                for ti in commands[cid]["params"]:
                     del aparams[ti]
 
             # - ignoring empty filepaths
             if filepaths == [None]:
                 filepaths = []
             else:
-                filepaths = [fp for fp in filepaths if fp.endswith('biom')]
+                filepaths = [fp for fp in filepaths if fp.endswith("biom")]
 
             # generating algorithm, by default is ''
-            algorithm = ''
+            algorithm = ""
             if cid is not None:
-                deprecated = commands[cid]['deprecated']
-                active = commands[cid]['active']
+                deprecated = commands[cid]["deprecated"]
+                active = commands[cid]["active"]
                 if pcid is None:
                     parent_merging_scheme = None
                 else:
-                    parent_merging_scheme = commands[pcid][
-                        'merging_scheme']
+                    parent_merging_scheme = commands[pcid]["merging_scheme"]
 
                 algorithm = human_merging_scheme(
-                    cname, commands[cid]['merging_scheme'],
-                    pname, parent_merging_scheme,
-                    aparams, filepaths, pparams)
+                    cname,
+                    commands[cid]["merging_scheme"],
+                    pname,
+                    parent_merging_scheme,
+                    aparams,
+                    filepaths,
+                    pparams,
+                )
 
                 if algorithm not in algorithm_az:
                     algorithm_az[algorithm] = hashlib.md5(
-                        algorithm.encode('utf-8')).hexdigest()
+                        algorithm.encode("utf-8")
+                    ).hexdigest()
             else:
                 # there is no cid, thus is a direct upload; setting things
                 # like this so the artifacts are dispayed
@@ -1926,51 +1983,51 @@ def get_artifacts_information(artifact_ids, only_biom=True):
 
             if prep_template_id not in ts:
                 qdb.sql_connection.TRN.add(sql_ts, [prep_template_id])
-                ts[prep_template_id] = \
-                    qdb.sql_connection.TRN.execute_fetchflatten()
+                ts[prep_template_id] = qdb.sql_connection.TRN.execute_fetchflatten()
             target = ts[prep_template_id]
 
             prep_samples = 0
-            platform = 'not provided'
-            target_gene = 'not provided'
+            platform = "not provided"
+            target_gene = "not provided"
             if prep_template_id is not None:
                 if prep_template_id not in ps:
                     pt = PT(prep_template_id)
                     categories = pt.categories
-                    if 'platform' in categories:
-                        platform = ', '.join(
-                            set(pt.get_category('platform').values()))
-                    if 'target_gene' in categories:
-                        target_gene = ', '.join(
-                            set(pt.get_category('target_gene').values()))
+                    if "platform" in categories:
+                        platform = ", ".join(set(pt.get_category("platform").values()))
+                    if "target_gene" in categories:
+                        target_gene = ", ".join(
+                            set(pt.get_category("target_gene").values())
+                        )
 
-                    ps[prep_template_id] = [
-                        len(list(pt.keys())), platform, target_gene]
+                    ps[prep_template_id] = [len(list(pt.keys())), platform, target_gene]
 
                 prep_samples, platform, target_gene = ps[prep_template_id]
 
-            results.append({
-                'artifact_id': aid,
-                'target_subfragment': target,
-                'prep_samples': prep_samples,
-                'platform': platform,
-                'target_gene': target_gene,
-                'name': name,
-                'data_type': dt,
-                'timestamp': str(gt),
-                'parameters': aparams,
-                'algorithm': algorithm,
-                'algorithm_az': algorithm_az[algorithm],
-                'deprecated': deprecated,
-                'active': active,
-                'files': filepaths})
+            results.append(
+                {
+                    "artifact_id": aid,
+                    "target_subfragment": target,
+                    "prep_samples": prep_samples,
+                    "platform": platform,
+                    "target_gene": target_gene,
+                    "name": name,
+                    "data_type": dt,
+                    "timestamp": str(gt),
+                    "parameters": aparams,
+                    "algorithm": algorithm,
+                    "algorithm_az": algorithm_az[algorithm],
+                    "deprecated": deprecated,
+                    "active": active,
+                    "files": filepaths,
+                }
+            )
 
         return results
 
 
 def _is_string_or_bytes(s):
-    """Returns True if input argument is string (unicode or not) or bytes.
-    """
+    """Returns True if input argument is string (unicode or not) or bytes."""
     return isinstance(s, str) or isinstance(s, bytes)
 
 
@@ -1986,23 +2043,28 @@ def _get_filehandle(filepath_or, *args, **kwargs):
     if _is_string_or_bytes(filepath_or):
         if h5py.is_hdf5(filepath_or):
             fh, own_fh = h5py.File(filepath_or, *args, **kwargs), True
-        elif filepath_or.endswith('.xlsx'):
+        elif filepath_or.endswith(".xlsx"):
             # due to extension, let's assume Excel file
             wb = load_workbook(filename=filepath_or, data_only=True)
             sheetnames = wb.sheetnames
             # let's check if Qiimp, they must be in same order
             first_cell_index = 0
             is_qiimp_wb = False
-            if sheetnames == ["Metadata", "Validation", "Data Dictionary",
-                              "metadata_schema", "metadata_form",
-                              "Instructions"]:
+            if sheetnames == [
+                "Metadata",
+                "Validation",
+                "Data Dictionary",
+                "metadata_schema",
+                "metadata_form",
+                "Instructions",
+            ]:
                 first_cell_index = 1
                 is_qiimp_wb = True
             first_sheet = wb[sheetnames[0]]
             cell_range = range(first_cell_index, first_sheet.max_column)
-            _, fp = mkstemp(suffix='.txt')
-            with open(fp, 'w') as fh:
-                cfh = csv_writer(fh, delimiter='\t')
+            _, fp = mkstemp(suffix=".txt")
+            with open(fp, "w") as fh:
+                cfh = csv_writer(fh, delimiter="\t")
                 for r in first_sheet.rows:
                     if is_qiimp_wb:
                         # check contents of first column; if they are a zero
@@ -2054,7 +2116,7 @@ def open_file(filepath_or, *args, **kwargs):
 
 
 def artifact_visibilities_to_skip():
-    return tuple([qdb.util.convert_to_id('archived', "visibility")])
+    return tuple([qdb.util.convert_to_id("archived", "visibility")])
 
 
 def generate_analysis_list(analysis_ids, public_only=False):
@@ -2097,30 +2159,38 @@ def generate_analysis_list(analysis_ids, public_only=False):
 
         qdb.sql_connection.TRN.add(sql, [tuple(analysis_ids)])
         for row in qdb.sql_connection.TRN.execute_fetchindex():
-            aid, name, description, ts, owner, artifacts, \
-                av, mapping_files = row
+            aid, name, description, ts, owner, artifacts, av, mapping_files = row
 
-            av = 'public' if set(av) == {'public'} else 'private'
-            if av != 'public' and public_only:
+            av = "public" if set(av) == {"public"} else "private"
+            if av != "public" and public_only:
                 continue
 
             if mapping_files == [None]:
                 mapping_files = []
             else:
                 mapping_files = [
-                    (mid, get_filepath_information(mid)['fullpath'])
-                    for mid in mapping_files if mid is not None]
+                    (mid, get_filepath_information(mid)["fullpath"])
+                    for mid in mapping_files
+                    if mid is not None
+                ]
             if artifacts == [None]:
                 artifacts = []
             else:
                 # making sure they are int so they don't break the GUI
                 artifacts = [int(a) for a in artifacts if a is not None]
 
-            results.append({
-                'analysis_id': aid, 'name': name, 'description': description,
-                'timestamp': ts.strftime("%m/%d/%y %H:%M:%S"),
-                'visibility': av, 'artifacts': artifacts, 'owner': owner,
-                'mapping_files': mapping_files})
+            results.append(
+                {
+                    "analysis_id": aid,
+                    "name": name,
+                    "description": description,
+                    "timestamp": ts.strftime("%m/%d/%y %H:%M:%S"),
+                    "visibility": av,
+                    "artifacts": artifacts,
+                    "owner": owner,
+                    "mapping_files": mapping_files,
+                }
+            )
 
     return results
 
@@ -2173,8 +2243,7 @@ def generate_analyses_list_per_study(study_id):
         qdb.sql_connection.TRN.add(analysis_sql, [study_id])
         aids = qdb.sql_connection.TRN.execute_fetchindex()
         for aid, artifact_ids in aids:
-            qdb.sql_connection.TRN.add(
-                extra_sql, [tuple(artifact_ids), aid])
+            qdb.sql_connection.TRN.add(extra_sql, [tuple(artifact_ids), aid])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
                 results.append(dict(row))
 
@@ -2216,10 +2285,15 @@ def create_nested_path(path):
             raise
 
 
-def human_merging_scheme(cname, merging_scheme,
-                         pname, parent_merging_scheme,
-                         artifact_parameters, artifact_filepaths,
-                         parent_parameters):
+def human_merging_scheme(
+    cname,
+    merging_scheme,
+    pname,
+    parent_merging_scheme,
+    artifact_parameters,
+    artifact_filepaths,
+    parent_parameters,
+):
     """From the artifact and its parent features format the merging scheme
 
     Parameters
@@ -2245,29 +2319,40 @@ def human_merging_scheme(cname, merging_scheme,
         The merging scheme
     """
     eparams = []
-    if merging_scheme['parameters']:
-        eparams.append(','.join(['%s: %s' % (k, artifact_parameters[k])
-                                 for k in merging_scheme['parameters']]))
-    if (merging_scheme['outputs'] and
-            artifact_filepaths is not None and
-            artifact_filepaths):
-        eparams.append('BIOM: %s' % ', '.join(artifact_filepaths))
+    if merging_scheme["parameters"]:
+        eparams.append(
+            ",".join(
+                [
+                    "%s: %s" % (k, artifact_parameters[k])
+                    for k in merging_scheme["parameters"]
+                ]
+            )
+        )
+    if (
+        merging_scheme["outputs"]
+        and artifact_filepaths is not None
+        and artifact_filepaths
+    ):
+        eparams.append("BIOM: %s" % ", ".join(artifact_filepaths))
     if eparams:
-        cname = "%s (%s)" % (cname, ', '.join(eparams))
+        cname = "%s (%s)" % (cname, ", ".join(eparams))
 
-    if merging_scheme['ignore_parent_command']:
+    if merging_scheme["ignore_parent_command"]:
         algorithm = cname
     else:
-        palgorithm = 'N/A'
+        palgorithm = "N/A"
         if pname is not None:
             palgorithm = pname
-            if parent_merging_scheme['parameters']:
-                params = ','.join(
-                    ['%s: %s' % (k, parent_parameters[k])
-                     for k in parent_merging_scheme['parameters']])
+            if parent_merging_scheme["parameters"]:
+                params = ",".join(
+                    [
+                        "%s: %s" % (k, parent_parameters[k])
+                        for k in parent_merging_scheme["parameters"]
+                    ]
+                )
                 palgorithm = "%s (%s)" % (palgorithm, params)
 
-        algorithm = '%s | %s' % (cname, palgorithm)
+        algorithm = "%s | %s" % (cname, palgorithm)
 
     return algorithm
 
@@ -2283,7 +2368,8 @@ def activate_or_update_plugins(update=False):
     """
     conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
     label = "{} plugin (%s/{}): %s... ".format(
-        "Updating" if update else "\tLoading", len(conf_files))
+        "Updating" if update else "\tLoading", len(conf_files)
+    )
     for i, fp in enumerate(conf_files):
         print(label % (i + 1, basename(fp)), end=None)
         s = qdb.software.Software.from_file(fp, update=update)
@@ -2295,12 +2381,12 @@ def activate_or_update_plugins(update=False):
 def send_email(to, subject, body):
     # create email
     msg = MIMEMultipart()
-    msg['From'] = qiita_config.smtp_email
-    msg['To'] = to
+    msg["From"] = qiita_config.smtp_email
+    msg["To"] = to
     # we need to do 'replace' because the subject can have
     # new lines in the middle of the string
-    msg['Subject'] = subject.replace('\n', '')
-    msg.attach(MIMEText(body, 'plain'))
+    msg["Subject"] = subject.replace("\n", "")
+    msg.attach(MIMEText(body, "plain"))
 
     # connect to smtp server, using ssl if needed
     if qiita_config.smtp_ssl:
@@ -2344,8 +2430,8 @@ def resource_allocation_plot(df, col_name):
         Returns a matplotlib object with a plot
     """
 
-    df.dropna(subset=['samples', 'columns'], inplace=True)
-    df[col_name] = df.samples * df['columns']
+    df.dropna(subset=["samples", "columns"], inplace=True)
+    df[col_name] = df.samples * df["columns"]
     df[col_name] = df[col_name].astype(int)
 
     fig, axs = plt.subplots(ncols=2, figsize=(10, 4), sharey=False)
@@ -2354,18 +2440,16 @@ def resource_allocation_plot(df, col_name):
     mem_models, time_models = retrieve_equations()
 
     # models for memory
-    _resource_allocation_plot_helper(
-        df, ax, "MaxRSSRaw",  mem_models, col_name)
+    _resource_allocation_plot_helper(df, ax, "MaxRSSRaw", mem_models, col_name)
     ax = axs[1]
     # models for time
-    _resource_allocation_plot_helper(
-        df, ax, "ElapsedRaw",  time_models, col_name)
+    _resource_allocation_plot_helper(df, ax, "ElapsedRaw", time_models, col_name)
 
     return fig, axs
 
 
 def retrieve_equations():
-    '''
+    """
     Helper function for resource_allocation_plot.
     Retrieves equations from db. Creates dictionary for memory and time models.
 
@@ -2376,30 +2460,30 @@ def retrieve_equations():
             memory models - potential memory models for resource allocations
         dict
             time models - potential time models for resource allocations
-    '''
+    """
     memory_models = {}
     time_models = {}
     res = []
     with qdb.sql_connection.TRN:
-        sql = ''' SELECT * FROM qiita.allocation_equations; '''
+        sql = """ SELECT * FROM qiita.allocation_equations; """
         qdb.sql_connection.TRN.add(sql)
         res = qdb.sql_connection.TRN.execute_fetchindex()
     for models in res:
-        if 'mem' in models[1]:
+        if "mem" in models[1]:
             memory_models[models[1]] = {
                 "equation_name": models[2],
-                "equation": lambda x, k, a, b: eval(models[2])
+                "equation": lambda x, k, a, b: eval(models[2]),
             }
         else:
             time_models[models[1]] = {
                 "equation_name": models[2],
-                "equation": lambda x, k, a, b: eval(models[2])
+                "equation": lambda x, k, a, b: eval(models[2]),
             }
     return (memory_models, time_models)
 
 
 def retrieve_resource_data(cname, sname, version, columns):
-    '''
+    """
     Retrieves resource data from db and constructs a DataFrame with relevant
     fields.
 
@@ -2414,7 +2498,7 @@ def retrieve_resource_data(cname, sname, version, columns):
     -------
     pd.DataFrame
         DataFrame with resources.
-    '''
+    """
     with qdb.sql_connection.TRN:
         sql = """
             SELECT
@@ -2453,8 +2537,7 @@ def retrieve_resource_data(cname, sname, version, columns):
         return df
 
 
-def _resource_allocation_plot_helper(
-        df, ax, curr, models, col_name):
+def _resource_allocation_plot_helper(df, ax, curr, models, col_name):
     """Helper function for resource allocation plot. Builds plot for MaxRSSRaw
     and ElapsedRaw
 
@@ -2514,62 +2597,76 @@ def _resource_allocation_plot_helper(
 
     x_data = np.array(x_data)
     y_data = np.array(y_data)
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+    ax.set_xscale("log")
+    ax.set_yscale("log")
     ax.set_ylabel(curr)
     ax.set_xlabel(col_name)
 
     # 50 - number of maximum iterations, 3 - number of failures we tolerate
     best_model_name, best_model, options = _resource_allocation_calculate(
-        df, x_data, y_data, models, curr, col_name, 50, 3)
+        df, x_data, y_data, models, curr, col_name, 50, 3
+    )
     k, a, b = options.x
     x_plot = np.array(sorted(df[col_name].unique()))
     y_plot = best_model(x_plot, k, a, b)
-    ax.plot(x_plot, y_plot, linewidth=1, color='orange')
+    ax.plot(x_plot, y_plot, linewidth=1, color="orange")
 
     cmin_value = min(y_plot)
     cmax_value = max(y_plot)
 
-    maxi = naturalsize(df[curr].max(), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(df[curr].max()))
-    cmax = naturalsize(cmax_value, gnu=True) if curr == "MaxRSSRaw" else \
-        str(timedelta(seconds=round(cmax_value, 2))).rstrip('0').rstrip('.')
+    maxi = (
+        naturalsize(df[curr].max(), gnu=True)
+        if curr == "MaxRSSRaw"
+        else timedelta(seconds=float(df[curr].max()))
+    )
+    cmax = (
+        naturalsize(cmax_value, gnu=True)
+        if curr == "MaxRSSRaw"
+        else str(timedelta(seconds=round(cmax_value, 2))).rstrip("0").rstrip(".")
+    )
 
-    mini = naturalsize(df[curr].min(), gnu=True) if curr == "MaxRSSRaw" else \
-        timedelta(seconds=float(df[curr].min()))
-    cmin = naturalsize(cmin_value, gnu=True) if curr == "MaxRSSRaw" else \
-        str(timedelta(seconds=round(cmin_value, 2))).rstrip('0').rstrip('.')
+    mini = (
+        naturalsize(df[curr].min(), gnu=True)
+        if curr == "MaxRSSRaw"
+        else timedelta(seconds=float(df[curr].min()))
+    )
+    cmin = (
+        naturalsize(cmin_value, gnu=True)
+        if curr == "MaxRSSRaw"
+        else str(timedelta(seconds=round(cmin_value, 2))).rstrip("0").rstrip(".")
+    )
 
     x_plot = np.array(df[col_name])
     success_df, failures_df = _resource_allocation_success_failures(
-        df, k, a, b, best_model, col_name, curr)
+        df, k, a, b, best_model, col_name, curr
+    )
     failures = failures_df.shape[0]
-    ax.scatter(failures_df[col_name], failures_df[curr], color='red', s=3,
-               label="failures")
-    success_df['node_name'] = success_df['node_name'].fillna('unknown')
-    slurm_hosts = set(success_df['node_name'].tolist())
-    cmap = colormaps.get_cmap('Accent')
+    ax.scatter(
+        failures_df[col_name], failures_df[curr], color="red", s=3, label="failures"
+    )
+    success_df["node_name"] = success_df["node_name"].fillna("unknown")
+    slurm_hosts = set(success_df["node_name"].tolist())
+    cmap = colormaps.get_cmap("Accent")
     if len(slurm_hosts) > len(cmap.colors):
         raise ValueError(f"""'Accent' colormap only has {len(cmap.colors)}
                      colors, but {len(slurm_hosts)} hosts are provided.""")
-    colors = cmap.colors[:len(slurm_hosts)]
+    colors = cmap.colors[: len(slurm_hosts)]
 
     for i, host in enumerate(slurm_hosts):
-        host_df = success_df[success_df['node_name'] == host]
-        ax.scatter(host_df[col_name], host_df[curr], color=colors[i], s=3,
-                   label=host)
+        host_df = success_df[success_df["node_name"] == host]
+        ax.scatter(host_df[col_name], host_df[curr], color=colors[i], s=3, label=host)
     ax.set_title(
-                 f'k||a||b: {k}||{a}||{b}\n'
-                 f'model: {models[best_model_name]["equation_name"]}\n'
-                 f'real: {mini} || {maxi}\n'
-                 f'calculated: {cmin} || {cmax}\n'
-                 f'failures: {failures}')
-    ax.legend(loc='upper left')
+        f"k||a||b: {k}||{a}||{b}\n"
+        f"model: {models[best_model_name]['equation_name']}\n"
+        f"real: {mini} || {maxi}\n"
+        f"calculated: {cmin} || {cmax}\n"
+        f"failures: {failures}"
+    )
+    ax.legend(loc="upper left")
     return best_model_name, best_model, options
 
 
-def _resource_allocation_calculate(
-        df, x, y, models, type_, col_name, depth, tolerance):
+def _resource_allocation_calculate(df, x, y, models, type_, col_name, depth, tolerance):
     """Helper function for resource allocation plot. Calculates best_model and
     best_result given the models list and x,y data.
 
@@ -2610,7 +2707,7 @@ def _resource_allocation_calculate(
     best_failures = np.inf
     best_max = np.inf
     for model_name, model in models.items():
-        model_equation = model['equation']
+        model_equation = model["equation"]
         # start values for binary search, where sl is left, sr is right
         # penalty weight must be positive & non-zero, hence, sl >= 1.
         # the upper bound for error can be an arbitrary large number
@@ -2627,13 +2724,17 @@ def _resource_allocation_calculate(
         # scoring constraints defined in if/else statements.
         while left < right and cnt < depth:
             middle = (left + right) // 2
-            options = minimize(_resource_allocation_custom_loss, init,
-                               args=(x, y, model_equation, middle))
+            options = minimize(
+                _resource_allocation_custom_loss,
+                init,
+                args=(x, y, model_equation, middle),
+            )
             k, a, b = options.x
             # important: here we take the 2nd (last) value of tuple since
             # the helper function returns success, then failures.
             failures_df = _resource_allocation_success_failures(
-                df, k, a, b, model_equation, col_name, type_)[-1]
+                df, k, a, b, model_equation, col_name, type_
+            )[-1]
             y_plot = model_equation(x, k, a, b)
             if not any(y_plot):
                 continue
@@ -2672,9 +2773,10 @@ def _resource_allocation_calculate(
         # this is helpful if the model that has e.g. 1 failure is a better fit
         # overall based on maximum calculated value.
         is_acceptable_based_on_failures = (
-            prev_failures <= tolerance or abs(
-                prev_failures - best_failures) < tolerance or
-            best_failures == np.inf)
+            prev_failures <= tolerance
+            or abs(prev_failures - best_failures) < tolerance
+            or best_failures == np.inf
+        )
 
         # case where less failures
         if is_acceptable_based_on_failures:
@@ -2714,8 +2816,7 @@ def _resource_allocation_custom_loss(params, x, y, model, p):
     residuals = y - model(x, k, a, b)
     # Apply a heavier penalty to points below the curve
     penalty = p
-    weighted_residuals = np.where(residuals > 0, penalty * residuals**2,
-                                  residuals**2)
+    weighted_residuals = np.where(residuals > 0, penalty * residuals**2, residuals**2)
     return np.mean(weighted_residuals)
 
 
@@ -2750,18 +2851,18 @@ def _resource_allocation_success_failures(df, k, a, b, model, col_name, type_):
     """
 
     x_plot = np.array(df[col_name])
-    df[f'c{type_}'] = model(x_plot, k, a, b)
-    success_df = df[df[type_] <= df[f'c{type_}']]
-    failures_df = df[df[type_] > df[f'c{type_}']]
+    df[f"c{type_}"] = model(x_plot, k, a, b)
+    success_df = df[df[type_] <= df[f"c{type_}"]]
+    failures_df = df[df[type_] > df[f"c{type_}"]]
     return (success_df, failures_df)
 
 
 def MaxRSS_helper(x):
-    if x[-1] == 'K':
+    if x[-1] == "K":
         y = float(x[:-1]) * 1000
-    elif x[-1] == 'M':
+    elif x[-1] == "M":
         y = float(x[:-1]) * 1000000
-    elif x[-1] == 'G':
+    elif x[-1] == "G":
         y = float(x[:-1]) * 1000000000
     else:
         y = float(x)
@@ -2773,17 +2874,17 @@ def update_resource_allocation_table(weeks=1, test=None):
     # better allocation so we default start time 2023-04-28 to
     # use the latests for the newest version
     """
-        Updates qiita.slurm_resource_allocation SQL table with jobs from slurm.
-        Retrieves the most recent job available in the table and appends with
-        the data.
+    Updates qiita.slurm_resource_allocation SQL table with jobs from slurm.
+    Retrieves the most recent job available in the table and appends with
+    the data.
 
-        Parameters:
-        ----------
-        weeks: integer, optional
-            Number of weeks for which we want to make a request from slurm.
-        test: pandas.DataFrame, optional
-            Represents dataframe containing slurm data from 2023-04-28. Used
-            for testing only.
+    Parameters:
+    ----------
+    weeks: integer, optional
+        Number of weeks for which we want to make a request from slurm.
+    test: pandas.DataFrame, optional
+        Represents dataframe containing slurm data from 2023-04-28. Used
+        for testing only.
     """
 
     # retrieve the most recent timestamp
@@ -2802,10 +2903,10 @@ def update_resource_allocation_table(weeks=1, test=None):
             LIMIT 1;
         """
 
-    dates = ['', '']
+    dates = ["", ""]
 
     slurm_external_id = 0
-    start_date = datetime.strptime('2023-04-28', '%Y-%m-%d')
+    start_date = datetime.strptime("2023-04-28", "%Y-%m-%d")
     with qdb.sql_connection.TRN:
         sql = sql_timestamp
         qdb.sql_connection.TRN.add(sql)
@@ -2845,22 +2946,30 @@ def update_resource_allocation_table(weeks=1, test=None):
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add(sql_command, sql_args=[slurm_external_id])
         res = qdb.sql_connection.TRN.execute_fetchindex()
-        df = pd.DataFrame(res, columns=["processing_job_id", 'external_id'])
-        df['external_id'] = df['external_id'].astype(int)
+        df = pd.DataFrame(res, columns=["processing_job_id", "external_id"])
+        df["external_id"] = df["external_id"].astype(int)
 
     data = []
     sacct = [
-        'sacct', '-p',
-        '--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,'
-        'ReqMem,AllocCPUs,AveVMSize,MaxVMSizeNode', '--starttime',
-        dates[0].strftime('%Y-%m-%d'), '--endtime',
-        dates[1].strftime('%Y-%m-%d'), '--user', 'qiita', '--state', 'CD']
+        "sacct",
+        "-p",
+        "--format=JobID,ElapsedRaw,MaxRSS,Submit,Start,End,CPUTimeRAW,"
+        "ReqMem,AllocCPUs,AveVMSize,MaxVMSizeNode",
+        "--starttime",
+        dates[0].strftime("%Y-%m-%d"),
+        "--endtime",
+        dates[1].strftime("%Y-%m-%d"),
+        "--user",
+        "qiita",
+        "--state",
+        "CD",
+    ]
 
     if test is not None:
         slurm_data = test
     else:
-        rvals = check_output(sacct).decode('ascii')
-        slurm_data = pd.read_csv(StringIO(rvals), sep='|')
+        rvals = check_output(sacct).decode("ascii")
+        slurm_data = pd.read_csv(StringIO(rvals), sep="|")
 
     # In slurm, each JobID is represented by 3 rows in the dataframe:
     # - external_id:        overall container for the job and its associated
@@ -2879,31 +2988,33 @@ def update_resource_allocation_table(weeks=1, test=None):
     # other columns
 
     def merge_rows(rows):
-        date_fmt = '%Y-%m-%dT%H:%M:%S'
-        wait_time = (
-            datetime.strptime(rows.iloc[0]['Start'], date_fmt) -
-            datetime.strptime(rows.iloc[0]['Submit'], date_fmt))
+        date_fmt = "%Y-%m-%dT%H:%M:%S"
+        wait_time = datetime.strptime(
+            rows.iloc[0]["Start"], date_fmt
+        ) - datetime.strptime(rows.iloc[0]["Submit"], date_fmt)
         if rows.shape[0] >= 2:
             tmp = rows.iloc[1].copy()
         else:
             tmp = rows.iloc[0].copy()
-        tmp['WaitTime'] = wait_time
+        tmp["WaitTime"] = wait_time
         return tmp
 
-    slurm_data['external_id'] = slurm_data['JobID'].apply(
-                                            lambda x: int(x.split('.')[0]))
-    slurm_data['external_id'] = slurm_data['external_id'].ffill()
+    slurm_data["external_id"] = slurm_data["JobID"].apply(
+        lambda x: int(x.split(".")[0])
+    )
+    slurm_data["external_id"] = slurm_data["external_id"].ffill()
 
-    slurm_data = slurm_data.groupby(
-            'external_id').apply(merge_rows).reset_index(drop=True)
+    slurm_data = (
+        slurm_data.groupby("external_id").apply(merge_rows).reset_index(drop=True)
+    )
 
     # filter to only those jobs that are within the slurm_data df.
-    eids = set(slurm_data['external_id'])
-    df = df[df['external_id'].isin(eids)]
+    eids = set(slurm_data["external_id"])
+    df = df[df["external_id"].isin(eids)]
 
     for index, row in df.iterrows():
-        job = qdb.processing_job.ProcessingJob(row['processing_job_id'])
-        extra_info = ''
+        job = qdb.processing_job.ProcessingJob(row["processing_job_id"])
+        extra_info = ""
         eid = job.external_id
 
         cmd = job.command
@@ -2919,62 +3030,71 @@ def update_resource_allocation_table(weeks=1, test=None):
         except TypeError as e:
             # similar to the except above, exept that for these 2 commands, we
             # have the study_id as None
-            if cmd.name in {'create_sample_template', 'delete_sample_template',
-                            'list_remote_files'}:
+            if cmd.name in {
+                "create_sample_template",
+                "delete_sample_template",
+                "list_remote_files",
+            }:
                 continue
             else:
                 raise e
         sname = s.name
 
-        if cmd.name == 'release_validators':
-            ej = qdb.processing_job.ProcessingJob(job.parameters.values['job'])
+        if cmd.name == "release_validators":
+            ej = qdb.processing_job.ProcessingJob(job.parameters.values["job"])
             extra_info = ej.command.name
             samples, columns, input_size = ej.shape
-        elif cmd.name == 'complete_job':
-            artifacts = loads(job.parameters.values['payload'])['artifacts']
+        elif cmd.name == "complete_job":
+            artifacts = loads(job.parameters.values["payload"])["artifacts"]
             if artifacts is not None:
-                extra_info = ','.join({
-                    x['artifact_type'] for x in artifacts.values()
-                    if 'artifact_type' in x})
-        elif cmd.name == 'Validate':
-            input_size = sum([len(x) for x in loads(
-                job.parameters.values['files']).values()])
+                extra_info = ",".join(
+                    {
+                        x["artifact_type"]
+                        for x in artifacts.values()
+                        if "artifact_type" in x
+                    }
+                )
+        elif cmd.name == "Validate":
+            input_size = sum(
+                [len(x) for x in loads(job.parameters.values["files"]).values()]
+            )
             sname = f"{sname} - {job.parameters.values['artifact_type']}"
-        elif cmd.name == 'Alpha rarefaction curves [alpha_rarefaction]':
+        elif cmd.name == "Alpha rarefaction curves [alpha_rarefaction]":
             extra_info = job.parameters.values[
-                ('The number of rarefaction depths to include between '
-                 'min_depth and max_depth. (steps)')]
-        curr = slurm_data[slurm_data['external_id'] == int(eid)].iloc[0]
-        barnacle_info = curr['MaxVMSizeNode']
+                (
+                    "The number of rarefaction depths to include between "
+                    "min_depth and max_depth. (steps)"
+                )
+            ]
+        curr = slurm_data[slurm_data["external_id"] == int(eid)].iloc[0]
+        barnacle_info = curr["MaxVMSizeNode"]
         if len(barnacle_info) == 0:
             barnacle_info = [None, None]
         else:
-            barnacle_info = barnacle_info.split('-')
+            barnacle_info = barnacle_info.split("-")
 
         row_dict = {
-            'processing_job_id': job.id,
-            'samples': samples,
-            'columns': columns,
-            'input_size': input_size,
-            'extra_info': extra_info,
-            'ElapsedRaw': curr['ElapsedRaw'],
-            'MaxRSS': curr['MaxRSS'],
-            'Start': curr['Start'],
-            'node_name': barnacle_info[0],
-            'node_model': barnacle_info[1]
+            "processing_job_id": job.id,
+            "samples": samples,
+            "columns": columns,
+            "input_size": input_size,
+            "extra_info": extra_info,
+            "ElapsedRaw": curr["ElapsedRaw"],
+            "MaxRSS": curr["MaxRSS"],
+            "Start": curr["Start"],
+            "node_name": barnacle_info[0],
+            "node_model": barnacle_info[1],
         }
         data.append(row_dict)
     df = pd.DataFrame(data)
 
     # This is important as we are transforming the MaxRSS to raw value
     # so we need to confirm that there is no other suffixes
-    print('Make sure that only 0/K/M exist', set(
-        df.MaxRSS.apply(lambda x: str(x)[-1])))
+    print("Make sure that only 0/K/M exist", set(df.MaxRSS.apply(lambda x: str(x)[-1])))
 
     # Generating new columns
-    df['MaxRSSRaw'] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
-    df['ElapsedRawTime'] = df.ElapsedRaw.apply(
-        lambda x: timedelta(seconds=float(x)))
+    df["MaxRSSRaw"] = df.MaxRSS.apply(lambda x: MaxRSS_helper(str(x)))
+    df["ElapsedRawTime"] = df.ElapsedRaw.apply(lambda x: timedelta(seconds=float(x)))
     df.replace({np.nan: None}, inplace=True)
 
     for index, row in df.iterrows():
@@ -2995,10 +3115,17 @@ def update_resource_allocation_table(weeks=1, test=None):
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             to_insert = [
-                row['processing_job_id'], row['samples'], row['columns'],
-                row['input_size'], row['extra_info'], row['MaxRSSRaw'],
-                row['ElapsedRaw'], row['Start'], row['node_name'],
-                row['node_model']]
+                row["processing_job_id"],
+                row["samples"],
+                row["columns"],
+                row["input_size"],
+                row["extra_info"],
+                row["MaxRSSRaw"],
+                row["ElapsedRaw"],
+                row["Start"],
+                row["node_name"],
+                row["node_model"],
+            ]
             qdb.sql_connection.TRN.add(sql, sql_args=to_insert)
             qdb.sql_connection.TRN.execute()
 
@@ -3022,4 +3149,4 @@ def merge_overlapping_strings(str1, str2):
     for i in range(1, min(len(str1), len(str2)) + 1):
         if str1.endswith(str2[:i]):
             overlap = str2[:i]
-    return str1 + str2[len(overlap):]
+    return str1 + str2[len(overlap) :]

@@ -5,14 +5,14 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import TestCase, main
-from os.path import exists, isdir
 from os import remove
+from os.path import exists, isdir
 from shutil import rmtree
+from unittest import TestCase, main
 
-from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
-from qiita_pet.handlers.api_proxy.user import (user_jobs_get_req)
+from qiita_core.util import qiita_test_checker
+from qiita_pet.handlers.api_proxy.user import user_jobs_get_req
 
 
 @qiita_test_checker()
@@ -29,13 +29,10 @@ class TestSUserAPI(TestCase):
                     remove(fp)
 
     def test_user_jobs_get_req(self):
-        obs = user_jobs_get_req(qdb.user.User('shared@foo.bar'))
-        exp = {
-            'status': 'success',
-            'message': '',
-            'jobs': []}
+        obs = user_jobs_get_req(qdb.user.User("shared@foo.bar"))
+        exp = {"status": "success", "message": "", "jobs": []}
         self.assertEqual(obs, exp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

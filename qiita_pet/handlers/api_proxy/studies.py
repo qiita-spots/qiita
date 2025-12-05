@@ -9,22 +9,20 @@ from collections import defaultdict
 from json import dumps, loads
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
+from qiita_core.util import execute_as_transaction
 from qiita_db.artifact import Artifact
-from qiita_db.sql_connection import TRN
-from qiita_db.user import User
-from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBLookupError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.processing_job import ProcessingJob
-from qiita_db.software import Software, Parameters
-from qiita_db.util import (supported_filepath_types,
-                           get_files_from_uploads_folders)
+from qiita_db.software import Parameters, Software
+from qiita_db.sql_connection import TRN
+from qiita_db.study import Study
+from qiita_db.user import User
+from qiita_db.util import get_files_from_uploads_folders, supported_filepath_types
 from qiita_pet.handlers.api_proxy.util import check_access
 
-
-STUDY_KEY_FORMAT = 'study_%s'
+STUDY_KEY_FORMAT = "study_%s"
 
 
 def data_types_get_req():
@@ -41,9 +39,7 @@ def data_types_get_req():
         message has the warnings or errors
         data_types is the list of available data types in the system
     """
-    return {'status': 'success',
-            'message': '',
-            'data_types': Study.all_data_types()}
+    return {"status": "success", "message": "", "data_types": Study.all_data_types()}
 
 
 def study_get_req(study_id, user_id):
@@ -76,77 +72,83 @@ def study_get_req(study_id, user_id):
     study = Study(study_id)
     study_info = study.info
     # Add needed info that is not part of the initial info pull
-    study_info['publication_doi'] = []
-    study_info['publication_pid'] = []
+    study_info["publication_doi"] = []
+    study_info["publication_pid"] = []
     for pub, is_doi in study.publications:
         if is_doi:
-            study_info['publication_doi'].append(pub)
+            study_info["publication_doi"].append(pub)
         else:
-            study_info['publication_pid'].append(pub)
-    study_info['study_id'] = study.id
-    study_info['study_title'] = study.title
-    study_info['shared_with'] = [s.id for s in study.shared_with]
-    study_info['status'] = study.status
-    study_info['ebi_study_accession'] = study.ebi_study_accession
-    study_info['ebi_submission_status'] = study.ebi_submission_status
-    study_info['public_raw_download'] = study.public_raw_download
-    study_info['notes'] = study.notes
-    study_info['autoloaded'] = study.autoloaded
+            study_info["publication_pid"].append(pub)
+    study_info["study_id"] = study.id
+    study_info["study_title"] = study.title
+    study_info["shared_with"] = [s.id for s in study.shared_with]
+    study_info["status"] = study.status
+    study_info["ebi_study_accession"] = study.ebi_study_accession
+    study_info["ebi_submission_status"] = study.ebi_submission_status
+    study_info["public_raw_download"] = study.public_raw_download
+    study_info["notes"] = study.notes
+    study_info["autoloaded"] = study.autoloaded
 
     # Clean up StudyPerson objects to string for display
-    pi = study_info['principal_investigator']
-    study_info['principal_investigator'] = {
-        'name': pi.name,
-        'email': pi.email,
-        'affiliation': pi.affiliation}
+    pi = study_info["principal_investigator"]
+    study_info["principal_investigator"] = {
+        "name": pi.name,
+        "email": pi.email,
+        "affiliation": pi.affiliation,
+    }
 
-    lab_person = study_info['lab_person']
+    lab_person = study_info["lab_person"]
     if lab_person:
-        study_info['lab_person'] = {
-            'name': lab_person.name,
-            'email': lab_person.email,
-            'affiliation': lab_person.affiliation}
+        study_info["lab_person"] = {
+            "name": lab_person.name,
+            "email": lab_person.email,
+            "affiliation": lab_person.affiliation,
+        }
 
     samples = study.sample_template
-    study_info['num_samples'] = 0 if samples is None else len(list(samples))
-    study_info['owner'] = study.owner.id
+    study_info["num_samples"] = 0 if samples is None else len(list(samples))
+    study_info["owner"] = study.owner.id
     # Study.has_access no_public=True, will return True only if the user_id is
     # the owner of the study or if the study is shared with the user_id; this
     # with study.public_raw_download will define has_access_to_raw_data
-    study_info['has_access_to_raw_data'] = study.has_access(
-        User(user_id), True) or study.public_raw_download
+    study_info["has_access_to_raw_data"] = (
+        study.has_access(User(user_id), True) or study.public_raw_download
+    )
 
-    study_info['show_biom_download_button'] = len(
-        study.artifacts(artifact_type='BIOM')) != 0
-    study_info['show_raw_download_button'] = any([
-        True for pt in study.prep_templates() if pt.artifact is not None])
+    study_info["show_biom_download_button"] = (
+        len(study.artifacts(artifact_type="BIOM")) != 0
+    )
+    study_info["show_raw_download_button"] = any(
+        [True for pt in study.prep_templates() if pt.artifact is not None]
+    )
 
     # getting study processing status from redis
     processing = False
-    study_info['level'] = ''
-    study_info['message'] = ''
+    study_info["level"] = ""
+    study_info["message"] = ""
     job_info = r_client.get(STUDY_KEY_FORMAT % study_id)
     if job_info:
-        job_info = defaultdict(lambda: '', loads(job_info))
-        job_id = job_info['job_id']
+        job_info = defaultdict(lambda: "", loads(job_info))
+        job_id = job_info["job_id"]
         job = ProcessingJob(job_id)
         job_status = job.status
-        processing = job_status not in ('success', 'error')
+        processing = job_status not in ("success", "error")
         if processing:
-            study_info['level'] = 'info'
-            study_info['message'] = 'This study is currently being processed'
-        elif job_status == 'error':
-            study_info['level'] = 'danger'
-            study_info['message'] = job.log.msg.replace('\n', '</br>')
+            study_info["level"] = "info"
+            study_info["message"] = "This study is currently being processed"
+        elif job_status == "error":
+            study_info["level"] = "danger"
+            study_info["message"] = job.log.msg.replace("\n", "</br>")
         else:
-            study_info['level'] = job_info['alert_type']
-            study_info['message'] = job_info['alert_msg'].replace(
-                '\n', '</br>')
+            study_info["level"] = job_info["alert_type"]
+            study_info["message"] = job_info["alert_msg"].replace("\n", "</br>")
 
-    return {'status': 'success',
-            'message': '',
-            'study_info': study_info,
-            'editable': study.can_edit(User(user_id))}
+    return {
+        "status": "success",
+        "message": "",
+        "study_info": study_info,
+        "editable": study.can_edit(User(user_id)),
+    }
 
 
 @execute_as_transaction
@@ -171,17 +173,16 @@ def study_delete_req(study_id, user_id):
     if access_error:
         return access_error
 
-    qiita_plugin = Software.from_name_and_version('Qiita', 'alpha')
-    cmd = qiita_plugin.get_command('delete_study')
-    params = Parameters.load(cmd, values_dict={'study': study_id})
+    qiita_plugin = Software.from_name_and_version("Qiita", "alpha")
+    cmd = qiita_plugin.get_command("delete_study")
+    params = Parameters.load(cmd, values_dict={"study": study_id})
     job = ProcessingJob.create(User(user_id), params, True)
     # Store the job id attaching it to the sample template id
-    r_client.set(STUDY_KEY_FORMAT % study_id,
-                 dumps({'job_id': job.id}))
+    r_client.set(STUDY_KEY_FORMAT % study_id, dumps({"job_id": job.id}))
 
     job.submit()
 
-    return {'status': 'success', 'message': ''}
+    return {"status": "success", "message": ""}
 
 
 def study_prep_get_req(study_id, user_id):
@@ -234,44 +235,43 @@ def study_prep_get_req(study_id, user_id):
         TRN.add(sql, [study_id])
         for row in TRN.execute_fetchindex():
             row = dict(row)
-            if row['visibility'] != 'public' and not editable:
+            if row["visibility"] != "public" and not editable:
                 continue
             # for those preps that have no artifact
-            if row['visibility'] is None:
-                row['visibility'] = 'sandbox'
+            if row["visibility"] is None:
+                row["visibility"] = "sandbox"
 
             info = {
-                'name': row['name'],
-                'id': row['prep_template_id'],
-                'status': row['visibility'],
-                'total_samples': row['total_samples'],
-                'creation_timestamp': row['creation_timestamp'],
-                'modification_timestamp': row['modification_timestamp'],
-                'start_artifact': None,
-                'start_artifact_id': None,
-                'youngest_artifact': None,
-                'num_artifact_children': 0,
-                'youngest_artifact_name': None,
-                'youngest_artifact_type': None,
-                'ebi_experiment': row['ebi_experiment']
+                "name": row["name"],
+                "id": row["prep_template_id"],
+                "status": row["visibility"],
+                "total_samples": row["total_samples"],
+                "creation_timestamp": row["creation_timestamp"],
+                "modification_timestamp": row["modification_timestamp"],
+                "start_artifact": None,
+                "start_artifact_id": None,
+                "youngest_artifact": None,
+                "num_artifact_children": 0,
+                "youngest_artifact_name": None,
+                "youngest_artifact_type": None,
+                "ebi_experiment": row["ebi_experiment"],
             }
-            if row['artifact_id'] is not None:
-                start_artifact = Artifact(row['artifact_id'])
+            if row["artifact_id"] is not None:
+                start_artifact = Artifact(row["artifact_id"])
                 youngest_artifact = start_artifact.youngest_artifact
-                info['start_artifact'] = start_artifact.artifact_type
-                info['start_artifact_id'] = row['artifact_id']
-                info['num_artifact_children'] = len(start_artifact.children)
-                info['youngest_artifact_name'] = youngest_artifact.name
-                info['youngest_artifact_type'] = \
-                    youngest_artifact.artifact_type
-                info['youngest_artifact'] = '%s - %s' % (
-                    youngest_artifact.name, youngest_artifact.artifact_type)
+                info["start_artifact"] = start_artifact.artifact_type
+                info["start_artifact_id"] = row["artifact_id"]
+                info["num_artifact_children"] = len(start_artifact.children)
+                info["youngest_artifact_name"] = youngest_artifact.name
+                info["youngest_artifact_type"] = youngest_artifact.artifact_type
+                info["youngest_artifact"] = "%s - %s" % (
+                    youngest_artifact.name,
+                    youngest_artifact.artifact_type,
+                )
 
-            prep_info[row['data_type']].append(info)
+            prep_info[row["data_type"]].append(info)
 
-    return {'status': 'success',
-            'message': '',
-            'info': prep_info}
+    return {"status": "success", "message": "", "info": prep_info}
 
 
 def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
@@ -317,14 +317,14 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     if pt.study_id != study_id:
         raise IncompetentQiitaDeveloperError(
             "The requested prep id (%d) doesn't belong to the study "
-            "(%d)" % (pt.study_id, study_id))
+            "(%d)" % (pt.study_id, study_id)
+        )
 
     uploaded = get_files_from_uploads_folders(study_id)
     pt = pt.to_dataframe()
-    ftypes_if = (ft.startswith('raw_') for ft, _ in supp_file_types
-                 if ft != 'raw_sff')
-    if any(ftypes_if) and 'run_prefix' in pt.columns:
-        prep_prefixes = tuple(set(pt['run_prefix']))
+    ftypes_if = (ft.startswith("raw_") for ft, _ in supp_file_types if ft != "raw_sff")
+    if any(ftypes_if) and "run_prefix" in pt.columns:
+        prep_prefixes = tuple(set(pt["run_prefix"]))
         num_prefixes = len(prep_prefixes)
         # sorting prefixes by length to avoid collisions like: 100 1002
         # 10003
@@ -358,8 +358,10 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         remaining = [f for _, f, _ in uploaded]
 
     # get file_types, format: filetype, required, list of files
-    file_types = [(t, req, [x[i] for x in selected if i+1 <= len(x)])
-                  for i, (t, req) in enumerate(supp_file_types)]
+    file_types = [
+        (t, req, [x[i] for x in selected if i + 1 <= len(x)])
+        for i, (t, req) in enumerate(supp_file_types)
+    ]
 
     # Create a list of artifacts that the user has access to, in case that
     # he wants to import the files from another artifact
@@ -373,17 +375,19 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
         study_label = "%s (%d)" % (study.title, study.id)
         for a in artifacts:
             artifact_options.append(
-                (a.id, "%s - %s (%d)" % (study_label, a.name, a.id)))
+                (a.id, "%s - %s (%d)" % (study_label, a.name, a.id))
+            )
 
-    message = ('' if not message
-               else '\n'.join(['Check these run_prefix:'] + message))
+    message = "" if not message else "\n".join(["Check these run_prefix:"] + message)
 
-    return {'status': 'success',
-            'message': message,
-            'remaining': sorted(remaining),
-            'file_types': file_types,
-            'num_prefixes': num_prefixes,
-            'artifacts': artifact_options}
+    return {
+        "status": "success",
+        "message": message,
+        "remaining": sorted(remaining),
+        "file_types": file_types,
+        "num_prefixes": num_prefixes,
+        "artifacts": artifact_options,
+    }
 
 
 def study_tags_request():
@@ -397,9 +401,7 @@ def study_tags_request():
         - message: str, if the request is unsuccessful, a human readable error
         - tags: {level: value, ..., ...}
     """
-    return {'status': 'success',
-            'message': '',
-            'tags': Study.get_tags()}
+    return {"status": "success", "message": "", "tags": Study.get_tags()}
 
 
 def study_get_tags_request(user_id, study_id):
@@ -426,13 +428,12 @@ def study_get_tags_request(user_id, study_id):
         return access_error
     study = Study(study_id)
 
-    return {'status': 'success',
-            'message': '',
-            'tags': study.tags}
+    return {"status": "success", "message": "", "tags": study.tags}
 
 
-def study_patch_request(user_id, study_id,
-                        req_op, req_path, req_value=None, req_from=None):
+def study_patch_request(
+    user_id, study_id, req_op, req_path, req_value=None, req_from=None
+):
     """Modifies an attribute of the study object
 
     Parameters
@@ -457,11 +458,10 @@ def study_patch_request(user_id, study_id,
         - status: str, whether if the request is successful or not
         - message: str, if the request is unsuccessful, a human readable error
     """
-    if req_op == 'replace':
-        req_path = [v for v in req_path.split('/') if v]
+    if req_op == "replace":
+        req_path = [v for v in req_path.split("/") if v]
         if len(req_path) != 1:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
+            return {"status": "error", "message": "Incorrect path parameter"}
 
         attribute = req_path[0]
 
@@ -471,24 +471,28 @@ def study_patch_request(user_id, study_id,
             return access_error
         study = Study(study_id)
 
-        if attribute == 'tags':
+        if attribute == "tags":
             message = study.update_tags(User(user_id), req_value)
-            return {'status': 'success',
-                    'message': message}
-        elif attribute == 'toggle_public_raw_download':
+            return {"status": "success", "message": message}
+        elif attribute == "toggle_public_raw_download":
             try:
                 study.public_raw_download = not study.public_raw_download
-                return {'status': 'success',
-                        'message': 'Successfully updated public_raw_download'}
+                return {
+                    "status": "success",
+                    "message": "Successfully updated public_raw_download",
+                }
             except (QiitaDBLookupError, QiitaDBColumnError) as e:
-                return {'status': 'error',
-                        'message': str(e)}
+                return {"status": "error", "message": str(e)}
         else:
             # We don't understand the attribute so return an error
-            return {'status': 'error',
-                    'message': 'Attribute "%s" not found. '
-                               'Please, check the path parameter' % attribute}
+            return {
+                "status": "error",
+                "message": 'Attribute "%s" not found. '
+                "Please, check the path parameter" % attribute,
+            }
     else:
-        return {'status': 'error',
-                'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace' % req_op}
+        return {
+            "status": "error",
+            "message": 'Operation "%s" not supported. '
+            "Current supported operations: replace" % req_op,
+        }

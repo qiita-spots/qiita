@@ -8,11 +8,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from subprocess import Popen, PIPE
 from datetime import datetime
-from tempfile import mkdtemp
-from os.path import join
 from os import environ
+from os.path import join
+from subprocess import PIPE, Popen
+from tempfile import mkdtemp
 
 import click
 
@@ -29,37 +29,39 @@ echo $SLURM_JOBID
 
 
 @click.command()
-@click.argument('qiita_env', required=True, nargs=1)
-@click.argument('command', required=True, nargs=1)
-@click.argument('arguments', required=True, nargs=-1)
+@click.argument("qiita_env", required=True, nargs=1)
+@click.argument("command", required=True, nargs=1)
+@click.argument("arguments", required=True, nargs=-1)
 def start(qiita_env, command, arguments):
     """Starts the plugin environment"""
-    cmd = ['qiita-private', command]
+    cmd = ["qiita-private", command]
     cmd.extend(["'%s'" % arg for arg in arguments])
     # When Popen executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    lines = [' '.join(cmd)]
+    lines = [" ".join(cmd)]
     datestr = datetime.now().strftime("%Y%m%d_%I%M%S.%f")
-    dirpath = mkdtemp(prefix=datestr,
-                      dir='/projects/qiita_data/working_dir/private-jobs/')
-    fp = join(dirpath, 'private')
-    with open(fp, 'w') as f:
+    dirpath = mkdtemp(
+        prefix=datestr, dir="/projects/qiita_data/working_dir/private-jobs/"
+    )
+    fp = join(dirpath, "private")
+    with open(fp, "w") as f:
         f.write(SBATCHFILE % (dirpath, dirpath, "\n".join(lines)))
 
     cmd = "sbatch %s" % fp
 
-    epilogue = environ.get('QIITA_JOB_SCHEDULER_EPILOGUE', '')
+    epilogue = environ.get("QIITA_JOB_SCHEDULER_EPILOGUE", "")
     if epilogue:
-        cmd = f'{cmd} --epilog {epilogue}'
+        cmd = f"{cmd} --epilog {epilogue}"
 
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:
         raise ValueError(
             "Error launching internal task:\n\tStdout: %s\n\tStderr: %s"
-            % (stdout, stderr))
+            % (stdout, stderr)
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start()

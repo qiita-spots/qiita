@@ -34,11 +34,9 @@ def check_access(study_id, user_id):
     try:
         study = Study(int(study_id))
     except QiitaDBUnknownIDError:
-        return {'status': 'error',
-                'message': 'Study does not exist'}
+        return {"status": "error", "message": "Study does not exist"}
     if not study.has_access(User(user_id)):
-        return {'status': 'error',
-                'message': 'User has insufficient permissions'}
+        return {"status": "error", "message": "User has insufficient permissions"}
     return {}
 
 
@@ -68,9 +66,5 @@ def check_fp(study_id, filename):
 
     if not exists(fp_rsp):
         # The file does not exist, fail nicely
-        return {'status': 'error',
-                'message': 'file does not exist',
-                'file': filename}
-    return {'status': 'success',
-            'message': '',
-            'file': fp_rsp}
+        return {"status": "error", "message": "file does not exist", "file": filename}
+    return {"status": "success", "message": "", "file": fp_rsp}

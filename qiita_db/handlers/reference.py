@@ -8,8 +8,9 @@
 
 from tornado.web import HTTPError
 
-from .oauth2 import OauthBaseHandler, authenticate_oauth
 import qiita_db as qdb
+
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
 def _get_reference(r_id):
@@ -36,8 +37,7 @@ def _get_reference(r_id):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, reason='Error instantiating the reference: '
-                        '%s' % str(e))
+        raise HTTPError(500, reason="Error instantiating the reference: %s" % str(e))
 
     return reference
 
@@ -66,7 +66,7 @@ class ReferenceHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             reference = _get_reference(reference_id)
 
-            fps = {'reference_seqs': reference.sequence_fp}
+            fps = {"reference_seqs": reference.sequence_fp}
             tax_fp = reference.taxonomy_fp
             if tax_fp:
                 fps["reference_tax"] = tax_fp
@@ -75,9 +75,9 @@ class ReferenceHandler(OauthBaseHandler):
                 fps["reference_tree"] = tree_fp
 
             response = {
-                'name': reference.name,
-                'version': reference.version,
-                'files': fps
+                "name": reference.name,
+                "version": reference.version,
+                "files": fps,
             }
 
         self.write(response)

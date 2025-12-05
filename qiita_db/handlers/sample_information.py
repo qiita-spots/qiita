@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 import qiita_db as qdb
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 from .util import _get_instance
 
@@ -28,7 +29,7 @@ class SampleInfoDBHandler(OauthBaseHandler):
         """
         with qdb.sql_connection.TRN:
             ST = qdb.metadata_template.sample_template.SampleTemplate
-            st = _get_instance(ST, study_id, 'Error instantiating sample info')
-            response = {'data': st.to_dataframe().to_dict(orient='index')}
+            st = _get_instance(ST, study_id, "Error instantiating sample info")
+            response = {"data": st.to_dataframe().to_dict(orient="index")}
 
             self.write(response)
