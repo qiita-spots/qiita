@@ -5,42 +5,41 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import TestCase, main, skipIf
-from os.path import join, basename
-from tempfile import mkdtemp
-import pandas as pd
 from datetime import datetime
-from shutil import rmtree, copyfile
-from os import path
 from glob import glob
-from paramiko.ssh_exception import AuthenticationException
+from os import path
+from os.path import basename, join
+from shutil import copyfile, rmtree
+from tempfile import mkdtemp
+from unittest import TestCase, main, skipIf
 
+import pandas as pd
 from h5py import File
+from paramiko.ssh_exception import AuthenticationException
 from qiita_files.demux import to_hdf5
 
-from qiita_ware.exceptions import ComputeError
-from qiita_ware.commands import submit_EBI, list_remote, download_remote
-from qiita_db.util import get_mountpoint
-from qiita_db.study import Study, StudyPerson
-from qiita_db.software import DefaultParameters, Parameters
+from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.software import DefaultParameters, Parameters
+from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_core.util import qiita_test_checker
-from qiita_core.qiita_settings import qiita_config
+from qiita_db.util import get_mountpoint
+from qiita_ware.commands import download_remote, list_remote, submit_EBI
+from qiita_ware.exceptions import ComputeError
 
 
 @qiita_test_checker()
 class SSHTests(TestCase):
     def setUp(self):
         self.self_dir_path = path.dirname(path.abspath(__file__))
-        self.remote_dir_path = join(self.self_dir_path,
-                                    'test_data/test_remote_dir/')
-        self.test_ssh_key = join(self.self_dir_path, 'test_data/test_key')
-        self.test_wrong_key = join(self.self_dir_path, 'test_data/random_key')
+        self.remote_dir_path = join(self.self_dir_path, "test_data/test_remote_dir/")
+        self.test_ssh_key = join(self.self_dir_path, "test_data/test_key")
+        self.test_wrong_key = join(self.self_dir_path, "test_data/random_key")
         self.temp_local_dir = mkdtemp()
-        self.exp_files = ['test_0.fastq.gz', 'test_1.txt']
+        self.exp_files = ["test_0.fastq.gz", "test_1.txt"]
 
     def tearDown(self):
         rmtree(self.temp_local_dir)
@@ -48,16 +47,17 @@ class SSHTests(TestCase):
     def _get_valid_files(self, folder):
         files = []
         for x in qiita_config.valid_upload_extension:
-            files.extend([basename(f) for f in glob(join(folder, '*.%s' % x))])
+            files.extend([basename(f) for f in glob(join(folder, "*.%s" % x))])
         return files
 
     def test_list_scp_wrong_key(self):
         with self.assertRaises(AuthenticationException):
-            list_remote('scp://runner@localhost:'+self.remote_dir_path,
-                        self.test_wrong_key)
+            list_remote(
+                "scp://runner@localhost:" + self.remote_dir_path, self.test_wrong_key
+            )
 
     def test_list_scp(self):
-        kpath = join(self.temp_local_dir, 'tmp-key')
+        kpath = join(self.temp_local_dir, "tmp-key")
         copyfile(self.test_ssh_key, kpath)
         # 05/22/25: this test requires a scp/ssh connection and github
         # actions is broken; thus commenting out
@@ -67,12 +67,14 @@ class SSHTests(TestCase):
 
     def test_download_remote_nonexist_key(self):
         with self.assertRaises(IOError):
-            download_remote('scp://runner@localhost:'+self.remote_dir_path,
-                            join(self.self_dir_path, 'nokey'),
-                            self.temp_local_dir)
+            download_remote(
+                "scp://runner@localhost:" + self.remote_dir_path,
+                join(self.self_dir_path, "nokey"),
+                self.temp_local_dir,
+            )
 
     def test_download_scp(self):
-        kpath = join(self.temp_local_dir, 'tmp-key')
+        kpath = join(self.temp_local_dir, "tmp-key")
         copyfile(self.test_ssh_key, kpath)
         # 05/22/25: this test requires a scp/ssh connection and github
         # actions is broken; thus commenting out
@@ -92,27 +94,31 @@ class CommandsTests(TestCase):
 
     def write_demux_files(self, prep_template, generate_hdf5=True):
         """Writes a demux test file to avoid duplication of code"""
-        fna_fp = join(self.temp_dir, 'seqs.fna')
-        demux_fp = join(self.temp_dir, 'demux.seqs')
+        fna_fp = join(self.temp_dir, "seqs.fna")
+        demux_fp = join(self.temp_dir, "demux.seqs")
         if generate_hdf5:
-            with open(fna_fp, 'w') as f:
+            with open(fna_fp, "w") as f:
                 f.write(FASTA_EXAMPLE)
             with File(demux_fp, "w") as f:
                 to_hdf5(fna_fp, f)
         else:
-            with open(demux_fp, 'w') as f:
-                f.write('')
+            with open(demux_fp, "w") as f:
+                f.write("")
 
         if prep_template.artifact is None:
             ppd = Artifact.create(
-                [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template)
+                [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template
+            )
         else:
             params = Parameters.from_default_params(
-                DefaultParameters(1),
-                {'input_data': prep_template.artifact.id})
+                DefaultParameters(1), {"input_data": prep_template.artifact.id}
+            )
             ppd = Artifact.create(
-                [(demux_fp, 6)], "Demultiplexed",
-                parents=[prep_template.artifact], processing_parameters=params)
+                [(demux_fp, 6)],
+                "Demultiplexed",
+                parents=[prep_template.artifact],
+                processing_parameters=params,
+            )
         return ppd
 
     def generate_new_study_with_preprocessed_data(self):
@@ -125,64 +131,73 @@ class CommandsTests(TestCase):
             "study_description": "Study for testing EBI",
             "study_abstract": "Study for testing EBI",
             "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
+            "lab_person_id": StudyPerson(1),
         }
-        study = Study.create(User('test@foo.bar'), "Test EBI study", info)
+        study = Study.create(User("test@foo.bar"), "Test EBI study", info)
         metadata_dict = {
-            'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
-                        'physical_specimen_location': 'location1',
-                        'taxon_id': 9606,
-                        'scientific_name': 'homo sapiens',
-                        'Description': 'Test Sample 1'},
-            'Sample2': {'collection_timestamp': datetime(2015, 6, 2, 7, 0, 0),
-                        'physical_specimen_location': 'location1',
-                        'taxon_id': 9606,
-                        'scientific_name': 'homo sapiens',
-                        'Description': 'Test Sample 2'},
-            'Sample3': {'collection_timestamp': datetime(2015, 6, 3, 7, 0, 0),
-                        'physical_specimen_location': 'location1',
-                        'taxon_id': 9606,
-                        'scientific_name': 'homo sapiens',
-                        'Description': 'Test Sample 3'}
+            "Sample1": {
+                "collection_timestamp": datetime(2015, 6, 1, 7, 0, 0),
+                "physical_specimen_location": "location1",
+                "taxon_id": 9606,
+                "scientific_name": "homo sapiens",
+                "Description": "Test Sample 1",
+            },
+            "Sample2": {
+                "collection_timestamp": datetime(2015, 6, 2, 7, 0, 0),
+                "physical_specimen_location": "location1",
+                "taxon_id": 9606,
+                "scientific_name": "homo sapiens",
+                "Description": "Test Sample 2",
+            },
+            "Sample3": {
+                "collection_timestamp": datetime(2015, 6, 3, 7, 0, 0),
+                "physical_specimen_location": "location1",
+                "taxon_id": 9606,
+                "scientific_name": "homo sapiens",
+                "Description": "Test Sample 3",
+            },
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient="index", dtype=str)
         SampleTemplate.create(metadata, study)
         metadata_dict = {
-            'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
-                        'barcode': 'CGTAGAGCTCTC',
-                        'center_name': 'KnightLab',
-                        'platform': 'Illumina',
-                        'instrument_model': 'Illumina MiSeq',
-                        'library_construction_protocol': 'Protocol ABC',
-                        'experiment_design_description': "Random value 1"},
-            'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
-                        'barcode': 'CGTAGAGCTCTA',
-                        'center_name': 'KnightLab',
-                        'platform': 'Illumina',
-                        'instrument_model': 'Illumina MiSeq',
-                        'library_construction_protocol': 'Protocol ABC',
-                        'experiment_design_description': "Random value 2"},
-            'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
-                        'barcode': 'CGTAGAGCTCTT',
-                        'center_name': 'KnightLab',
-                        'platform': 'Illumina',
-                        'instrument_model': 'Illumina MiSeq',
-                        'library_construction_protocol': 'Protocol ABC',
-                        'experiment_design_description': "Random value 3"},
+            "Sample1": {
+                "primer": "GTGCCAGCMGCCGCGGTAA",
+                "barcode": "CGTAGAGCTCTC",
+                "center_name": "KnightLab",
+                "platform": "Illumina",
+                "instrument_model": "Illumina MiSeq",
+                "library_construction_protocol": "Protocol ABC",
+                "experiment_design_description": "Random value 1",
+            },
+            "Sample2": {
+                "primer": "GTGCCAGCMGCCGCGGTAA",
+                "barcode": "CGTAGAGCTCTA",
+                "center_name": "KnightLab",
+                "platform": "Illumina",
+                "instrument_model": "Illumina MiSeq",
+                "library_construction_protocol": "Protocol ABC",
+                "experiment_design_description": "Random value 2",
+            },
+            "Sample3": {
+                "primer": "GTGCCAGCMGCCGCGGTAA",
+                "barcode": "CGTAGAGCTCTT",
+                "center_name": "KnightLab",
+                "platform": "Illumina",
+                "instrument_model": "Illumina MiSeq",
+                "library_construction_protocol": "Protocol ABC",
+                "experiment_design_description": "Random value 3",
+            },
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
-                                          dtype=str)
-        pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
-        fna_fp = join(self.temp_dir, 'seqs.fna')
-        demux_fp = join(self.temp_dir, 'demux.seqs')
-        with open(fna_fp, 'w') as f:
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient="index", dtype=str)
+        pt = PrepTemplate.create(metadata, study, "16S", "Metagenomics")
+        fna_fp = join(self.temp_dir, "seqs.fna")
+        demux_fp = join(self.temp_dir, "demux.seqs")
+        with open(fna_fp, "w") as f:
             f.write(FASTA_EXAMPLE_2.format(study.id))
-        with File(demux_fp, 'w') as f:
+        with File(demux_fp, "w") as f:
             to_hdf5(fna_fp, f)
 
-        ppd = Artifact.create(
-            [(demux_fp, 6)], "Demultiplexed", prep_template=pt)
+        ppd = Artifact.create([(demux_fp, 6)], "Demultiplexed", prep_template=pt)
 
         return ppd
 
@@ -191,47 +206,43 @@ class CommandsTests(TestCase):
         pid = ppd.id
 
         with self.assertRaises(ComputeError):
-            submit_EBI(pid, 'VALIDATE', True)
+            submit_EBI(pid, "VALIDATE", True)
 
-        rmtree(join(self.base_fp, '%d_ebi_submission' % pid), True)
+        rmtree(join(self.base_fp, "%d_ebi_submission" % pid), True)
 
-    @skipIf(
-        qiita_config.ebi_seq_xfer_pass == '', 'skip: ascp not configured')
+    @skipIf(qiita_config.ebi_seq_xfer_pass == "", "skip: ascp not configured")
     def test_submit_EBI_parse_EBI_reply_failure(self):
         ppd = self.write_demux_files(PrepTemplate(1))
         pid = ppd.id
 
         with self.assertRaises(ComputeError) as error:
-            submit_EBI(pid, 'VALIDATE', True)
+            submit_EBI(pid, "VALIDATE", True)
         error = str(error.exception)
-        self.assertIn('EBI Submission failed! Log id:', error)
-        self.assertIn('The EBI submission failed:', error)
+        self.assertIn("EBI Submission failed! Log id:", error)
+        self.assertIn("The EBI submission failed:", error)
 
-        rmtree(join(self.base_fp, '%d_ebi_submission' % pid), True)
+        rmtree(join(self.base_fp, "%d_ebi_submission" % pid), True)
 
-    @skipIf(
-        qiita_config.ebi_seq_xfer_pass == '', 'skip: ascp not configured')
+    @skipIf(qiita_config.ebi_seq_xfer_pass == "", "skip: ascp not configured")
     def test_full_submission(self):
         artifact = self.generate_new_study_with_preprocessed_data()
-        self.assertEqual(
-            artifact.study.ebi_submission_status, 'not submitted')
+        self.assertEqual(artifact.study.ebi_submission_status, "not submitted")
         aid = artifact.id
-        submit_EBI(aid, 'VALIDATE', True, test=True)
-        self.assertEqual(artifact.study.ebi_submission_status, 'submitted')
+        submit_EBI(aid, "VALIDATE", True, test=True)
+        self.assertEqual(artifact.study.ebi_submission_status, "submitted")
 
-        rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
+        rmtree(join(self.base_fp, "%d_ebi_submission" % aid), True)
 
     def test_max_ebiena_curl_error(self):
         artifact = self.generate_new_study_with_preprocessed_data()
-        self.assertEqual(
-            artifact.study.ebi_submission_status, 'not submitted')
+        self.assertEqual(artifact.study.ebi_submission_status, "not submitted")
         aid = artifact.id
         with self.assertRaises(ComputeError) as error:
-            submit_EBI(aid, 'VALIDATE', True, test_size=True)
+            submit_EBI(aid, "VALIDATE", True, test_size=True)
         error = str(error.exception)
-        self.assertIn('is too large. Before cleaning:', error)
+        self.assertIn("is too large. Before cleaning:", error)
 
-        rmtree(join(self.base_fp, '%d_ebi_submission' % aid), True)
+        rmtree(join(self.base_fp, "%d_ebi_submission" % aid), True)
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
@@ -281,5 +292,5 @@ CCACCCAGTAAC
 """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

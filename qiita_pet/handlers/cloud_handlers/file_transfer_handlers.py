@@ -1,11 +1,11 @@
 import os
 
-from tornado.web import HTTPError, RequestHandler
 from tornado.gen import coroutine
+from tornado.web import HTTPError, RequestHandler
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import execute_as_transaction
 from qiita_db.handlers.oauth2 import authenticate_oauth
-from qiita_core.qiita_settings import qiita_config
 
 
 class FetchFileFromCentralHandler(RequestHandler):
@@ -29,28 +29,34 @@ class FetchFileFromCentralHandler(RequestHandler):
             # attempt to access files outside of the BASE_DATA_DIR
             # intentionally NOT reporting the actual location to avoid exposing
             # instance internal information
-            raise HTTPError(403, reason=(
-                "You cannot access files outside of "
-                "the BASE_DATA_DIR of Qiita!"))
+            raise HTTPError(
+                403,
+                reason=(
+                    "You cannot access files outside of the BASE_DATA_DIR of Qiita!"
+                ),
+            )
 
         if not os.path.exists(filepath):
-            raise HTTPError(403, reason=(
-                "The requested file is not present in Qiita's BASE_DATA_DIR!"))
+            raise HTTPError(
+                403,
+                reason=("The requested file is not present in Qiita's BASE_DATA_DIR!"),
+            )
 
         # delivery of the file via nginx requires replacing the basedatadir
         # with the prefix defined in the nginx configuration for the
         # base_data_dir, '/protected/' by default
-        protected_filepath = filepath.replace(basedatadir, '/protected')
+        protected_filepath = filepath.replace(basedatadir, "/protected")
 
-        self.set_header('Content-Type', 'application/octet-stream')
-        self.set_header('Content-Transfer-Encoding', 'binary')
-        self.set_header('X-Accel-Redirect', protected_filepath)
-        self.set_header('Content-Description', 'File Transfer')
-        self.set_header('Expires',  '0')
-        self.set_header('Cache-Control',  'no-cache')
-        self.set_header('Content-Disposition',
-                        'attachment; filename=%s' % os.path.basename(
-                            protected_filepath))
+        self.set_header("Content-Type", "application/octet-stream")
+        self.set_header("Content-Transfer-Encoding", "binary")
+        self.set_header("X-Accel-Redirect", protected_filepath)
+        self.set_header("Content-Description", "File Transfer")
+        self.set_header("Expires", "0")
+        self.set_header("Cache-Control", "no-cache")
+        self.set_header(
+            "Content-Disposition",
+            "attachment; filename=%s" % os.path.basename(protected_filepath),
+        )
         self.finish()
 
 
@@ -60,7 +66,7 @@ class PushFileToCentralHandler(RequestHandler):
     @execute_as_transaction
     def post(self):
         if not self.request.files:
-            raise HTTPError(400, reason='No files to upload defined!')
+            raise HTTPError(400, reason="No files to upload defined!")
 
         # canonic version of base_data_dir
         basedatadir = os.path.abspath(qiita_config.base_data_dir)
@@ -68,27 +74,32 @@ class PushFileToCentralHandler(RequestHandler):
 
         for filespath, filelist in self.request.files.items():
             if filespath.startswith(basedatadir):
-                filespath = filespath[len(basedatadir):]
+                filespath = filespath[len(basedatadir) :]
 
             for file in filelist:
-                filepath = os.path.join(filespath, file['filename'])
+                filepath = os.path.join(filespath, file["filename"])
                 # remove leading /
                 if filepath.startswith(os.sep):
-                    filepath = filepath[len(os.sep):]
+                    filepath = filepath[len(os.sep) :]
                 filepath = os.path.abspath(os.path.join(basedatadir, filepath))
 
                 if os.path.exists(filepath):
-                    raise HTTPError(403, reason=(
-                        "The requested file is already "
-                        "present in Qiita's BASE_DATA_DIR!"))
+                    raise HTTPError(
+                        403,
+                        reason=(
+                            "The requested file is already "
+                            "present in Qiita's BASE_DATA_DIR!"
+                        ),
+                    )
 
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 with open(filepath, "wb") as f:
-                    f.write(file['body'])
+                    f.write(file["body"])
                     stored_files.append(filepath)
 
-        self.write("Stored %i files into BASE_DATA_DIR of Qiita:\n%s\n" % (
-            len(stored_files),
-            '\n'.join(map(lambda x: ' - %s' % x, stored_files))))
+        self.write(
+            "Stored %i files into BASE_DATA_DIR of Qiita:\n%s\n"
+            % (len(stored_files), "\n".join(map(lambda x: " - %s" % x, stored_files)))
+        )
 
         self.finish()

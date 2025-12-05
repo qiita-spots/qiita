@@ -5,8 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import TestCase, main
 from os.path import join
+from unittest import TestCase, main
 
 from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
@@ -14,36 +14,34 @@ from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 
 class TestUtil(TestCase):
     def test_check_access(self):
-        obs = check_access(1, 'test@foo.bar')
+        obs = check_access(1, "test@foo.bar")
         self.assertEqual(obs, {})
 
     def test_check_access_no_access(self):
-        obs = check_access(1, 'demo@microbio.me')
-        exp = {'status': 'error',
-               'message': 'User has insufficient permissions'}
+        obs = check_access(1, "demo@microbio.me")
+        exp = {"status": "error", "message": "User has insufficient permissions"}
         self.assertEqual(obs, exp)
 
     def test_check_access_bad_id(self):
-        obs = check_access(232423423, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Study does not exist'}
+        obs = check_access(232423423, "test@foo.bar")
+        exp = {"status": "error", "message": "Study does not exist"}
         self.assertEqual(obs, exp)
 
     def test_check_fp(self):
-        obs = check_fp(1, 'uploaded_file.txt')
+        obs = check_fp(1, "uploaded_file.txt")
         _, base_fp = get_mountpoint("uploads")[0]
-        exp = {'status': 'success',
-               'message': '',
-               'file': join(base_fp, '1', 'uploaded_file.txt')}
+        exp = {
+            "status": "success",
+            "message": "",
+            "file": join(base_fp, "1", "uploaded_file.txt"),
+        }
         self.assertEqual(obs, exp)
 
     def test_check_fp_bad_fp(self):
-        obs = check_fp(1, 'badfile')
-        exp = {'status': 'error',
-               'message': 'file does not exist',
-               'file': 'badfile'}
+        obs = check_fp(1, "badfile")
+        exp = {"status": "error", "message": "file does not exist", "file": "badfile"}
         self.assertEqual(obs, exp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

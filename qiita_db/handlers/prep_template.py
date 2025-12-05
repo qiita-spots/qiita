@@ -9,10 +9,11 @@
 from json import loads
 from os.path import basename
 
-from tornado.web import HTTPError
 import pandas as pd
+from tornado.web import HTTPError
 
 import qiita_db as qdb
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
@@ -41,8 +42,9 @@ def _get_prep_template(pid):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, reason='Error instantiating prep template %s: %s'
-                        % (pid, str(e)))
+        raise HTTPError(
+            500, reason="Error instantiating prep template %s: %s" % (pid, str(e))
+        )
 
     return pt
 
@@ -71,23 +73,25 @@ class PrepTemplateDBHandler(OauthBaseHandler):
         """
         with qdb.sql_connection.TRN:
             pt = _get_prep_template(prep_id)
-            prep_files = [fp for _, fp in pt.get_filepaths()
-                          if 'qiime' not in basename(fp)]
+            prep_files = [
+                fp for _, fp in pt.get_filepaths() if "qiime" not in basename(fp)
+            ]
             artifact = pt.artifact.id if pt.artifact is not None else None
             sid = pt.study_id
             response = {
-                'data_type': pt.data_type(),
-                'artifact': artifact,
-                'investigation_type': pt.investigation_type,
-                'study': sid,
-                'status': pt.status,
+                "data_type": pt.data_type(),
+                "artifact": artifact,
+                "investigation_type": pt.investigation_type,
+                "study": sid,
+                "status": pt.status,
                 # get_filepaths returns an ordered list of [filepath_id,
                 # filepath] and we want the last pair
-                'sample-file': qdb.study.Study(
-                    sid).sample_template.get_filepaths()[0][1],
+                "sample-file": qdb.study.Study(sid).sample_template.get_filepaths()[0][
+                    1
+                ],
                 # The first element in the prep_files is the newest
                 # prep information file - hence the correct one
-                'prep-file': prep_files[0]
+                "prep-file": prep_files[0],
             }
 
         self.write(response)
@@ -108,16 +112,19 @@ class PrepTemplateDataHandler(OauthBaseHandler):
         dict
             The contents of the prep information keyed by sample id
         """
-        sample_info = self.get_argument('sample_information', False)
+        sample_info = self.get_argument("sample_information", False)
 
         with qdb.sql_connection.TRN:
             pt = _get_prep_template(prep_id)
             if not sample_info:
-                response = {'data': pt.to_dataframe().to_dict(orient='index')}
+                response = {"data": pt.to_dataframe().to_dict(orient="index")}
             else:
                 ST = qdb.metadata_template.sample_template.SampleTemplate
-                response = {'data': ST(pt.study_id).to_dataframe(
-                    samples=list(pt)).to_dict(orient='index')}
+                response = {
+                    "data": ST(pt.study_id)
+                    .to_dataframe(samples=list(pt))
+                    .to_dict(orient="index")
+                }
 
         self.write(response)
 
@@ -125,17 +132,17 @@ class PrepTemplateDataHandler(OauthBaseHandler):
 class PrepTemplateAPIHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
-        prep_info_dict = loads(self.get_argument('prep_info'))
-        study = self.get_argument('study')
-        data_type = self.get_argument('data_type')
-        name = self.get_argument('name', None)
-        jid = self.get_argument('job-id', None)
+        prep_info_dict = loads(self.get_argument("prep_info"))
+        study = self.get_argument("study")
+        data_type = self.get_argument("data_type")
+        name = self.get_argument("name", None)
+        jid = self.get_argument("job-id", None)
 
-        metadata = pd.DataFrame.from_dict(prep_info_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(prep_info_dict, orient="index")
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
-            metadata, qdb.study.Study(study), data_type, name=name,
-            creation_job_id=jid)
-        self.write({'prep': pt.id})
+            metadata, qdb.study.Study(study), data_type, name=name, creation_job_id=jid
+        )
+        self.write({"prep": pt.id})
 
 
 class PrepTemplateAPItestHandler(PrepTemplateAPIHandler):

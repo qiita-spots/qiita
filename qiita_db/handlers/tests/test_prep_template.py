@@ -6,16 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import main, TestCase
-from json import loads, dumps
-from os.path import join
 from functools import partial
+from json import dumps, loads
+from os.path import join
+from unittest import TestCase, main
 
 from tornado.web import HTTPError
 
-from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.handlers.prep_template import _get_prep_template
+from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 
 
 class UtilTests(TestCase):
@@ -31,187 +31,248 @@ class UtilTests(TestCase):
 
 class PrepTemplateHandlerTests(OauthTestingBase):
     def test_get_does_not_exist(self):
-        obs = self.get('/qiita_db/prep_template/100/', headers=self.header)
+        obs = self.get("/qiita_db/prep_template/100/", headers=self.header)
         self.assertEqual(obs.code, 404)
 
     def test_get_no_header(self):
-        obs = self.get('/qiita_db/prep_template/1/')
+        obs = self.get("/qiita_db/prep_template/1/")
         self.assertEqual(obs.code, 400)
 
     def test_get(self):
-        obs = self.get('/qiita_db/prep_template/1/', headers=self.header)
+        obs = self.get("/qiita_db/prep_template/1/", headers=self.header)
         self.assertEqual(obs.code, 200)
 
-        db_test_template_dir = qdb.util.get_mountpoint('templates')[0][1]
+        db_test_template_dir = qdb.util.get_mountpoint("templates")[0][1]
         path_builder = partial(join, db_test_template_dir)
 
         obs = loads(obs.body)
 
         # have to check per key because since patch 51 we are updating the
         # test info files
-        self.assertEqual(obs['data_type'], '18S')
-        self.assertEqual(obs['artifact'], 1)
-        self.assertEqual(obs['investigation_type'], 'Metagenomics')
-        self.assertEqual(obs['study'], 1)
-        self.assertEqual(obs['status'], 'private')
-        self.assertTrue(obs['sample-file'].startswith(
-            path_builder('1_')))
-        self.assertTrue(obs['prep-file'].startswith(
-            path_builder('1_prep_1_')))
+        self.assertEqual(obs["data_type"], "18S")
+        self.assertEqual(obs["artifact"], 1)
+        self.assertEqual(obs["investigation_type"], "Metagenomics")
+        self.assertEqual(obs["study"], 1)
+        self.assertEqual(obs["status"], "private")
+        self.assertTrue(obs["sample-file"].startswith(path_builder("1_")))
+        self.assertTrue(obs["prep-file"].startswith(path_builder("1_prep_1_")))
 
 
 class PrepTemplateDataHandlerTests(OauthTestingBase):
     def test_get_does_not_exist(self):
-        obs = self.get('/qiita_db/prep_template/100/data/',
-                       headers=self.header)
+        obs = self.get("/qiita_db/prep_template/100/data/", headers=self.header)
         self.assertEqual(obs.code, 404)
 
     def test_get_no_header(self):
-        obs = self.get('/qiita_db/prep_template/100/data/')
+        obs = self.get("/qiita_db/prep_template/100/data/")
         self.assertEqual(obs.code, 400)
 
     def test_get(self):
-        obs = self.get('/qiita_db/prep_template/1/data/', headers=self.header)
+        obs = self.get("/qiita_db/prep_template/1/data/", headers=self.header)
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertCountEqual(obs.keys(), ['data'])
+        self.assertCountEqual(obs.keys(), ["data"])
 
-        obs = obs['data']
-        exp = ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
-               '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
-               '1.SKD9.640182', '1.SKM8.640201', '1.SKM2.640199',
-               '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
-               '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186',
-               '1.SKB1.640202', '1.SKM1.640183', '1.SKD1.640179',
-               '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
-               '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
-               '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
+        obs = obs["data"]
+        exp = [
+            "1.SKB2.640194",
+            "1.SKM4.640180",
+            "1.SKB3.640195",
+            "1.SKB6.640176",
+            "1.SKD6.640190",
+            "1.SKM6.640187",
+            "1.SKD9.640182",
+            "1.SKM8.640201",
+            "1.SKM2.640199",
+            "1.SKD2.640178",
+            "1.SKB7.640196",
+            "1.SKD4.640185",
+            "1.SKB8.640193",
+            "1.SKM3.640197",
+            "1.SKD5.640186",
+            "1.SKB1.640202",
+            "1.SKM1.640183",
+            "1.SKD1.640179",
+            "1.SKD3.640198",
+            "1.SKB5.640181",
+            "1.SKB4.640189",
+            "1.SKB9.640200",
+            "1.SKM9.640192",
+            "1.SKD8.640184",
+            "1.SKM5.640177",
+            "1.SKM7.640188",
+            "1.SKD7.640191",
+        ]
         self.assertCountEqual(list(obs.keys()), exp)
 
-        obs = obs['1.SKB1.640202']
+        obs = obs["1.SKB1.640202"]
         exp = {
-            'barcode': 'GTCCGCAAGTTA',
-            'center_name': 'ANL',
-            'center_project_name': None,
-            'emp_status': 'EMP',
-            'experiment_center': 'ANL',
-            'experiment_design_description':
-                'micro biome of soil and rhizosphere of cannabis plants '
-                'from CA',
-            'experiment_title': 'Cannabis Soil Microbiome',
-            'illumina_technology': 'MiSeq',
-            'instrument_model': 'Illumina MiSeq',
-            'library_construction_protocol':
-                'This analysis was done as in Caporaso et al 2011 Genome '
-                'research. The PCR primers (F515/R806) were developed against '
-                'the V4 region of the 16S rRNA (both bacteria and archaea), '
-                'which we determined would yield optimal community clustering '
-                'with reads of this length using a procedure similar to that '
-                'of ref. 15. [For reference, this primer pair amplifies the '
-                'region 533_786 in the Escherichia coli strain 83972 sequence '
-                '(greengenes accession no. prokMSA_id:470367).] The reverse '
-                'PCR primer is barcoded with a 12-base error-correcting Golay '
-                'code to facilitate multiplexing of up to 1,500 samples per '
-                'lane, and both PCR primers contain sequencer adapter '
-                'regions.',
-            'pcr_primers': 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT',
-            'platform': 'Illumina',
-            'primer': 'GTGCCAGCMGCCGCGGTAA',
-            'run_center': 'ANL',
-            'run_date': '8/1/12',
-            'run_prefix': 's_G1_L001_sequences',
-            'samp_size': '.25,g',
-            'sample_center': 'ANL',
-            'sequencing_meth': 'Sequencing by synthesis',
-            'study_center': 'CCME',
-            'target_gene': '16S rRNA',
-            'target_subfragment': 'V4',
-            'qiita_prep_id': '1'}
+            "barcode": "GTCCGCAAGTTA",
+            "center_name": "ANL",
+            "center_project_name": None,
+            "emp_status": "EMP",
+            "experiment_center": "ANL",
+            "experiment_design_description": "micro biome of soil and rhizosphere of cannabis plants "
+            "from CA",
+            "experiment_title": "Cannabis Soil Microbiome",
+            "illumina_technology": "MiSeq",
+            "instrument_model": "Illumina MiSeq",
+            "library_construction_protocol": "This analysis was done as in Caporaso et al 2011 Genome "
+            "research. The PCR primers (F515/R806) were developed against "
+            "the V4 region of the 16S rRNA (both bacteria and archaea), "
+            "which we determined would yield optimal community clustering "
+            "with reads of this length using a procedure similar to that "
+            "of ref. 15. [For reference, this primer pair amplifies the "
+            "region 533_786 in the Escherichia coli strain 83972 sequence "
+            "(greengenes accession no. prokMSA_id:470367).] The reverse "
+            "PCR primer is barcoded with a 12-base error-correcting Golay "
+            "code to facilitate multiplexing of up to 1,500 samples per "
+            "lane, and both PCR primers contain sequencer adapter "
+            "regions.",
+            "pcr_primers": "FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT",
+            "platform": "Illumina",
+            "primer": "GTGCCAGCMGCCGCGGTAA",
+            "run_center": "ANL",
+            "run_date": "8/1/12",
+            "run_prefix": "s_G1_L001_sequences",
+            "samp_size": ".25,g",
+            "sample_center": "ANL",
+            "sequencing_meth": "Sequencing by synthesis",
+            "study_center": "CCME",
+            "target_gene": "16S rRNA",
+            "target_subfragment": "V4",
+            "qiita_prep_id": "1",
+        }
         self.assertEqual(obs, exp)
 
     def test_get_sample_information(self):
         obs = self.get(
-            '/qiita_db/prep_template/1/data/?sample_information=true',
-            headers=self.header)
+            "/qiita_db/prep_template/1/data/?sample_information=true",
+            headers=self.header,
+        )
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertCountEqual(obs.keys(), ['data'])
+        self.assertCountEqual(obs.keys(), ["data"])
 
         # let's just check that the samples and the keys from the first element
         # match - this assures us that is the sample_info, the rest is
         # basically the same as the regular prep_info
-        obs = obs['data']
-        exp = ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
-               '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
-               '1.SKD9.640182', '1.SKM8.640201', '1.SKM2.640199',
-               '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
-               '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186',
-               '1.SKB1.640202', '1.SKM1.640183', '1.SKD1.640179',
-               '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
-               '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
-               '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']
+        obs = obs["data"]
+        exp = [
+            "1.SKB2.640194",
+            "1.SKM4.640180",
+            "1.SKB3.640195",
+            "1.SKB6.640176",
+            "1.SKD6.640190",
+            "1.SKM6.640187",
+            "1.SKD9.640182",
+            "1.SKM8.640201",
+            "1.SKM2.640199",
+            "1.SKD2.640178",
+            "1.SKB7.640196",
+            "1.SKD4.640185",
+            "1.SKB8.640193",
+            "1.SKM3.640197",
+            "1.SKD5.640186",
+            "1.SKB1.640202",
+            "1.SKM1.640183",
+            "1.SKD1.640179",
+            "1.SKD3.640198",
+            "1.SKB5.640181",
+            "1.SKB4.640189",
+            "1.SKB9.640200",
+            "1.SKM9.640192",
+            "1.SKD8.640184",
+            "1.SKM5.640177",
+            "1.SKM7.640188",
+            "1.SKD7.640191",
+        ]
         self.assertCountEqual(list(obs.keys()), exp)
-        exp = ['ph', 'temp', 'depth', 'country', 'texture', 'altitude',
-               'latitude', 'taxon_id', 'elevation', 'env_biome', 'longitude',
-               'tot_nitro', 'host_taxid', 'common_name', 'description',
-               'env_feature', 'env_package', 'sample_type', 'tot_org_carb',
-               'dna_extracted', 'samp_salinity', 'anonymized_name',
-               'host_subject_id', 'scientific_name', 'assigned_from_geo',
-               'season_environment', 'water_content_soil',
-               'collection_timestamp', 'description_duplicate',
-               'physical_specimen_location', 'physical_specimen_remaining',
-               'qiita_study_id']
-        self.assertCountEqual(obs['1.SKB2.640194'].keys(), exp)
+        exp = [
+            "ph",
+            "temp",
+            "depth",
+            "country",
+            "texture",
+            "altitude",
+            "latitude",
+            "taxon_id",
+            "elevation",
+            "env_biome",
+            "longitude",
+            "tot_nitro",
+            "host_taxid",
+            "common_name",
+            "description",
+            "env_feature",
+            "env_package",
+            "sample_type",
+            "tot_org_carb",
+            "dna_extracted",
+            "samp_salinity",
+            "anonymized_name",
+            "host_subject_id",
+            "scientific_name",
+            "assigned_from_geo",
+            "season_environment",
+            "water_content_soil",
+            "collection_timestamp",
+            "description_duplicate",
+            "physical_specimen_location",
+            "physical_specimen_remaining",
+            "qiita_study_id",
+        ]
+        self.assertCountEqual(obs["1.SKB2.640194"].keys(), exp)
 
 
 class PrepTemplateAPItestHandlerTests(OauthTestingBase):
     def test_post(self):
         metadata_dict = {
-            'SKB8.640193': {'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'platform': 'Illumina',
-                            'instrument_model': 'Illumina MiSeq'},
-            'SKD8.640184': {'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'platform': 'Illumina',
-                            'instrument_model': 'Illumina MiSeq'}}
-        data = {'prep_info': dumps(metadata_dict),
-                'study': 1,
-                'data_type': '16S'}
-        obs = self.post('/apitest/prep_template/', headers=self.header,
-                        data=data)
+            "SKB8.640193": {
+                "primer": "GTGCCAGCMGCCGCGGTAA",
+                "barcode": "GTCCGCAAGTTA",
+                "platform": "Illumina",
+                "instrument_model": "Illumina MiSeq",
+            },
+            "SKD8.640184": {
+                "primer": "GTGCCAGCMGCCGCGGTAA",
+                "barcode": "GTCCGCAAGTTA",
+                "platform": "Illumina",
+                "instrument_model": "Illumina MiSeq",
+            },
+        }
+        data = {"prep_info": dumps(metadata_dict), "study": 1, "data_type": "16S"}
+        obs = self.post("/apitest/prep_template/", headers=self.header, data=data)
         self.assertEqual(obs.code, 200)
         obs = loads(obs.body)
-        self.assertCountEqual(obs.keys(), ['prep'])
+        self.assertCountEqual(obs.keys(), ["prep"])
 
-        pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
+        pt = qdb.metadata_template.prep_template.PrepTemplate(obs["prep"])
         # default name, and creation_job_id
-        self.assertTrue(pt.name.startswith('Prep information'))
+        self.assertTrue(pt.name.startswith("Prep information"))
         self.assertIsNone(pt.creation_job_id)
-        self.assertCountEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
+        self.assertCountEqual(pt.keys(), ["1.SKB8.640193", "1.SKD8.640184"])
 
         # testing that a new prep doesn't break the call due to empty artifact
-        obs = self.get('/qiita_db/prep_template/%d/' % pt.id,
-                       headers=self.header)
+        obs = self.get("/qiita_db/prep_template/%d/" % pt.id, headers=self.header)
         self.assertEqual(obs.code, 200)
 
         # testing that using a non default value actually works
-        data['name'] = 'my long and informative name'
-        data['job-id'] = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-        obs = self.post('/apitest/prep_template/', headers=self.header,
-                        data=data)
+        data["name"] = "my long and informative name"
+        data["job-id"] = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        obs = self.post("/apitest/prep_template/", headers=self.header, data=data)
         obs = loads(obs.body)
-        pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
-        self.assertEqual(pt.name, data['name'])
-        self.assertEqual(pt.creation_job_id, data['job-id'])
+        pt = qdb.metadata_template.prep_template.PrepTemplate(obs["prep"])
+        self.assertEqual(pt.name, data["name"])
+        self.assertEqual(pt.creation_job_id, data["job-id"])
 
         # testing setter
-        jid = 'aaaaaaaa-aaaa-bbbb-aaaa-aaaaaaaaaaaa'
+        jid = "aaaaaaaa-aaaa-bbbb-aaaa-aaaaaaaaaaaa"
         pt.creation_job_id = jid
         self.assertEqual(pt.creation_job_id, jid)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

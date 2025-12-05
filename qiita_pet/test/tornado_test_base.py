@@ -7,19 +7,21 @@
 # -----------------------------------------------------------------------------
 
 from mock import Mock
+
 try:
     from urllib import urlencode
 except ImportError:  # py3
     from urllib.parse import urlencode
 
-from tornado.testing import AsyncHTTPTestCase, bind_unused_port
 from tornado.escape import json_encode
+from tornado.testing import AsyncHTTPTestCase, bind_unused_port
 from tornado.websocket import websocket_connect
-from qiita_pet.webserver import Application
-from qiita_pet.handlers.base_handlers import BaseHandler
+
+from qiita_core.qiita_settings import r_client
 from qiita_db.environment_manager import clean_test_environment
 from qiita_db.user import User
-from qiita_core.qiita_settings import r_client
+from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.webserver import Application
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
@@ -28,7 +30,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
 
     def get_app(self):
         BaseHandler.get_current_user = Mock(return_value=User("test@foo.bar"))
-        self.app.settings['debug'] = False
+        self.app.settings["debug"] = False
         return self.app
 
     @classmethod
@@ -41,11 +43,11 @@ class TestHandlerBase(AsyncHTTPTestCase):
         if data is not None:
             if isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
-            if '?' in url:
-                url += '&%s' % data
+            if "?" in url:
+                url += "&%s" % data
             else:
-                url += '?%s' % data
-        return self._fetch(url, 'GET', headers=headers)
+                url += "?%s" % data
+        return self._fetch(url, "GET", headers=headers)
 
     def post(self, url, data, headers=None, doseq=True, asjson=False):
         if data is not None:
@@ -53,7 +55,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
                 data = json_encode(data)
             elif isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
-        return self._fetch(url, 'POST', data, headers)
+        return self._fetch(url, "POST", data, headers)
 
     def patch(self, url, data, headers=None, doseq=True, asjson=False):
         if asjson:
@@ -61,25 +63,26 @@ class TestHandlerBase(AsyncHTTPTestCase):
         else:
             if isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
-            if '?' in url:
-                url += '&%s' % data
+            if "?" in url:
+                url += "&%s" % data
             else:
-                url += '?%s' % data
-        return self._fetch(url, 'PATCH', data=data, headers=headers)
+                url += "?%s" % data
+        return self._fetch(url, "PATCH", data=data, headers=headers)
 
     def delete(self, url, data=None, headers=None, doseq=True):
         if data is not None:
             if isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
-            if '?' in url:
-                url += '&%s' % data
+            if "?" in url:
+                url += "&%s" % data
             else:
-                url += '?%s' % data
-        return self._fetch(url, 'DELETE', headers=headers)
+                url += "?%s" % data
+        return self._fetch(url, "DELETE", headers=headers)
 
     def _fetch(self, url, method, data=None, headers=None):
-        self.http_client.fetch(self.get_url(url), self.stop, method=method,
-                               body=data, headers=headers)
+        self.http_client.fetch(
+            self.get_url(url), self.stop, method=method, body=data, headers=headers
+        )
         # there is a random error in travis where a test takes longer than
         # expected thus using 25 seconds
         return self.wait(timeout=25)
@@ -94,5 +97,5 @@ class TestHandlerWebSocketBase(TestHandlerBase):
 
     def _mk_connection(self):
         return websocket_connect(
-            'ws://localhost:{}/analysis/selected/socket/'.format(self.port)
+            "ws://localhost:{}/analysis/selected/socket/".format(self.port)
         )

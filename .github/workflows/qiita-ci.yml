@@ -252,7 +252,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: flake8
+      - name: ruff
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
@@ -262,5 +262,5 @@ jobs:
         uses: actions/checkout@v2
       - name: lint
         run: |
-          pip install -q flake8
-          flake8 qiita_* setup.py scripts/qiita* notebooks/*/*.py
+          pip install -q ruff
+          ruff check qiita_* setup.py scripts/qiita* notebooks/*/*.py

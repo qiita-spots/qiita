@@ -40,6 +40,7 @@ class Investigation(qdb.base.QiitaObject):
     add_study
         Adds a study to the investigation
     """
+
     _table = "investigation"
 
     @classmethod

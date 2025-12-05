@@ -23,9 +23,9 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+import qiita_db as qdb
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-import qiita_db as qdb
 
 
 class QiitaObject(object):
@@ -109,7 +109,8 @@ class QiitaObject(object):
         """
         if cls._table is None:
             raise IncompetentQiitaDeveloperError(
-                "Could not instantiate an object of the base class")
+                "Could not instantiate an object of the base class"
+            )
 
     def _check_id(self, id_):
         r"""Check that the provided ID actually exists on the database
@@ -173,10 +174,11 @@ class QiitaObject(object):
         # as strings (e.g., '5'). Therefore, explicit type-checking is needed
         # here to accommodate these possibilities.
         if not isinstance(id_, (int, str)):
-            raise TypeError("id_ must be a numerical or text type (not %s) "
-                            "when instantiating "
-                            "%s" % (id_.__class__.__name__,
-                                    self.__class__.__name__))
+            raise TypeError(
+                "id_ must be a numerical or text type (not %s) "
+                "when instantiating "
+                "%s" % (id_.__class__.__name__, self.__class__.__name__)
+            )
 
         if isinstance(id_, (str)):
             if id_.isdigit():
@@ -187,7 +189,7 @@ class QiitaObject(object):
             try:
                 _id = self._check_id(id_)
             except ValueError as error:
-                if 'INVALID_TEXT_REPRESENTATION' not in str(error):
+                if "INVALID_TEXT_REPRESENTATION" not in str(error):
                     raise error
                 _id = False
 
@@ -197,7 +199,8 @@ class QiitaObject(object):
             if not self._check_portal(id_):
                 raise qdb.exceptions.QiitaDBError(
                     "%s with id %d inaccessible in current portal: %s"
-                    % (self.__class__.__name__, id_, qiita_config.portal))
+                    % (self.__class__.__name__, id_, qiita_config.portal)
+                )
 
         self._id = id_
 

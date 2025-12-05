@@ -5,16 +5,15 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+import warnings
+from string import ascii_letters, digits
+
+import numpy as np
+import pandas as pd
+from iteration_utilities import duplicates
 from six import StringIO
 
-import pandas as pd
-import numpy as np
-import warnings
-from iteration_utilities import duplicates
-
 import qiita_db as qdb
-
-from string import ascii_letters, digits
 
 
 def prefix_sample_names_with_id(md_template, study_id):
@@ -29,27 +28,34 @@ def prefix_sample_names_with_id(md_template, study_id):
     """
     # loop over the samples and prefix those that aren't prefixed
     sid = str(study_id)
-    md_template['qiita_sample_name_with_id'] = pd.Series(
-        [idx if idx.split('.', 1)[0] == sid and idx != sid
-         else '%d.%s' % (study_id, idx)
-         for idx in md_template.index], index=md_template.index)
+    md_template["qiita_sample_name_with_id"] = pd.Series(
+        [
+            idx
+            if idx.split(".", 1)[0] == sid and idx != sid
+            else "%d.%s" % (study_id, idx)
+            for idx in md_template.index
+        ],
+        index=md_template.index,
+    )
 
     # get the rows that are going to change
-    changes = len(md_template.index[
-        md_template['qiita_sample_name_with_id'] != md_template.index])
+    changes = len(
+        md_template.index[md_template["qiita_sample_name_with_id"] != md_template.index]
+    )
     if changes != 0 and changes != len(md_template.index):
         warnings.warn(
             "Some of the samples were already prefixed with the study id.",
-            qdb.exceptions.QiitaDBWarning)
+            qdb.exceptions.QiitaDBWarning,
+        )
 
     md_template.index = md_template.qiita_sample_name_with_id
-    del md_template['qiita_sample_name_with_id']
+    del md_template["qiita_sample_name_with_id"]
     # The original metadata template had the index column unnamed -> remove
     # the name of the index for consistency
     md_template.index.name = None
 
 
-def load_template_to_dataframe(fn, index='sample_name'):
+def load_template_to_dataframe(fn, index="sample_name"):
     """Load a sample/prep template or a QIIME mapping file into a data frame
 
     Parameters
@@ -95,50 +101,49 @@ def load_template_to_dataframe(fn, index='sample_name'):
     """
     # Load in file lines
     holdfile = None
-    with qdb.util.open_file(fn, newline=None,
-                            encoding="utf8", errors='ignore') as f:
+    with qdb.util.open_file(fn, newline=None, encoding="utf8", errors="ignore") as f:
         holdfile = f.readlines()
 
     if not holdfile:
-        raise ValueError('Empty file passed!')
+        raise ValueError("Empty file passed!")
 
     if index == "#SampleID":
         # We're going to parse a QIIME mapping file. We are going to first
         # parse it with the QIIME function so we can remove the comments
         # easily and make sure that QIIME will accept this as a mapping file
         data, headers, comments = _parse_mapping_file(holdfile)
-        holdfile = ["%s\n" % '\t'.join(d) for d in data]
-        holdfile.insert(0, "%s\n" % '\t'.join(headers))
+        holdfile = ["%s\n" % "\t".join(d) for d in data]
+        holdfile.insert(0, "%s\n" % "\t".join(headers))
         # The QIIME parser fixes the index and removes the #
-        index = 'SampleID'
+        index = "SampleID"
 
     # Strip all values in the cells in the input file
     for pos, line in enumerate(holdfile):
-        cols = line.split('\t')
-        if pos == 0 and index != 'SampleID':
+        cols = line.split("\t")
+        if pos == 0 and index != "SampleID":
             # get and clean the controlled columns
-            ccols = {'sample_name'}
+            ccols = {"sample_name"}
             ccols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
             newcols = [
-                c.lower().strip() if c.lower().strip() in ccols
-                else c.strip()
-                for c in cols]
+                c.lower().strip() if c.lower().strip() in ccols else c.strip()
+                for c in cols
+            ]
 
             # while we are here, let's check for duplicate columns headers
             ncols = set(newcols)
             if len(ncols) != len(newcols):
-                if '' in ncols:
-                    raise ValueError(
-                        'Your file has empty columns headers.')
+                if "" in ncols:
+                    raise ValueError("Your file has empty columns headers.")
                 raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-                    set(duplicates(newcols)))
+                    set(duplicates(newcols))
+                )
         else:
             # .strip will remove odd chars, newlines, tabs and multiple
             # spaces but we need to read a new line at the end of the
             # line(+'\n')
             newcols = [d.strip(" \r\n") for d in cols]
 
-        holdfile[pos] = '\t'.join(newcols) + '\n'
+        holdfile[pos] = "\t".join(newcols) + "\n"
 
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
@@ -150,28 +155,30 @@ def load_template_to_dataframe(fn, index='sample_name'):
     #   constituted only by delimiters i. e. empty rows.
     try:
         template = pd.read_csv(
-            StringIO(''.join(holdfile)),
-            sep='\t',
+            StringIO("".join(holdfile)),
+            sep="\t",
             dtype=str,
-            encoding='utf-8',
+            encoding="utf-8",
             keep_default_na=False,
             index_col=False,
-            comment='\t',
-            converters={index: lambda x: str(x).strip()})
+            comment="\t",
+            converters={index: lambda x: str(x).strip()},
+        )
     except pd.errors.ParserError as e:
-        if 'tokenizing' in str(e):
-            msg = ('Your file has more columns with values than headers. To '
-                   'fix, make sure to delete any extra rows or columns; they '
-                   'might look empty because they have spaces. Then upload '
-                   'and try again.')
+        if "tokenizing" in str(e):
+            msg = (
+                "Your file has more columns with values than headers. To "
+                "fix, make sure to delete any extra rows or columns; they "
+                "might look empty because they have spaces. Then upload "
+                "and try again."
+            )
             raise RuntimeError(msg)
         else:
             raise e
     # remove newlines and tabs from fields
-    template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
-                     regex=True, inplace=True)
+    template.replace(to_replace="[\t\n\r\x0b\x0c]+", value="", regex=True, inplace=True)
     # removing columns with empty values
-    template.dropna(axis='columns', how='all', inplace=True)
+    template.dropna(axis="columns", how="all", inplace=True)
     if template.empty:
         raise ValueError("The template is empty")
 
@@ -180,40 +187,43 @@ def load_template_to_dataframe(fn, index='sample_name'):
     if index not in template.columns:
         raise qdb.exceptions.QiitaDBColumnError(
             "The '%s' column is missing from your template, this file cannot "
-            "be parsed." % index)
+            "be parsed." % index
+        )
 
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
-    template.dropna(subset=[index], how='all', inplace=True)
+    template.dropna(subset=[index], how="all", inplace=True)
 
     # set the sample name as the index
     template.set_index(index, inplace=True)
 
     # it is not uncommon to find templates that have empty columns so let's
     # find the columns that are all ''
-    columns = np.where(np.all(template.applymap(lambda x: x == ''), axis=0))
+    columns = np.where(np.all(template.applymap(lambda x: x == ""), axis=0))
     template.drop(template.columns[columns], axis=1, inplace=True)
 
     initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
     if dropped_cols:
         warnings.warn(
-            'The following column(s) were removed from the template because '
-            'all their values are empty: %s'
-            % ', '.join(dropped_cols), qdb.exceptions.QiitaDBWarning)
+            "The following column(s) were removed from the template because "
+            "all their values are empty: %s" % ", ".join(dropped_cols),
+            qdb.exceptions.QiitaDBWarning,
+        )
 
     # removing 'sample-id' and 'sample_id' as per issue #2906
     sdrop = []
-    if 'sample-id' in template.columns:
-        sdrop.append('sample-id')
-    if 'sample_id' in template.columns:
-        sdrop.append('sample_id')
+    if "sample-id" in template.columns:
+        sdrop.append("sample-id")
+    if "sample_id" in template.columns:
+        sdrop.append("sample_id")
     if sdrop:
         template.drop(columns=sdrop, inplace=True)
         warnings.warn(
-            'The following column(s) were removed from the template because '
-            'they will cause conflicts with sample_name: %s'
-            % ', '.join(sdrop), qdb.exceptions.QiitaDBWarning)
+            "The following column(s) were removed from the template because "
+            "they will cause conflicts with sample_name: %s" % ", ".join(sdrop),
+            qdb.exceptions.QiitaDBWarning,
+        )
 
     # Pandas represents data with np.nan rather than Nones, change it to None
     # because psycopg2 knows that a None is a Null in SQL, while it doesn't
@@ -243,7 +253,7 @@ def get_invalid_sample_names(sample_names):
     """
 
     # from the QIIME mapping file documentation
-    valid = set(ascii_letters+digits+'.')
+    valid = set(ascii_letters + digits + ".")
     inv = []
 
     for s in sample_names:
@@ -275,13 +285,13 @@ def looks_like_qiime_mapping_file(fp):
     some other different column.
     """
     first_line = None
-    with qdb.util.open_file(fp, newline=None, errors='replace') as f:
+    with qdb.util.open_file(fp, newline=None, errors="replace") as f:
         first_line = f.readline()
     if not first_line:
         return False
 
     first_col = first_line.split()[0]
-    return first_col == '#SampleID'
+    return first_col == "#SampleID"
 
 
 def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
@@ -319,12 +329,12 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
             # remove quotes but not spaces
 
             def strip_f(x):
-                return x.replace('"', '')
+                return x.replace('"', "")
         else:
             # remove quotes and spaces
 
             def strip_f(x):
-                return x.replace('"', '').strip()
+                return x.replace('"', "").strip()
     else:
         if suppress_stripping:
             # don't remove quotes or spaces
@@ -349,24 +359,22 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
             # skip blank lines when not stripping lines
             continue
 
-        if line.startswith('#'):
+        if line.startswith("#"):
             line = line[1:]
             if not header:
-                header = line.strip().split('\t')
+                header = line.strip().split("\t")
             else:
                 comments.append(line)
         else:
             # Will add empty string to empty fields
-            tmp_line = list(map(strip_f, line.split('\t')))
+            tmp_line = list(map(strip_f, line.split("\t")))
             if len(tmp_line) < len(header):
-                tmp_line.extend([''] * (len(header) - len(tmp_line)))
+                tmp_line.extend([""] * (len(header) - len(tmp_line)))
             mapping_data.append(tmp_line)
     if not header:
-        raise qdb.exceptions.QiitaDBError(
-            "No header line was found in mapping file.")
+        raise qdb.exceptions.QiitaDBError("No header line was found in mapping file.")
     if not mapping_data:
-        raise qdb.exceptions.QiitaDBError(
-            "No data found in mapping file.")
+        raise qdb.exceptions.QiitaDBError("No data found in mapping file.")
 
     return mapping_data, header, comments
 
@@ -393,7 +401,14 @@ def get_qiime2_reserved_words():
     set: str
         The reserved words
     """
-    qiime2_reserved_column_names = ['feature id', 'feature-id', 'featureid',
-                                    'id', 'sample id', 'sample-id', 'sampleid']
+    qiime2_reserved_column_names = [
+        "feature id",
+        "feature-id",
+        "featureid",
+        "id",
+        "sample id",
+        "sample-id",
+        "sampleid",
+    ]
 
     return set(qiime2_reserved_column_names)

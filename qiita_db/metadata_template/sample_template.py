@@ -8,11 +8,10 @@
 from os.path import join
 from time import strftime
 
+import qiita_db as qdb
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
-import qiita_db as qdb
-from .base_metadata_template import (
-    BaseSample, MetadataTemplate, QIITA_COLUMN_NAME)
+from .base_metadata_template import QIITA_COLUMN_NAME, BaseSample, MetadataTemplate
 
 
 class Sample(BaseSample):
@@ -23,6 +22,7 @@ class Sample(BaseSample):
     BaseSample
     PrepSample
     """
+
     _table = "study_sample"
     _table_prefix = "sample_"
     _id_column = "study_id"
@@ -53,22 +53,24 @@ class SampleTemplate(MetadataTemplate):
     MetadataTemplate
     PrepTemplate
     """
+
     _table = "study_sample"
     _table_prefix = "sample_"
     _id_column = "study_id"
     _sample_cls = Sample
-    _filepath_table = 'sample_template_filepath'
+    _filepath_table = "sample_template_filepath"
     _forbidden_words = {
-                        'barcodesequence',
-                        'linkerprimersequence',
-                        'barcode',
-                        'linker',
-                        'primer',
-                        'run_prefix',
-                        'sampleid',
-                        'qiita_study_id',
-                        'qiita_prep_id',
-                        QIITA_COLUMN_NAME}
+        "barcodesequence",
+        "linkerprimersequence",
+        "barcode",
+        "linker",
+        "primer",
+        "run_prefix",
+        "sampleid",
+        "qiita_study_id",
+        "qiita_prep_id",
+        QIITA_COLUMN_NAME,
+    }
 
     @classmethod
     def create(cls, md_template, study):
@@ -87,7 +89,8 @@ class SampleTemplate(MetadataTemplate):
             # Check that we don't have a MetadataTemplate for study
             if cls.exists(study.id):
                 raise qdb.exceptions.QiitaDBDuplicateError(
-                    cls.__name__, 'id: %d' % study.id)
+                    cls.__name__, "id: %d" % study.id
+                )
 
             # Clean and validate the metadata template given
             md_template = cls._clean_validate_template(md_template, study.id)
@@ -95,8 +98,7 @@ class SampleTemplate(MetadataTemplate):
             cls._common_creation_steps(md_template, study.id)
 
             st = cls(study.id)
-            st.validate(
-                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            st.validate(qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
             st.generate_files()
 
             return st
@@ -131,7 +133,8 @@ class SampleTemplate(MetadataTemplate):
             if has_prep_templates:
                 raise qdb.exceptions.QiitaDBError(
                     "Sample template cannot be erased because there are prep "
-                    "templates associated.")
+                    "templates associated."
+                )
 
             table_name = cls._table_name(id_)
 
@@ -145,7 +148,8 @@ class SampleTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql)
 
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
-                cls._table, cls._id_column)
+                cls._table, cls._id_column
+            )
             qdb.sql_connection.TRN.add(sql, args)
 
             qdb.sql_connection.TRN.execute()
@@ -185,14 +189,17 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBOperationNotPermittedError
             If the `sample_name` has been used in a prep info file
         """
-        pts = {pt.id: [sn for sn in sample_names if pt.get(sn) is not None]
-               for pt in qdb.study.Study(self.study_id).prep_templates()}
+        pts = {
+            pt.id: [sn for sn in sample_names if pt.get(sn) is not None]
+            for pt in qdb.study.Study(self.study_id).prep_templates()
+        }
         if any(pts.values()):
-            sids = ', '.join({vv for v in pts.values() for vv in v})
-            pts = ', '.join(map(str, pts.keys()))
+            sids = ", ".join({vv for v in pts.values() for vv in v})
+            pts = ", ".join(map(str, pts.keys()))
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "'%s' cannot be deleted as they have been found in a prep "
-                "information file: '%s'" % (sids, pts))
+                "information file: '%s'" % (sids, pts)
+            )
 
         self._common_delete_sample_steps(sample_names)
 
@@ -259,8 +266,8 @@ class SampleTemplate(MetadataTemplate):
         """
         with qdb.sql_connection.TRN:
             # figuring out the filepath of the sample template
-            _id, fp = qdb.util.get_mountpoint('templates')[0]
-            fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+            _id, fp = qdb.util.get_mountpoint("templates")[0]
+            fp = join(fp, "%d_%s.txt" % (self.id, strftime("%Y%m%d-%H%M%S")))
             # storing the sample template
             self.to_file(fp)
 
@@ -277,7 +284,7 @@ class SampleTemplate(MetadataTemplate):
         dict of {str: str}
             The EBI sample accession numbers keyed by sample id
         """
-        return self._get_accession_numbers('ebi_sample_accession')
+        return self._get_accession_numbers("ebi_sample_accession")
 
     @ebi_sample_accessions.setter
     def ebi_sample_accessions(self, value):
@@ -293,7 +300,7 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBError
             If a sample in `value` already has an accession number
         """
-        self._update_accession_numbers('ebi_sample_accession', value)
+        self._update_accession_numbers("ebi_sample_accession", value)
 
     @property
     def biosample_accessions(self):
@@ -304,7 +311,7 @@ class SampleTemplate(MetadataTemplate):
         dict of {str: str}
             The biosample accession numbers keyed by sample id
         """
-        return self._get_accession_numbers('biosample_accession')
+        return self._get_accession_numbers("biosample_accession")
 
     @biosample_accessions.setter
     def biosample_accessions(self, value):
@@ -320,7 +327,7 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBError
             If a sample in `value` already has an accession number
         """
-        self._update_accession_numbers('biosample_accession', value)
+        self._update_accession_numbers("biosample_accession", value)
 
     def to_dataframe(self, add_ebi_accessions=False, samples=None):
         """Returns the metadata template as a dataframe
@@ -336,8 +343,9 @@ class SampleTemplate(MetadataTemplate):
 
         if add_ebi_accessions:
             accessions = self.ebi_sample_accessions
-            df['qiita_ebi_sample_accessions'] = df.index.map(
-                lambda sid: accessions[sid])
+            df["qiita_ebi_sample_accessions"] = df.index.map(
+                lambda sid: accessions[sid]
+            )
 
         return df
 

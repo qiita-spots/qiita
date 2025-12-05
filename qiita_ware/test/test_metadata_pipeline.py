@@ -7,20 +7,19 @@
 # -----------------------------------------------------------------------------
 
 from io import StringIO
-from unittest import TestCase, main
 from os import remove
 from os.path import exists
+from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_ware.exceptions import QiitaWareError
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.sql_connection import TRN
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_count
-from qiita_db.metadata_template.sample_template import SampleTemplate
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_ware.metadata_pipeline import (
-    create_templates_from_qiime_mapping_file)
+from qiita_ware.exceptions import QiitaWareError
+from qiita_ware.metadata_pipeline import create_templates_from_qiime_mapping_file
 
 
 @qiita_test_checker()
@@ -32,14 +31,15 @@ class TestMetadataPipeline(TestCase):
             "mixs_compliant": True,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
+            "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
+            "gut microbiome",
             "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
+            "lab_person_id": StudyPerson(1),
         }
         self.new_study = Study.create(
-            User('test@foo.bar'), "Fried Chicken Microbiome", info)
+            User("test@foo.bar"), "Fried Chicken Microbiome", info
+        )
         self._clean_up_files = []
 
     def tearDown(self):
@@ -55,9 +55,10 @@ class TestMetadataPipeline(TestCase):
         Study.delete(study_id)
 
     def test_create_templates_from_qiime_mapping_file(self):
-        new_pt_id = get_count('qiita.prep_template') + 1
+        new_pt_id = get_count("qiita.prep_template") + 1
         obs_st, obs_pt = create_templates_from_qiime_mapping_file(
-            StringIO(QIIME_MAP), self.new_study, "16S")
+            StringIO(QIIME_MAP), self.new_study, "16S"
+        )
 
         # Be green: clean the environment
         for template in [obs_st, obs_pt]:
@@ -68,25 +69,40 @@ class TestMetadataPipeline(TestCase):
         self.assertEqual(obs_pt.id, new_pt_id)
 
         # Check that each template has the correct columns
-        exp = {"physical_specimen_location", "physical_specimen_remaining",
-               "dna_extracted", "sample_type", "host_subject_id", "latitude",
-               "longitude", "taxon_id", "scientific_name",
-               "collection_timestamp", "description"}
+        exp = {
+            "physical_specimen_location",
+            "physical_specimen_remaining",
+            "dna_extracted",
+            "sample_type",
+            "host_subject_id",
+            "latitude",
+            "longitude",
+            "taxon_id",
+            "scientific_name",
+            "collection_timestamp",
+            "description",
+        }
         self.assertEqual(set(obs_st.categories), exp)
 
-        exp = {"barcode", "primer", "center_name", "run_prefix", "platform",
-               "library_construction_protocol", "instrument_model",
-               "experiment_design_description"}
+        exp = {
+            "barcode",
+            "primer",
+            "center_name",
+            "run_prefix",
+            "platform",
+            "library_construction_protocol",
+            "instrument_model",
+            "experiment_design_description",
+        }
         self.assertEqual(set(obs_pt.categories), exp)
 
     def test_create_templates_from_qiime_mapping_file_reverse_linker(self):
         with TRN:
-            TRN.add("SELECT last_value FROM "
-                    "qiita.prep_template_prep_template_id_seq")
+            TRN.add("SELECT last_value FROM qiita.prep_template_prep_template_id_seq")
             curr_id = TRN.execute_fetchflatten()[0]
         obs_st, obs_pt = create_templates_from_qiime_mapping_file(
-            StringIO(QIIME_MAP_WITH_REVERSE_LINKER_PRIMER),
-            self.new_study, "16S")
+            StringIO(QIIME_MAP_WITH_REVERSE_LINKER_PRIMER), self.new_study, "16S"
+        )
 
         # Be green: clean the environment
         for template in [obs_st, obs_pt]:
@@ -97,21 +113,39 @@ class TestMetadataPipeline(TestCase):
         self.assertEqual(obs_pt.id, curr_id + 1)
 
         # Check that each template has the correct columns
-        exp = {"physical_specimen_location", "physical_specimen_remaining",
-               "dna_extracted", "sample_type", "host_subject_id", "latitude",
-               "longitude", "taxon_id", "scientific_name",
-               "collection_timestamp", "description"}
+        exp = {
+            "physical_specimen_location",
+            "physical_specimen_remaining",
+            "dna_extracted",
+            "sample_type",
+            "host_subject_id",
+            "latitude",
+            "longitude",
+            "taxon_id",
+            "scientific_name",
+            "collection_timestamp",
+            "description",
+        }
         self.assertEqual(set(obs_st.categories), exp)
 
-        exp = {"barcode", "primer", "center_name", "run_prefix", "platform",
-               "library_construction_protocol", "instrument_model",
-               "experiment_design_description", "reverselinkerprimer"}
+        exp = {
+            "barcode",
+            "primer",
+            "center_name",
+            "run_prefix",
+            "platform",
+            "library_construction_protocol",
+            "instrument_model",
+            "experiment_design_description",
+            "reverselinkerprimer",
+        }
         self.assertEqual(set(obs_pt.categories), exp)
 
     def test_create_templates_from_qiime_mapping_file_error(self):
         with self.assertRaises(QiitaWareError):
             create_templates_from_qiime_mapping_file(
-                StringIO(QIIME_MAP_ERROR), self.new_study, "16S")
+                StringIO(QIIME_MAP_ERROR), self.new_study, "16S"
+            )
 
 
 QIIME_MAP = (
@@ -129,7 +163,8 @@ QIIME_MAP = (
     "Illumina\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S2\n"
     "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
     "TRUE\ttype3\tNotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\trp_2\t"
-    "Illumina\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S3\n")
+    "Illumina\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S3\n"
+)
 
 QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer\t"
@@ -149,7 +184,8 @@ QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
     "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype3\tNotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\t"
     "rp_2\tIllumina\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00:00\t"
-    "Description S3\n")
+    "Description S3\n"
+)
 
 QIIME_MAP_ERROR = (
     "#SampleID\tBarcodeSequence\tphysical_specimen_location\t"
@@ -165,7 +201,8 @@ QIIME_MAP_ERROR = (
     "05/28/15 11:00:00\tDescription S2\n"
     "Sample3\tCCTCTGAGAGCT\tUCSD\tTRUE\tTRUE\ttype3\tNotIdentified\t4.3\t4.3\t"
     "9606\thomo sapiens\tANL\trp_2\tIllumina\tprotocol_1\tedd_1\t"
-    "05/28/15 11:00:00\tDescription S3\n")
+    "05/28/15 11:00:00\tDescription S3\n"
+)
 
 
 if __name__ == "__main__":

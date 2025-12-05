@@ -19,6 +19,7 @@ Classes
 
    Transaction
 """
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -27,26 +28,29 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from contextlib import contextmanager
-from itertools import chain
 from functools import wraps
+from itertools import chain
 
-from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
-                      OperationalError, errorcodes)
-from psycopg2.extras import DictCursor
+from psycopg2 import Error as PostgresError
+from psycopg2 import OperationalError, ProgrammingError, connect, errorcodes
 from psycopg2.extensions import TRANSACTION_STATUS_IDLE
+from psycopg2.extras import DictCursor
 
 from qiita_core.qiita_settings import qiita_config
 
 
 def _checker(func):
     """Decorator to check that methods are executed inside the context"""
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if self._contexts_entered == 0:
             raise RuntimeError(
                 "Operation not permitted. Transaction methods can only be "
-                "invoked within the context manager.")
+                "invoked within the context manager."
+            )
         return func(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -66,6 +70,7 @@ class Transaction(object):
     When the execution leaves the context manager, any remaining queries in
     the transaction will be executed and committed.
     """
+
     def __init__(self, admin=False):
         self._queries = []
         self._results = []
@@ -86,40 +91,50 @@ class Transaction(object):
                     user=qiita_config.admin_user,
                     password=qiita_config.admin_password,
                     host=qiita_config.host,
-                    port=qiita_config.port)
+                    port=qiita_config.port,
+                )
                 self._connection.autocommit = True
             else:
-                self._connection = connect(user=qiita_config.user,
-                                           password=qiita_config.password,
-                                           database=qiita_config.database,
-                                           host=qiita_config.host,
-                                           port=qiita_config.port)
+                self._connection = connect(
+                    user=qiita_config.user,
+                    password=qiita_config.password,
+                    database=qiita_config.database,
+                    host=qiita_config.host,
+                    port=qiita_config.port,
+                )
         except OperationalError as e:
             # catch three known common exceptions and raise runtime errors
             try:
-                etype = str(e).split(':')[1].split()[0]
+                etype = str(e).split(":")[1].split()[0]
             except IndexError:
                 # we recieved a really unanticipated error without a colon
-                etype = ''
-            if etype == 'database':
-                etext = ('This is likely because the database `%s` has not '
-                         'been created or has been dropped.' %
-                         qiita_config.database)
-            elif etype == 'role':
-                etext = ('This is likely because the user string `%s` '
-                         'supplied in your configuration file `%s` is '
-                         'incorrect or not an authorized postgres user.' %
-                         (qiita_config.user, qiita_config.conf_fp))
-            elif etype == 'Connection':
-                etext = ('This is likely because postgres isn\'t '
-                         'running. Check that postgres is correctly '
-                         'installed and is running.')
+                etype = ""
+            if etype == "database":
+                etext = (
+                    "This is likely because the database `%s` has not "
+                    "been created or has been dropped." % qiita_config.database
+                )
+            elif etype == "role":
+                etext = (
+                    "This is likely because the user string `%s` "
+                    "supplied in your configuration file `%s` is "
+                    "incorrect or not an authorized postgres user."
+                    % (qiita_config.user, qiita_config.conf_fp)
+                )
+            elif etype == "Connection":
+                etext = (
+                    "This is likely because postgres isn't "
+                    "running. Check that postgres is correctly "
+                    "installed and is running."
+                )
             else:
                 # we recieved a really unanticipated error with a colon
-                etext = ''
-            ebase = ('An OperationalError with the following message occured'
-                     '\n\n\t%s\n%s For more information, review `INSTALL.md`'
-                     ' in the Qiita installation base directory.')
+                etext = ""
+            ebase = (
+                "An OperationalError with the following message occured"
+                "\n\n\t%s\n%s For more information, review `INSTALL.md`"
+                " in the Qiita installation base directory."
+            )
             raise RuntimeError(ebase % (str(e), etext))
 
     def close(self):
@@ -164,8 +179,7 @@ class Transaction(object):
             # wrapped in a try/except and rollbacks in case of failure
             self.execute()
             self.commit()
-        elif self._connection.get_transaction_status() != \
-                TRANSACTION_STATUS_IDLE:
+        elif self._connection.get_transaction_status() != TRANSACTION_STATUS_IDLE:
             # There are no queries to be executed, however, the transaction
             # is still not committed. Commit it so the changes are not lost
             self.commit()
@@ -196,8 +210,7 @@ class Transaction(object):
 
         try:
             ec_lu = errorcodes.lookup(error.pgcode)
-            raise ValueError(
-                "Error running SQL: %s. MSG: %s\n" % (ec_lu, str(error)))
+            raise ValueError("Error running SQL: %s. MSG: %s\n" % (ec_lu, str(error)))
         # the order of except statements is important, do not change
         except (KeyError, AttributeError, TypeError) as error:
             raise ValueError("Error running SQL query: %s" % str(error))
@@ -239,8 +252,10 @@ class Transaction(object):
         for args in sql_args:
             if args:
                 if not isinstance(args, (list, tuple, dict)):
-                    raise TypeError("sql_args should be a list, tuple or dict."
-                                    " Found %s" % type(args))
+                    raise TypeError(
+                        "sql_args should be a list, tuple or dict."
+                        " Found %s" % type(args)
+                    )
             self._queries.append((sql, args))
 
     def _execute(self):
@@ -402,7 +417,8 @@ class Transaction(object):
         if error_msg:
             raise RuntimeError(
                 "An error occurred during the post %s commands:\n%s"
-                % (func_str, "\n".join(error_msg)))
+                % (func_str, "\n".join(error_msg))
+            )
 
     @_checker
     def commit(self):

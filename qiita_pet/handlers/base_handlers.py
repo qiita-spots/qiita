@@ -15,18 +15,18 @@ from qiita_pet.util import convert_text_html
 
 class BaseHandler(RequestHandler):
     def get_current_user(self):
-        '''Overrides default method of returning user curently connected'''
+        """Overrides default method of returning user curently connected"""
         username = self.get_secure_cookie("user")
         if username is not None:
             # strip off quotes added by get_secure_cookie
-            username = username.decode('ascii').strip("\"' ")
+            username = username.decode("ascii").strip("\"' ")
             return User(username)
         else:
             self.clear_cookie("user")
             return None
 
     def write_error(self, status_code, **kwargs):
-        '''Overrides the error page created by Tornado'''
+        """Overrides the error page created by Tornado"""
         if status_code == 404:
             # just use the 404 page as the error
             self.render("404.html")
@@ -40,36 +40,42 @@ class BaseHandler(RequestHandler):
         user = self.get_current_user()
         if user:
             try:
-                is_admin = user.level == 'admin'
+                is_admin = user.level == "admin"
             except Exception:
                 # Any issue with this check leaves default as not admin
                 pass
 
         # log the error
         from traceback import format_exception
+
         exc_info = kwargs["exc_info"]
-        trace_info = ''.join(["%s\n" % line for line in
-                             format_exception(*exc_info)])
+        trace_info = "".join(["%s\n" % line for line in format_exception(*exc_info)])
         req_dict = self.request.__dict__
         # must trim body to 1024 chars to prevent huge error messages
-        req_dict['body'] = req_dict.get('body', '')[:1024]
-        request_info = ''.join(["<strong>%s</strong>: %s\n" %
-                               (k, req_dict[k]) for k in
-                                req_dict.keys() if k != 'files'])
-        error = str(exc_info[1]).split(':', 1)
+        req_dict["body"] = req_dict.get("body", "")[:1024]
+        request_info = "".join(
+            [
+                "<strong>%s</strong>: %s\n" % (k, req_dict[k])
+                for k in req_dict.keys()
+                if k != "files"
+            ]
+        )
+        error = str(exc_info[1]).split(":", 1)
         if len(error) > 1:
             error = error[1]
         else:
             error = error[0]
 
         # render error page
-        self.render('error.html', status_code=status_code, is_admin=is_admin,
-                    error=error)
+        self.render(
+            "error.html", status_code=status_code, is_admin=is_admin, error=error
+        )
 
         LogEntry.create(
-            'Runtime',
-            'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
-            (error, trace_info, request_info))
+            "Runtime",
+            "ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n"
+            % (error, trace_info, request_info),
+        )
 
     def head(self):
         """Adds proper response for head requests"""
@@ -77,21 +83,23 @@ class BaseHandler(RequestHandler):
 
 
 class MainHandler(BaseHandler):
-    '''Index page'''
+    """Index page"""
+
     def get(self):
-        msg = self.get_argument('message', '')
+        msg = self.get_argument("message", "")
         msg = convert_text_html(msg)
-        lvl = self.get_argument('level', '')
+        lvl = self.get_argument("level", "")
         self.render("index.html", message=msg, level=lvl)
 
 
 class IFrame(BaseHandler):
-    '''Open one of the IFrame pages'''
+    """Open one of the IFrame pages"""
+
     def get(self):
-        msg = self.get_argument('message', '')
+        msg = self.get_argument("message", "")
         msg = convert_text_html(msg)
-        lvl = self.get_argument('level', '')
-        iframe = self.get_argument('iframe', '')
+        lvl = self.get_argument("level", "")
+        iframe = self.get_argument("iframe", "")
         self.render("iframe.html", iframe=iframe, message=msg, level=lvl)
 
 

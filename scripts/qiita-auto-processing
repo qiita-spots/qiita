@@ -7,13 +7,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from qiita_db.handlers.plugin import _get_plugin
-from qiita_db.study import Study
-from qiita_db.software import Parameters
-from qiita_db.user import User
 from qiita_db.processing_job import ProcessingWorkflow
+from qiita_db.software import Parameters
+from qiita_db.study import Study
+from qiita_db.user import User
 
-
-user = User('antoniog@ucsd.edu')
+user = User("antoniog@ucsd.edu")
 
 # full_pipelines is a list of dict as: {
 #   'name': str,
@@ -38,74 +37,94 @@ user = User('antoniog@ucsd.edu')
 #   'parameters_names': list of the names of the parameter sets we want to run
 # }
 full_pipelines = [
-    {'name': 'Full WGS - Shogun',
-     'data_type': ['Metagenomic'],
-     'artifact_type': 'per_sample_FASTQ',
-     'previous-step': None,
-     'requirements': dict(),
-     'steps': [
-         {'previous-step': None,
-          'plugin': 'qp-meta',
-          'version': '2021.01',
-          'cmd_name': 'Atropos v1.1.24',
-          'input_name': 'input',
-          'ignore_parameters': ['Number of threads used'],
-          'parent_artifact_name': None,
-          'parameters_names': ['KAPA HyperPlus with iTru']},
-         {'previous-step': 'Atropos v1.1.24',
-          'plugin': 'qp-shogun',
-          'version': '072020',
-          'cmd_name': 'Shogun v1.0.8',
-          'input_name': 'input',
-          'ignore_parameters': ['Number of threads'],
-          'parent_artifact_name': 'Adapter trimmed files',
-          'parameters_names': ['wol_bowtie2', 'rep200_bowtie2']}
-      ]},
-    {'name': 'Target Gene Processing',
-     'data_type': ['16S', '18S', 'ITS'],
-     'artifact_type': 'Demultiplexed',
-     'previous-step': 'Split libraries FASTQ',
-     'requirements': {
-        'prep': [
-            {'column': 'platform', 'value': ['illumina'],
-             'equal': True},
-            {'column': 'run_prefix', 'value': ['cmi_workshop_lane1_s1_l001'],
-             'equal': False}]},
-     'steps': [
-        {'previous-step': None,
-         'plugin': 'QIIMEq2',
-         'version': '1.9.1',
-         'cmd_name': 'Trimming',
-         'input_name': 'input_data',
-         'ignore_parameters': [],
-         'parent_artifact_name': None,
-         'parameters_names': ['90 base pairs',
-                              '100 base pairs',
-                              '150 base pairs'
-                              ]},
-        {'previous-step': 'Trimming',
-         'plugin': 'QIIMEq2',
-         'version': '1.9.1',
-         'cmd_name': 'Pick closed-reference OTUs',
-         'input_name': 'input_data',
-         'ignore_parameters': [],
-         'parent_artifact_name': 'Trimmed Demultiplexed',
-         'parameters_names': ['Defaults - parallel']},
-        {'previous-step': 'Trimming',
-         'plugin': 'deblur',
-         'version': '1.1.0',
-         'cmd_name': 'Deblur',
-         'input_name': 'Demultiplexed sequences',
-         'ignore_parameters': [],
-         'parent_artifact_name': 'Trimmed Demultiplexed',
-         'parameters_names': ['Defaults']}
-        ]},
+    {
+        "name": "Full WGS - Shogun",
+        "data_type": ["Metagenomic"],
+        "artifact_type": "per_sample_FASTQ",
+        "previous-step": None,
+        "requirements": dict(),
+        "steps": [
+            {
+                "previous-step": None,
+                "plugin": "qp-meta",
+                "version": "2021.01",
+                "cmd_name": "Atropos v1.1.24",
+                "input_name": "input",
+                "ignore_parameters": ["Number of threads used"],
+                "parent_artifact_name": None,
+                "parameters_names": ["KAPA HyperPlus with iTru"],
+            },
+            {
+                "previous-step": "Atropos v1.1.24",
+                "plugin": "qp-shogun",
+                "version": "072020",
+                "cmd_name": "Shogun v1.0.8",
+                "input_name": "input",
+                "ignore_parameters": ["Number of threads"],
+                "parent_artifact_name": "Adapter trimmed files",
+                "parameters_names": ["wol_bowtie2", "rep200_bowtie2"],
+            },
+        ],
+    },
+    {
+        "name": "Target Gene Processing",
+        "data_type": ["16S", "18S", "ITS"],
+        "artifact_type": "Demultiplexed",
+        "previous-step": "Split libraries FASTQ",
+        "requirements": {
+            "prep": [
+                {"column": "platform", "value": ["illumina"], "equal": True},
+                {
+                    "column": "run_prefix",
+                    "value": ["cmi_workshop_lane1_s1_l001"],
+                    "equal": False,
+                },
+            ]
+        },
+        "steps": [
+            {
+                "previous-step": None,
+                "plugin": "QIIMEq2",
+                "version": "1.9.1",
+                "cmd_name": "Trimming",
+                "input_name": "input_data",
+                "ignore_parameters": [],
+                "parent_artifact_name": None,
+                "parameters_names": [
+                    "90 base pairs",
+                    "100 base pairs",
+                    "150 base pairs",
+                ],
+            },
+            {
+                "previous-step": "Trimming",
+                "plugin": "QIIMEq2",
+                "version": "1.9.1",
+                "cmd_name": "Pick closed-reference OTUs",
+                "input_name": "input_data",
+                "ignore_parameters": [],
+                "parent_artifact_name": "Trimmed Demultiplexed",
+                "parameters_names": ["Defaults - parallel"],
+            },
+            {
+                "previous-step": "Trimming",
+                "plugin": "deblur",
+                "version": "1.1.0",
+                "cmd_name": "Deblur",
+                "input_name": "Demultiplexed sequences",
+                "ignore_parameters": [],
+                "parent_artifact_name": "Trimmed Demultiplexed",
+                "parameters_names": ["Defaults"],
+            },
+        ],
+    },
 ]
 
 
 def _check_previous_command(prev_step, pparams):
     if (prev_step is None and pparams is None) or (
-            pparams is not None and prev_step == pparams.command.name):
+        pparams is not None and prev_step == pparams.command.name
+    ):
         return True
     return False
 
@@ -114,35 +133,42 @@ def _check_requirements(requirements, template):
     satisfied = True
     for req in requirements:
         if satisfied:
-            if req['column'] not in template.categories:
-                if req['equal']:
+            if req["column"] not in template.categories:
+                if req["equal"]:
                     satisfied = False
                 continue
-            template_value = list(map(str.lower, set(
-                template.get_category(req['column']).values())))
-            if req['equal'] and template_value != req['value']:
+            template_value = list(
+                map(str.lower, set(template.get_category(req["column"]).values()))
+            )
+            if req["equal"] and template_value != req["value"]:
                 satisfied = False
                 continue
-            elif not req['equal'] and template_value == req['value']:
+            elif not req["equal"] and template_value == req["value"]:
                 satisfied = False
                 continue
     return satisfied
 
 
 def _check_parameters(jobs, cmd):
-    params = [{k: str(v) for k, v in j.parameters.values.items()
-              if k not in cmd['ignore_parameters']} for j in jobs]
+    params = [
+        {
+            k: str(v)
+            for k, v in j.parameters.values.items()
+            if k not in cmd["ignore_parameters"]
+        }
+        for j in jobs
+    ]
     return params
 
 
 def _submit_workflows(artifact_process):
     for artifact in artifact_process:
-        if artifact['workflow'] is None:
+        if artifact["workflow"] is None:
             continue
         # nodes will return in position [0] the first job created
-        first_job = list(artifact['workflow'].graph.nodes())[0]
-        if first_job.status == 'in_construction':
-            artifact['workflow'].submit()
+        first_job = list(artifact["workflow"].graph.nodes())[0]
+        if first_job.status == "in_construction":
+            artifact["workflow"].submit()
 
 
 # Step 1. Loop over the full_pipelines to process each step
@@ -150,30 +176,35 @@ for pipeline in full_pipelines:
     # Step 2. From the steps generate the list of commands to add to the
     #         workflow
     commands = []
-    for step in pipeline['steps']:
-        plugin = _get_plugin(step['plugin'], step['version'])
-        cmds = [c for c in plugin.commands if c.name == step['cmd_name']]
+    for step in pipeline["steps"]:
+        plugin = _get_plugin(step["plugin"], step["version"])
+        cmds = [c for c in plugin.commands if c.name == step["cmd_name"]]
         if len(cmds) != 1:
-            raise ValueError('There is more than one command with this '
-                             'definition %s' % str(step))
+            raise ValueError(
+                "There is more than one command with this definition %s" % str(step)
+            )
 
         cmd = cmds[0]
         parameters = []
         for dps in cmd.default_parameter_sets:
-            if dps.name in step['parameters_names']:
+            if dps.name in step["parameters_names"]:
                 # note that for simplicity we are converting all values in the
                 # parameters to string
-                parameters.append({'id': dps.id, 'values': {
-                    k: str(v) for k, v in dps.values.items()}})
+                parameters.append(
+                    {"id": dps.id, "values": {k: str(v) for k, v in dps.values.items()}}
+                )
 
-        commands.append({
-            'command': cmd,
-            'command-name': cmd.name,
-            'previous-step': step['previous-step'],
-            'parent_artifact_name': step['parent_artifact_name'],
-            'input_name': step['input_name'],
-            'ignore_parameters': step['ignore_parameters'],
-            'parameters': parameters})
+        commands.append(
+            {
+                "command": cmd,
+                "command-name": cmd.name,
+                "previous-step": step["previous-step"],
+                "parent_artifact_name": step["parent_artifact_name"],
+                "input_name": step["input_name"],
+                "ignore_parameters": step["ignore_parameters"],
+                "parameters": parameters,
+            }
+        )
 
     # Step 2. - for children. Get their commands. We currently only support
     #         processing for 2 levels, like:
@@ -181,18 +212,20 @@ for pipeline in full_pipelines:
     #                 -> Close reference
     #         which should be fine for now as all our pipelines only
     #         have 2 levels
-    children_cmds = [c for c in commands[1:]
-                     if c['previous-step'] == commands[0]['command-name']]
+    children_cmds = [
+        c for c in commands[1:] if c["previous-step"] == commands[0]["command-name"]
+    ]
 
     # Step 3. Find all preparations/artifacts that we can add the pipeline
     #         ... as a first pass we will only process study 10317 (AGP) ...
     # artifacts_all = [a for study in Study.iter()
-    artifacts_all = [a for study in [Study(10317)]
-                     # loop over all artifacts of artifact_type with in study
-                     for a in study.artifacts(
-                         artifact_type=pipeline['artifact_type'])
-                     if _check_previous_command(
-                         pipeline['previous-step'], a.processing_parameters)]
+    artifacts_all = [
+        a
+        for study in [Study(10317)]
+        # loop over all artifacts of artifact_type with in study
+        for a in study.artifacts(artifact_type=pipeline["artifact_type"])
+        if _check_previous_command(pipeline["previous-step"], a.processing_parameters)
+    ]
 
     # Step 4. Limit all_artifacts to those within restrictions
     artifacts_compliant = []
@@ -204,16 +237,16 @@ for pipeline in full_pipelines:
         pt = pts[0]
 
         # {'sandbox', 'awaiting_approval', 'private', 'public'}
-        if a.visibility in ('sandbox', 'awaiting_approval'):
+        if a.visibility in ("sandbox", "awaiting_approval"):
             continue
 
-        if pt.data_type() not in pipeline['data_type']:
+        if pt.data_type() not in pipeline["data_type"]:
             continue
 
-        reqs = pipeline['requirements']
-        if 'sample' in reqs and not _check_requirements(reqs['sample'], st):
+        reqs = pipeline["requirements"]
+        if "sample" in reqs and not _check_requirements(reqs["sample"], st):
             continue
-        if 'prep' in reqs and not _check_requirements(reqs['prep'], pt):
+        if "prep" in reqs and not _check_requirements(reqs["prep"], pt):
             continue
 
         artifacts_compliant.append(a)
@@ -226,23 +259,23 @@ for pipeline in full_pipelines:
     cmd = commands[0]
     for a in artifacts_compliant:
         # getting all jobs, includen hiddens, in case the job failed
-        jobs = a.jobs(cmd=cmd['command'], show_hidden=True)
+        jobs = a.jobs(cmd=cmd["command"], show_hidden=True)
         params = _check_parameters(jobs, cmd)
 
         # checking that all required parameters of this command exist
         missing_parameters = []
-        for p in cmd['parameters']:
-            p = p['values']
-            p.update({cmd['input_name']: str(a.id)})
+        for p in cmd["parameters"]:
+            p = p["values"]
+            p.update({cmd["input_name"]: str(a.id)})
             p_to_compare = p.copy()
-            for k in cmd['ignore_parameters']:
+            for k in cmd["ignore_parameters"]:
                 del p_to_compare[k]
             if p_to_compare not in params:
                 missing_parameters.append(p)
             else:
                 for c in a.children:
                     cpp = c.processing_parameters
-                    if cpp.command.name == cmd['command-name']:
+                    if cpp.command.name == cmd["command-name"]:
                         cparams = _check_parameters([cpp], cmd)
                         if cparams == p_to_compare:
                             children_compliant.append(c)
@@ -250,33 +283,42 @@ for pipeline in full_pipelines:
             # note that we are building a dict for each artifact so we can
             # save the workflow id, useful for when we run this in a terminal
             # and we want to follow up on those workflows
-            artifact_process.append({'workflow': None, 'artifact': a,
-                                     'missing_parameters': missing_parameters,
-                                     'cmd_id': 0})
+            artifact_process.append(
+                {
+                    "workflow": None,
+                    "artifact": a,
+                    "missing_parameters": missing_parameters,
+                    "cmd_id": 0,
+                }
+            )
 
     # Step 5b. Add workflow/commands for children
     for a in children_compliant:
         for cmd_id, cmd in enumerate(children_cmds):
             # getting all jobs, includen hiddens, in case the job failed
-            jobs = a.jobs(cmd=cmd['command'], show_hidden=True)
+            jobs = a.jobs(cmd=cmd["command"], show_hidden=True)
             params = _check_parameters(jobs, cmd)
 
             # checking that all required parameters of this command exist
             missing_parameters = []
-            for p in cmd['parameters']:
-                p = p['values']
-                p.update({cmd['input_name']: str(a.id)})
+            for p in cmd["parameters"]:
+                p = p["values"]
+                p.update({cmd["input_name"]: str(a.id)})
                 p_to_compare = p.copy()
-                for k in cmd['ignore_parameters']:
+                for k in cmd["ignore_parameters"]:
                     del p_to_compare[k]
 
                 if p_to_compare not in params:
                     missing_parameters.append(p)
             if missing_parameters:
                 artifact_process.append(
-                    {'workflow': None, 'artifact': a,
-                     'missing_parameters': missing_parameters,
-                     'cmd_id': cmd_id + 1})
+                    {
+                        "workflow": None,
+                        "artifact": a,
+                        "missing_parameters": missing_parameters,
+                        "cmd_id": cmd_id + 1,
+                    }
+                )
 
     # Step 6: add workflows and jobs
     # max processing will be useful for debugging as it allows to stop after
@@ -287,42 +329,52 @@ for pipeline in full_pipelines:
         if i >= max_processing:
             break
 
-        if artifact['workflow'] is not None:
+        if artifact["workflow"] is not None:
             continue
 
-        a = artifact['artifact']
-        cmd_id = artifact['cmd_id']
+        a = artifact["artifact"]
+        cmd_id = artifact["cmd_id"]
         # create the first-job/workflow with the first command and the first
         # set of parameters
         cmd = commands[cmd_id]
-        params = artifact['missing_parameters'][0]
-        params.update({cmd['input_name']: str(a.id)})
-        job_params = Parameters.load(cmd['command'], values_dict=params)
+        params = artifact["missing_parameters"][0]
+        params.update({cmd["input_name"]: str(a.id)})
+        job_params = Parameters.load(cmd["command"], values_dict=params)
 
-        artifact['workflow'] = ProcessingWorkflow.from_scratch(
-            user, job_params)
+        artifact["workflow"] = ProcessingWorkflow.from_scratch(user, job_params)
 
         # now we can add the rest of the parameters to the workflow for
         # the first command
-        for params in artifact['missing_parameters'][1:]:
-            job_params = Parameters.load(cmd['command'], values_dict=params)
-            artifact['workflow'].add(
-                job_params, req_params={cmd['input_name']: str(a.id)})
+        for params in artifact["missing_parameters"][1:]:
+            job_params = Parameters.load(cmd["command"], values_dict=params)
+            artifact["workflow"].add(
+                job_params, req_params={cmd["input_name"]: str(a.id)}
+            )
 
-        for cmd in commands[cmd_id + 1:]:
+        for cmd in commands[cmd_id + 1 :]:
             # get jobs from the workflow to which we can add this new command
-            previous_jobs = [j for j in artifact['workflow'].graph.nodes()
-                             if j.command.name == cmd['previous-step']]
+            previous_jobs = [
+                j
+                for j in artifact["workflow"].graph.nodes()
+                if j.command.name == cmd["previous-step"]
+            ]
             for job in previous_jobs:
-                for params in cmd['parameters']:
-                    params = params['values']
-                    params.update({cmd['input_name']: '%s%s' % (
-                        job.id, cmd['parent_artifact_name'])})
-                    job_params = Parameters.load(
-                        cmd['command'], values_dict=params)
+                for params in cmd["parameters"]:
+                    params = params["values"]
+                    params.update(
+                        {
+                            cmd["input_name"]: "%s%s"
+                            % (job.id, cmd["parent_artifact_name"])
+                        }
+                    )
+                    job_params = Parameters.load(cmd["command"], values_dict=params)
 
-                    artifact['workflow'].add(job_params, connections={job: {
-                        cmd['parent_artifact_name']: cmd['input_name']}})
+                    artifact["workflow"].add(
+                        job_params,
+                        connections={
+                            job: {cmd["parent_artifact_name"]: cmd["input_name"]}
+                        },
+                    )
 
     # Step 7. submit the workflows!
     _submit_workflows(artifact_process)

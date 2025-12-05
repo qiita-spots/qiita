@@ -6,31 +6,50 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from . import base
-from . import util
-from . import sql_connection
-from . import metadata_template
-from . import analysis
-from . import artifact
-from . import archive
-from . import commands
-from . import environment_manager
-from . import exceptions
-from . import investigation
-from . import logger
-from . import meta_util
-from . import ontology
-from . import portal
-from . import reference
-from . import software
-from . import study
-from . import user
-from . import processing_job
+from . import (
+    analysis,
+    archive,
+    artifact,
+    base,
+    commands,
+    environment_manager,
+    exceptions,
+    investigation,
+    logger,
+    meta_util,
+    metadata_template,
+    ontology,
+    portal,
+    processing_job,
+    reference,
+    software,
+    sql_connection,
+    study,
+    user,
+    util,
+)
 
 __version__ = "2025.11"
 
-__all__ = ["analysis", "artifact",  "archive", "base", "commands",
-           "environment_manager", "exceptions", "investigation", "logger",
-           "meta_util", "ontology", "portal", "reference",
-           "software", "sql_connection", "study", "user", "util",
-           "metadata_template", "processing_job"]
+__all__ = [
+    "analysis",
+    "artifact",
+    "archive",
+    "base",
+    "commands",
+    "environment_manager",
+    "exceptions",
+    "investigation",
+    "logger",
+    "meta_util",
+    "ontology",
+    "portal",
+    "reference",
+    "software",
+    "sql_connection",
+    "study",
+    "user",
+    "util",
+    "metadata_template",
+    "processing_job",
+]

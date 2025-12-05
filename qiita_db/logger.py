@@ -22,7 +22,7 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from json import loads, dumps
+from json import dumps, loads
 
 import qiita_db as qdb
 
@@ -42,7 +42,7 @@ class LogEntry(qdb.base.QiitaObject):
     add_info
     """
 
-    _table = 'logging'
+    _table = "logging"
 
     @classmethod
     def newest_records(cls, numrecords=100):
@@ -64,8 +64,7 @@ class LogEntry(qdb.base.QiitaObject):
                      ORDER BY logging_id DESC LIMIT %s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [numrecords])
 
-            return [cls(i)
-                    for i in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [cls(i) for i in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @classmethod
     def create(cls, severity, msg, info=None):
@@ -126,8 +125,7 @@ class LogEntry(qdb.base.QiitaObject):
         datetime
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT time FROM qiita.{} WHERE logging_id = %s".format(
-                self._table)
+            sql = "SELECT time FROM qiita.{} WHERE logging_id = %s".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self.id])
 
             return qdb.sql_connection.TRN.execute_fetchlast()
@@ -172,15 +170,13 @@ class LogEntry(qdb.base.QiitaObject):
         str
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT msg FROM qiita.{0} WHERE logging_id = %s".format(
-                self._table)
+            sql = "SELECT msg FROM qiita.{0} WHERE logging_id = %s".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self.id])
 
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     def clear_info(self):
-        """Resets the list of info dicts to be an empty list
-        """
+        """Resets the list of info dicts to be an empty list"""
         sql = """UPDATE qiita.{} SET information = %s
                  WHERE logging_id = %s""".format(self._table)
         qdb.sql_connection.perform_as_transaction(sql, [dumps([]), self.id])

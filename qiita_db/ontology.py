@@ -23,6 +23,7 @@ Classes
 
    Ontology
 """
+
 import qiita_db as qdb
 
 
@@ -34,7 +35,8 @@ class Ontology(qdb.base.QiitaObject):
     terms
     shortname
     """
-    _table = 'ontology'
+
+    _table = "ontology"
 
     def __contains__(self, value):
         with qdb.sql_connection.TRN:
@@ -67,7 +69,7 @@ class Ontology(qdb.base.QiitaObject):
 
     @property
     def shortname(self):
-        return qdb.util.convert_from_id(self.id, 'ontology')
+        return qdb.util.convert_from_id(self.id, "ontology")
 
     def add_user_defined_term(self, term):
         """Add a user defined term to the ontology
@@ -110,8 +112,8 @@ class Ontology(qdb.base.QiitaObject):
             result = qdb.sql_connection.TRN.execute_fetchindex()
 
             if not result:
-                return 'not_ontology'
+                return "not_ontology"
             elif result[0][0]:
-                return 'user_defined'
+                return "user_defined"
             elif not result[0][0]:
-                return 'ontology'
+                return "ontology"

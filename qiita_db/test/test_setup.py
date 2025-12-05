@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 
-from qiita_db.util import get_count, check_count
+from qiita_db.util import check_count, get_count
 
 
 class SetupTest(TestCase):
@@ -72,11 +72,11 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.analysis_users"), 1)
 
     def test_ontology(self):
-        self.assertTrue(check_count('qiita.ontology', 1))
+        self.assertTrue(check_count("qiita.ontology", 1))
 
     def test_ontology_terms(self):
-        self.assertTrue(check_count('qiita.term', 5))
+        self.assertTrue(check_count("qiita.term", 5))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

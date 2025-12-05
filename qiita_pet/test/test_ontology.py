@@ -6,20 +6,20 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import main
 from json import loads
+from unittest import main
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class TestOntologyHandler(TestHandlerBase):
     def test_patch(self):
-        arguments = {'op': 'add', 'path': 'ENA', 'value': 'new-term'}
-        response = self.patch('/ontology/', data=arguments)
+        arguments = {"op": "add", "path": "ENA", "value": "new-term"}
+        response = self.patch("/ontology/", data=arguments)
         self.assertEqual(response.code, 200)
-        exp = {'status': 'success', 'message': ''}
+        exp = {"status": "success", "message": ""}
         self.assertEqual(loads(response.body), exp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

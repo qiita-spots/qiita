@@ -6,61 +6,63 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import main
 from json import loads
+from unittest import main
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 
 
 class UserInfoDBHandlerTests(OauthTestingBase):
     def test_get_does_not_exist(self):
-        obs = self.get('/qiita_db/user/no-exists@foo.bar/data/',
-                       headers=self.header)
+        obs = self.get("/qiita_db/user/no-exists@foo.bar/data/", headers=self.header)
         self.assertEqual(obs.code, 404)
 
     def test_get_no_header(self):
-        obs = self.get('/qiita_db/user/no-exists@foo.bar/data/')
+        obs = self.get("/qiita_db/user/no-exists@foo.bar/data/")
         self.assertEqual(obs.code, 400)
 
     def test_get(self):
-        obs = self.get('/qiita_db/user/shared@foo.bar/data/',
-                       headers=self.header)
+        obs = self.get("/qiita_db/user/shared@foo.bar/data/", headers=self.header)
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        self.assertCountEqual(obs.keys(), ['data'])
+        self.assertCountEqual(obs.keys(), ["data"])
 
         # for simplicity we will only test that the keys are the same
         # and that one of the key's info is correct
-        obs = obs['data']
-        exp = {"password": "$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJk"
-               "UM8nXG9Efe", "email": "shared@foo.bar", "level": "user",
-               "name": "Shared"}
+        obs = obs["data"]
+        exp = {
+            "password": "$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe",
+            "email": "shared@foo.bar",
+            "level": "user",
+            "name": "Shared",
+        }
         self.assertEqual(obs, exp)
 
 
 class UsersListDBHandlerTests(OauthTestingBase):
     def test_get_no_header(self):
-        obs = self.get('/qiita_db/users/')
+        obs = self.get("/qiita_db/users/")
         self.assertEqual(obs.code, 400)
 
     def test_get(self):
-        obs = self.get('/qiita_db/users/',
-                       headers=self.header)
+        obs = self.get("/qiita_db/users/", headers=self.header)
         self.assertEqual(obs.code, 200)
 
         obs = loads(obs.body)
-        exp = {'data': [
-            {'email': 'shared@foo.bar', 'name': 'Shared'},
-            {'email': 'admin@foo.bar', 'name': 'Admin'},
-            {'email': 'demo@microbio.me', 'name': 'Demo'},
-            {'email': 'test@foo.bar', 'name': 'Dude'},
-            {'email': 'justnow@nonvalidat.ed', 'name': 'JustNow'},
-            {'email': 'ayearago@nonvalidat.ed', 'name': 'Oldie'},
-            {'email': '3Xdays@nonvalidat.ed', 'name': 'TooLate'}
-            ]}
+        exp = {
+            "data": [
+                {"email": "shared@foo.bar", "name": "Shared"},
+                {"email": "admin@foo.bar", "name": "Admin"},
+                {"email": "demo@microbio.me", "name": "Demo"},
+                {"email": "test@foo.bar", "name": "Dude"},
+                {"email": "justnow@nonvalidat.ed", "name": "JustNow"},
+                {"email": "ayearago@nonvalidat.ed", "name": "Oldie"},
+                {"email": "3Xdays@nonvalidat.ed", "name": "TooLate"},
+            ]
+        }
         self.assertEqual(obs, exp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

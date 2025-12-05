@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .base_handlers import (ArtifactSummaryAJAX, ArtifactAJAX,
-                            ArtifactSummaryHandler)
+from .base_handlers import ArtifactAJAX, ArtifactSummaryAJAX, ArtifactSummaryHandler
 
-__all__ = ['ArtifactSummaryAJAX', 'ArtifactAJAX', 'ArtifactSummaryHandler']
+__all__ = ["ArtifactSummaryAJAX", "ArtifactAJAX", "ArtifactSummaryHandler"]

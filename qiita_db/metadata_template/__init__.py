@@ -6,9 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from . import constants
-from . import util
-from . import sample_template
-from . import prep_template
+from . import constants, prep_template, sample_template, util
 
 __all__ = ["sample_template", "prep_template", "util", "constants"]

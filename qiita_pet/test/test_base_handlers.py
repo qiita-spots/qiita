@@ -7,31 +7,33 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class TestMainHandler(TestHandlerBase):
     def test_get(self):
-        response = self.get('/')
+        response = self.get("/")
         self.assertEqual(response.code, 200)
 
 
 class TestNoPageHandler(TestHandlerBase):
     def test_get(self):
-        response = self.get('/THISPAGENOEXIST')
+        response = self.get("/THISPAGENOEXIST")
         self.assertEqual(response.code, 404)
 
 
 class TestIFrame(TestHandlerBase):
     def test_get(self):
-        response = self.get('/iframe/')
+        response = self.get("/iframe/")
         self.assertEqual(response.code, 200)
-        self.assertIn("<b>No content</b>", response.body.decode('ascii'))
+        self.assertIn("<b>No content</b>", response.body.decode("ascii"))
 
-        response = self.get('/iframe/?iframe=qiita-terms')
+        response = self.get("/iframe/?iframe=qiita-terms")
         self.assertEqual(response.code, 200)
-        self.assertIn('src="/static/qiita_data_terms_of_use.html"',
-                      response.body.decode('ascii'))
+        self.assertIn(
+            'src="/static/qiita_data_terms_of_use.html"', response.body.decode("ascii")
+        )
 
 
 if __name__ == "__main__":

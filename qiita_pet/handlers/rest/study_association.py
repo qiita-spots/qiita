@@ -8,43 +8,43 @@
 
 
 from qiita_db.handlers.oauth2 import authenticate_oauth
+
 from .rest_handler import RESTHandler
 
-
 # terms used more than once
-_STUDY = 'study'
-_PREP = 'prep'
-_FILEPATH = 'filepath'
-_STATUS = 'status'
-_ARTIFACT = 'artifact'
-_SAMPLE = 'sample'
-_METADATA = 'metadata'
-_TEMPLATE = 'template'
-_ID = 'id'
-_PROCESSING = 'processing'
-_TYPE = 'type'
+_STUDY = "study"
+_PREP = "prep"
+_FILEPATH = "filepath"
+_STATUS = "status"
+_ARTIFACT = "artifact"
+_SAMPLE = "sample"
+_METADATA = "metadata"
+_TEMPLATE = "template"
+_ID = "id"
+_PROCESSING = "processing"
+_TYPE = "type"
 
 # payload keys
-STUDY_ID = f'{_STUDY}_{_ID}'
-STUDY_SAMPLE_METADATA_FILEPATH = f'{_STUDY}_{_SAMPLE}_{_METADATA}_{_FILEPATH}'
-PREP_TEMPLATES = f'{_PREP}_{_TEMPLATE}s'
-PREP_ID = f'{_PREP}_{_ID}'
-PREP_STATUS = f'{_PREP}_{_STATUS}'
-PREP_SAMPLE_METADATA_FILEPATH = f'{_PREP}_{_SAMPLE}_{_METADATA}_{_FILEPATH}'
-PREP_DATA_TYPE = f'{_PREP}_data_{_TYPE}'
-PREP_HUMAN_FILTERING = f'{_PREP}_human_filtering'
-PREP_ARTIFACTS = f'{_PREP}_{_ARTIFACT}s'
-ARTIFACT_ID = f'{_ARTIFACT}_{_ID}'
-ARTIFACT_STATUS = f'{_ARTIFACT}_{_STATUS}'
-ARTIFACT_PARENT_IDS = f'{_ARTIFACT}_parent_{_ID}s'
-ARTIFACT_BASAL_ID = f'{_ARTIFACT}_basal_{_ID}'
-ARTIFACT_PROCESSING_ID = f'{_ARTIFACT}_{_PROCESSING}_{_ID}'
-ARTIFACT_PROCESSING_NAME = f'{_ARTIFACT}_{_PROCESSING}_name'
-ARTIFACT_PROCESSING_ARGUMENTS = f'{_ARTIFACT}_{_PROCESSING}_arguments'
-ARTIFACT_FILEPATHS = f'{_ARTIFACT}_{_FILEPATH}s'
-ARTIFACT_FILEPATH = f'{_ARTIFACT}_{_FILEPATH}'
-ARTIFACT_FILEPATH_TYPE = f'{_ARTIFACT}_{_FILEPATH}_{_TYPE}'
-ARTIFACT_FILEPATH_ID = f'{_ARTIFACT}_{_FILEPATH}_{_ID}'
+STUDY_ID = f"{_STUDY}_{_ID}"
+STUDY_SAMPLE_METADATA_FILEPATH = f"{_STUDY}_{_SAMPLE}_{_METADATA}_{_FILEPATH}"
+PREP_TEMPLATES = f"{_PREP}_{_TEMPLATE}s"
+PREP_ID = f"{_PREP}_{_ID}"
+PREP_STATUS = f"{_PREP}_{_STATUS}"
+PREP_SAMPLE_METADATA_FILEPATH = f"{_PREP}_{_SAMPLE}_{_METADATA}_{_FILEPATH}"
+PREP_DATA_TYPE = f"{_PREP}_data_{_TYPE}"
+PREP_HUMAN_FILTERING = f"{_PREP}_human_filtering"
+PREP_ARTIFACTS = f"{_PREP}_{_ARTIFACT}s"
+ARTIFACT_ID = f"{_ARTIFACT}_{_ID}"
+ARTIFACT_STATUS = f"{_ARTIFACT}_{_STATUS}"
+ARTIFACT_PARENT_IDS = f"{_ARTIFACT}_parent_{_ID}s"
+ARTIFACT_BASAL_ID = f"{_ARTIFACT}_basal_{_ID}"
+ARTIFACT_PROCESSING_ID = f"{_ARTIFACT}_{_PROCESSING}_{_ID}"
+ARTIFACT_PROCESSING_NAME = f"{_ARTIFACT}_{_PROCESSING}_name"
+ARTIFACT_PROCESSING_ARGUMENTS = f"{_ARTIFACT}_{_PROCESSING}_arguments"
+ARTIFACT_FILEPATHS = f"{_ARTIFACT}_{_FILEPATH}s"
+ARTIFACT_FILEPATH = f"{_ARTIFACT}_{_FILEPATH}"
+ARTIFACT_FILEPATH_TYPE = f"{_ARTIFACT}_{_FILEPATH}_{_TYPE}"
+ARTIFACT_FILEPATH_ID = f"{_ARTIFACT}_{_FILEPATH}_{_ID}"
 
 
 def _most_recent_template_path(template):
@@ -93,7 +93,7 @@ def _set_prep_template(template_payload, prep_template):
     current_template[PREP_STATUS] = prep_template.status
     current_template[PREP_SAMPLE_METADATA_FILEPATH] = filepath
     current_template[PREP_DATA_TYPE] = prep_template.data_type()
-    current_template[PREP_HUMAN_FILTERING] = _get_human_filtering(prep_template)  # noqa
+    current_template[PREP_HUMAN_FILTERING] = _get_human_filtering(prep_template)
 
     _set_artifacts(current_template, prep_template)
 
@@ -105,7 +105,9 @@ def _get_artifacts(prep_template):
     if prep_template.artifact is None:
         return []
 
-    pending_artifact_objects = [prep_template.artifact, ]
+    pending_artifact_objects = [
+        prep_template.artifact,
+    ]
     all_artifact_objects = set(pending_artifact_objects[:])
 
     while pending_artifact_objects:
@@ -164,7 +166,7 @@ def _set_artifact_processing(artifact_payload, artifact):
 
     artifact_payload[ARTIFACT_PROCESSING_ID] = artifact_processing_id
     artifact_payload[ARTIFACT_PROCESSING_NAME] = artifact_processing_name
-    artifact_payload[ARTIFACT_PROCESSING_ARGUMENTS] = artifact_processing_arguments  # noqa
+    artifact_payload[ARTIFACT_PROCESSING_ARGUMENTS] = artifact_processing_arguments
 
 
 def _set_artifact_filepaths(artifact_payload, artifact):
@@ -172,9 +174,9 @@ def _set_artifact_filepaths(artifact_payload, artifact):
     artifact_filepaths = []
     for filepath_data in artifact.filepaths:
         local_payload = {}
-        local_payload[ARTIFACT_FILEPATH] = filepath_data['fp']
-        local_payload[ARTIFACT_FILEPATH_ID] = filepath_data['fp_id']
-        local_payload[ARTIFACT_FILEPATH_TYPE] = filepath_data['fp_type']
+        local_payload[ARTIFACT_FILEPATH] = filepath_data["fp"]
+        local_payload[ARTIFACT_FILEPATH_ID] = filepath_data["fp_id"]
+        local_payload[ARTIFACT_FILEPATH_TYPE] = filepath_data["fp_type"]
         artifact_filepaths.append(local_payload)
 
     # the test study includes an artifact which does not have filepaths

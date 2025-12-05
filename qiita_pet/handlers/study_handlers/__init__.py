@@ -6,36 +6,91 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .listing_handlers import (ListStudiesHandler, StudyApprovalList,
-                               ShareStudyAJAX, ListStudiesAJAX,
-                               AutocompleteHandler)
-from .edit_handlers import StudyEditHandler, CreateStudyAJAX
+from .artifact import (
+    ArtifactAdminAJAX,
+    ArtifactGetInfo,
+    ArtifactGetSamples,
+    ArtifactGraphAJAX,
+    NewArtifactHandler,
+)
+from .base import (
+    DataTypesMenuAJAX,
+    Study,
+    StudyBaseInfoAJAX,
+    StudyDeleteAjax,
+    StudyFilesAJAX,
+    StudyGetTags,
+    StudyIndexHandler,
+    StudyTags,
+)
 from .ebi_handlers import EBISubmitHandler
-from .vamps_handlers import VAMPSHandler
-from .base import (StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax,
-                   DataTypesMenuAJAX, StudyFilesAJAX, StudyGetTags, StudyTags,
-                   Study)
+from .edit_handlers import CreateStudyAJAX, StudyEditHandler
+from .listing_handlers import (
+    AutocompleteHandler,
+    ListStudiesAJAX,
+    ListStudiesHandler,
+    ShareStudyAJAX,
+    StudyApprovalList,
+)
 from .prep_template import (
-    PrepTemplateAJAX, PrepFilesHandler, AddDefaultWorkflowHandler,
-    NewPrepTemplateAjax, PrepTemplateSummaryAJAX)
-from .processing import (ListCommandsHandler, ListOptionsHandler,
-                         WorkflowHandler, WorkflowRunHandler, JobAJAX)
-from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
-                       ArtifactAdminAJAX, ArtifactGetSamples, ArtifactGetInfo)
+    AddDefaultWorkflowHandler,
+    NewPrepTemplateAjax,
+    PrepFilesHandler,
+    PrepTemplateAJAX,
+    PrepTemplateSummaryAJAX,
+)
+from .processing import (
+    JobAJAX,
+    ListCommandsHandler,
+    ListOptionsHandler,
+    WorkflowHandler,
+    WorkflowRunHandler,
+)
 from .sample_template import (
-    SampleTemplateHandler, SampleTemplateOverviewHandler, AnalysesAjax,
-    SampleTemplateColumnsHandler, SampleAJAX)
+    AnalysesAjax,
+    SampleAJAX,
+    SampleTemplateColumnsHandler,
+    SampleTemplateHandler,
+    SampleTemplateOverviewHandler,
+)
+from .vamps_handlers import VAMPSHandler
 
-__all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
-           'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
-           'VAMPSHandler', 'ListStudiesAJAX', 'ArtifactGraphAJAX',
-           'ArtifactAdminAJAX', 'StudyIndexHandler', 'StudyBaseInfoAJAX',
-           'SampleTemplateHandler', 'SampleTemplateOverviewHandler',
-           'SampleTemplateColumnsHandler', 'AddDefaultWorkflowHandler',
-           'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
-           'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
-           'StudyDeleteAjax', 'NewPrepTemplateAjax',
-           'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
-           'WorkflowHandler', 'WorkflowRunHandler', 'AnalysesAjax',
-           'JobAJAX', 'AutocompleteHandler', 'StudyGetTags', 'StudyTags',
-           'Study', 'ArtifactGetSamples', 'ArtifactGetInfo']
+__all__ = [
+    "ListStudiesHandler",
+    "StudyApprovalList",
+    "ShareStudyAJAX",
+    "StudyEditHandler",
+    "CreateStudyAJAX",
+    "EBISubmitHandler",
+    "VAMPSHandler",
+    "ListStudiesAJAX",
+    "ArtifactGraphAJAX",
+    "ArtifactAdminAJAX",
+    "StudyIndexHandler",
+    "StudyBaseInfoAJAX",
+    "SampleTemplateHandler",
+    "SampleTemplateOverviewHandler",
+    "SampleTemplateColumnsHandler",
+    "AddDefaultWorkflowHandler",
+    "PrepTemplateAJAX",
+    "NewArtifactHandler",
+    "PrepFilesHandler",
+    "ListCommandsHandler",
+    "ListOptionsHandler",
+    "SampleAJAX",
+    "StudyDeleteAjax",
+    "NewPrepTemplateAjax",
+    "DataTypesMenuAJAX",
+    "StudyFilesAJAX",
+    "PrepTemplateSummaryAJAX",
+    "WorkflowHandler",
+    "WorkflowRunHandler",
+    "AnalysesAjax",
+    "JobAJAX",
+    "AutocompleteHandler",
+    "StudyGetTags",
+    "StudyTags",
+    "Study",
+    "ArtifactGetSamples",
+    "ArtifactGetInfo",
+]

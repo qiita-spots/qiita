@@ -7,11 +7,12 @@
 # -----------------------------------------------------------------------------
 from random import choice
 
-from tornado.gen import coroutine, Task
+from tornado.gen import Task, coroutine
 
-from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config, r_client
+from qiita_core.util import execute_as_transaction
 from qiita_db.study import Study
+
 from .base_handlers import BaseHandler
 
 
@@ -22,19 +23,20 @@ class StatsHandler(BaseHandler):
         # checking values from redis
         portal = qiita_config.portal
         vals = [
-            ('number_studies', r_client.hgetall),
-            ('number_of_samples', r_client.hgetall),
-            ('num_users', r_client.get),
-            ('per_data_type_stats', r_client.hgetall),
-            ('lat_longs', r_client.get),
-            ('num_studies_ebi', r_client.get),
-            ('num_samples_ebi', r_client.get),
-            ('number_samples_ebi_prep', r_client.get),
-            ('img', r_client.get),
-            ('time', r_client.get),
-            ('num_processing_jobs', r_client.get)]
+            ("number_studies", r_client.hgetall),
+            ("number_of_samples", r_client.hgetall),
+            ("num_users", r_client.get),
+            ("per_data_type_stats", r_client.hgetall),
+            ("lat_longs", r_client.get),
+            ("num_studies_ebi", r_client.get),
+            ("num_samples_ebi", r_client.get),
+            ("number_samples_ebi_prep", r_client.get),
+            ("img", r_client.get),
+            ("time", r_client.get),
+            ("num_processing_jobs", r_client.get),
+        ]
         for k, f in vals:
-            redis_key = '%s:stats:%s' % (portal, k)
+            redis_key = "%s:stats:%s" % (portal, k)
             stats[k] = f(redis_key)
 
         callback(stats)
@@ -45,7 +47,7 @@ class StatsHandler(BaseHandler):
         stats = yield Task(self._get_stats)
 
         # Pull a random public study from the database
-        public_studies = Study.get_by_status('public')
+        public_studies = Study.get_by_status("public")
         study = choice(list(public_studies)) if public_studies else None
 
         if study is None:
@@ -57,18 +59,20 @@ class StatsHandler(BaseHandler):
             random_study_title = study.title
             random_study_id = study.id
 
-        self.render('stats.html',
-                    number_studies=stats['number_studies'],
-                    number_of_samples=stats['number_of_samples'],
-                    num_users=stats['num_users'],
-                    per_data_type_stats=stats['per_data_type_stats'],
-                    lat_longs=eval(
-                        stats['lat_longs']) if stats['lat_longs'] else [],
-                    num_studies_ebi=stats['num_studies_ebi'],
-                    num_samples_ebi=stats['num_samples_ebi'],
-                    number_samples_ebi_prep=stats['number_samples_ebi_prep'],
-                    img=stats['img'], time=stats['time'],
-                    num_processing_jobs=stats['num_processing_jobs'],
-                    random_study_info=random_study_info,
-                    random_study_title=random_study_title,
-                    random_study_id=random_study_id)
+        self.render(
+            "stats.html",
+            number_studies=stats["number_studies"],
+            number_of_samples=stats["number_of_samples"],
+            num_users=stats["num_users"],
+            per_data_type_stats=stats["per_data_type_stats"],
+            lat_longs=eval(stats["lat_longs"]) if stats["lat_longs"] else [],
+            num_studies_ebi=stats["num_studies_ebi"],
+            num_samples_ebi=stats["num_samples_ebi"],
+            number_samples_ebi_prep=stats["number_samples_ebi_prep"],
+            img=stats["img"],
+            time=stats["time"],
+            num_processing_jobs=stats["num_processing_jobs"],
+            random_study_info=random_study_info,
+            random_study_title=random_study_title,
+            random_study_id=random_study_id,
+        )

@@ -6,12 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .oauth2 import OauthBaseHandler, authenticate_oauth
 import qiita_db as qdb
+
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
 class ResetAPItestHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
-        drop_labcontrol = self.get_argument('drop_labcontrol', False)
+        drop_labcontrol = self.get_argument("drop_labcontrol", False)
         qdb.environment_manager.drop_and_rebuild_tst_database(drop_labcontrol)

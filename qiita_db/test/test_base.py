@@ -8,10 +8,10 @@
 
 from unittest import TestCase, main
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.util import qiita_test_checker
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
 
 
 @qiita_test_checker()
@@ -53,10 +53,10 @@ class QiitaBaseTest(TestCase):
 
     def test_check_portal(self):
         """Correctly checks if object is accessable in portal given"""
-        qiita_config.portal = 'QIITA'
+        qiita_config.portal = "QIITA"
         tester = qdb.analysis.Analysis(1)
         self.assertTrue(tester._check_portal(1))
-        qiita_config.portal = 'EMP'
+        qiita_config.portal = "EMP"
         self.assertFalse(tester._check_portal(1))
 
         self.assertTrue(self.tester._check_portal(1))
@@ -82,5 +82,5 @@ class QiitaBaseTest(TestCase):
         self.assertNotEqual(self.tester, new)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

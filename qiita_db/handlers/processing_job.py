@@ -11,6 +11,7 @@ from json import loads
 from tornado.web import HTTPError
 
 import qiita_db as qdb
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
@@ -40,7 +41,7 @@ def _get_job(job_id):
     try:
         job = qdb.processing_job.ProcessingJob(job_id)
     except Exception as e:
-        raise HTTPError(500, reason='Error instantiating the job: %s' % str(e))
+        raise HTTPError(500, reason="Error instantiating the job: %s" % str(e))
 
     return job
 
@@ -71,10 +72,9 @@ class JobHandler(OauthBaseHandler):
             cmd = job.command.name
             params = job.parameters.values
             status = job.status
-            msg = '' if status != 'error' else job.log.msg
+            msg = "" if status != "error" else job.log.msg
 
-        response = {'command': cmd, 'parameters': params,
-                    'status': status, 'msg': msg}
+        response = {"command": cmd, "parameters": params, "status": status, "msg": msg}
 
         self.write(response)
 
@@ -113,7 +113,7 @@ class ActiveStepHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             job = _get_job(job_id)
             payload = loads(self.request.body)
-            step = payload['step']
+            step = payload["step"]
             try:
                 job.step = step
             except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
@@ -135,20 +135,20 @@ class CompleteHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             job = _get_job(job_id)
 
-            if job.status != 'running':
-                raise HTTPError(
-                    403, "Can't complete job: not in a running state")
+            if job.status != "running":
+                raise HTTPError(403, "Can't complete job: not in a running state")
 
-            qiita_plugin = qdb.software.Software.from_name_and_version(
-                'Qiita', 'alpha')
-            cmd = qiita_plugin.get_command('complete_job')
+            qiita_plugin = qdb.software.Software.from_name_and_version("Qiita", "alpha")
+            cmd = qiita_plugin.get_command("complete_job")
             params = qdb.software.Parameters.load(
-                cmd, values_dict={'job_id': job_id,
-                                  'payload': self.request.body.decode(
-                                      'ascii')})
+                cmd,
+                values_dict={
+                    "job_id": job_id,
+                    "payload": self.request.body.decode("ascii"),
+                },
+            )
             # complete_job are unique so it is fine to force them to be created
-            job = qdb.processing_job.ProcessingJob.create(
-                job.user, params, force=True)
+            job = qdb.processing_job.ProcessingJob.create(job.user, params, force=True)
             job.submit()
 
         self.finish()
@@ -157,20 +157,20 @@ class CompleteHandler(OauthBaseHandler):
 class ProcessingJobAPItestHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
-        user = self.get_argument('user', 'test@foo.bar')
-        s_name, s_version, cmd_name = loads(self.get_argument('command'))
-        params_dict = self.get_argument('parameters')
-        status = self.get_argument('status', None)
+        user = self.get_argument("user", "test@foo.bar")
+        s_name, s_version, cmd_name = loads(self.get_argument("command"))
+        params_dict = self.get_argument("parameters")
+        status = self.get_argument("status", None)
 
         cmd = qdb.software.Software.from_name_and_version(
-            s_name, s_version).get_command(cmd_name)
+            s_name, s_version
+        ).get_command(cmd_name)
 
         params = qdb.software.Parameters.load(cmd, json_str=params_dict)
 
-        job = qdb.processing_job.ProcessingJob.create(
-            qdb.user.User(user), params, True)
+        job = qdb.processing_job.ProcessingJob.create(qdb.user.User(user), params, True)
 
         if status:
             job._set_status(status)
 
-        self.write({'job': job.id})
+        self.write({"job": job.id})

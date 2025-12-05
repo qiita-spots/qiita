@@ -6,13 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import TestCase, main
 from os import close, remove
 from os.path import basename, join
 from tempfile import mkstemp
+from unittest import TestCase, main
 
-from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
+from qiita_core.util import qiita_test_checker
 
 
 @qiita_test_checker()
@@ -28,7 +28,7 @@ class ReferenceTests(TestCase):
         fd, self.tree_fp = mkstemp(suffix="_tree.tre")
         close(fd)
 
-        _, self.db_dir = qdb.util.get_mountpoint('reference')[0]
+        _, self.db_dir = qdb.util.get_mountpoint("reference")[0]
 
         self._clean_up_files = []
 
@@ -40,13 +40,15 @@ class ReferenceTests(TestCase):
         """Correctly creates the rows in the DB for the reference"""
         # Check that the returned object has the correct id
         obs = qdb.reference.Reference.create(
-            self.name, self.version, self.seqs_fp, self.tax_fp, self.tree_fp)
+            self.name, self.version, self.seqs_fp, self.tax_fp, self.tree_fp
+        )
         self.assertEqual(obs.id, 3)
 
         # Check that the information on the database is correct
         with qdb.sql_connection.TRN:
             qdb.sql_connection.TRN.add(
-                "SELECT * FROM qiita.reference WHERE reference_id=3")
+                "SELECT * FROM qiita.reference WHERE reference_id=3"
+            )
             obs = qdb.sql_connection.TRN.execute_fetchindex()
         self.assertEqual(obs[0][1], self.name)
         self.assertEqual(obs[0][2], self.version)
@@ -62,15 +64,14 @@ class ReferenceTests(TestCase):
                         OR filepath_id=%s"""
             qdb.sql_connection.TRN.add(sql, [seqs_id, tax_id, tree_id])
             obs = qdb.sql_connection.TRN.execute_fetchindex()
-        exp_seq = "%s_%s_%s" % (self.name, self.version,
-                                basename(self.seqs_fp))
-        exp_tax = "%s_%s_%s" % (self.name, self.version,
-                                basename(self.tax_fp))
-        exp_tree = "%s_%s_%s" % (self.name, self.version,
-                                 basename(self.tree_fp))
-        exp = [[seqs_id, exp_seq, 10, '0', 1, 6, 0],
-               [tax_id, exp_tax, 11, '0', 1, 6, 0],
-               [tree_id, exp_tree, 12, '0', 1, 6, 0]]
+        exp_seq = "%s_%s_%s" % (self.name, self.version, basename(self.seqs_fp))
+        exp_tax = "%s_%s_%s" % (self.name, self.version, basename(self.tax_fp))
+        exp_tree = "%s_%s_%s" % (self.name, self.version, basename(self.tree_fp))
+        exp = [
+            [seqs_id, exp_seq, 10, "0", 1, 6, 0],
+            [tax_id, exp_tax, 11, "0", 1, 6, 0],
+            [tree_id, exp_tree, 12, "0", 1, 6, 0],
+        ]
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):
@@ -90,8 +91,8 @@ class ReferenceTests(TestCase):
 
     def test_tree_fp_empty(self):
         ref = qdb.reference.Reference(2)
-        self.assertEqual(ref.tree_fp, '')
+        self.assertEqual(ref.tree_fp, "")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

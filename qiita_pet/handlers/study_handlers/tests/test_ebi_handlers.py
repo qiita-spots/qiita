@@ -5,19 +5,19 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from unittest import main
-from os import remove, close
+from os import close, remove
 from os.path import exists
 from tempfile import mkstemp
+from unittest import main
 
 from h5py import File
 from mock import Mock
 from qiita_files.demux import to_hdf5
 
-from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
+from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class TestEBISubmitHandler(TestHandlerBase):
@@ -32,13 +32,16 @@ class TestEBISubmitHandler(TestHandlerBase):
                 remove(fp)
 
     def test_get(self):
-        demux_fp = [x['fp'] for x in Artifact(2).filepaths
-                    if x['fp_type'] == 'preprocessed_demux'][0]
-        fd, fna_fp = mkstemp(suffix='_seqs.fna')
+        demux_fp = [
+            x["fp"]
+            for x in Artifact(2).filepaths
+            if x["fp_type"] == "preprocessed_demux"
+        ][0]
+        fd, fna_fp = mkstemp(suffix="_seqs.fna")
         close(fd)
         self._clean_up_files.extend([fna_fp, demux_fp])
-        with open(fna_fp, 'w') as f:
-            f.write('>a_1 X orig_bc=X new_bc=X bc_diffs=0\nCCC')
+        with open(fna_fp, "w") as f:
+            f.write(">a_1 X orig_bc=X new_bc=X bc_diffs=0\nCCC")
         with File(demux_fp, "w") as f:
             to_hdf5(fna_fp, f)
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
@@ -50,7 +53,7 @@ class TestEBISubmitHandler(TestHandlerBase):
         self.assertEqual(response.code, 403)
 
     def test_get_no_exist(self):
-        response = self.get('/ebi_submission/100')
+        response = self.get("/ebi_submission/100")
         self.assertEqual(response.code, 404)
 
 

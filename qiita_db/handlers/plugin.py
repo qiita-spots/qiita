@@ -6,15 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from json import loads
 from glob import glob
+from json import loads
 from os.path import join
 
 from tornado.web import HTTPError
 
-from .oauth2 import OauthBaseHandler, authenticate_oauth
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+from qiita_core.qiita_settings import qiita_config
+
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
 def _get_plugin(name, version):
@@ -43,8 +44,9 @@ def _get_plugin(name, version):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, reason='Error instantiating plugin %s %s: %s'
-                        % (name, version, str(e)))
+        raise HTTPError(
+            500, reason="Error instantiating plugin %s %s: %s" % (name, version, str(e))
+        )
 
     return plugin
 
@@ -77,14 +79,17 @@ class PluginHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             plugin = _get_plugin(name, version)
             response = {
-                'name': plugin.name,
-                'version': plugin.version,
-                'description': plugin.description,
-                'commands': [c.name for c in plugin.commands],
-                'publications': [{'DOI': doi, 'PubMed': pubmed}
-                                 for doi, pubmed in plugin.publications],
-                'type': plugin.type,
-                'active': plugin.active}
+                "name": plugin.name,
+                "version": plugin.version,
+                "description": plugin.description,
+                "commands": [c.name for c in plugin.commands],
+                "publications": [
+                    {"DOI": doi, "PubMed": pubmed}
+                    for doi, pubmed in plugin.publications
+                ],
+                "type": plugin.type,
+                "active": plugin.active,
+            }
         self.write(response)
 
 
@@ -103,43 +108,47 @@ class CommandListHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             plugin = _get_plugin(name, version)
 
-            cmd_name = self.get_argument('name')
-            cmd_desc = self.get_argument('description')
-            req_params = loads(self.get_argument('required_parameters'))
-            opt_params = loads(self.get_argument('optional_parameters'))
+            cmd_name = self.get_argument("name")
+            cmd_desc = self.get_argument("description")
+            req_params = loads(self.get_argument("required_parameters"))
+            opt_params = loads(self.get_argument("optional_parameters"))
 
             for p_name, vals in opt_params.items():
-                if vals[0].startswith('mchoice'):
+                if vals[0].startswith("mchoice"):
                     opt_params[p_name] = [vals[0], loads(vals[1])]
                     if len(vals) == 2:
                         opt_params[p_name] = [vals[0], loads(vals[1])]
                     elif len(vals) == 4:
-                        opt_params[p_name] = [vals[0], loads(vals[1]), vals[2],
-                                              vals[3]]
+                        opt_params[p_name] = [vals[0], loads(vals[1]), vals[2], vals[3]]
                     else:
                         raise qdb.exceptions.QiitaDBError(
                             "Malformed parameters dictionary, the format "
                             "should be either {param_name: [parameter_type, "
                             "default]} or {parameter_name: (parameter_type, "
                             "default, name_order, check_biom_merge)}. Found: "
-                            "%s for parameter name %s"
-                            % (vals, p_name))
+                            "%s for parameter name %s" % (vals, p_name)
+                        )
                 # adding an extra element to make sure the parser knows this is
                 # an optional parameter
-                opt_params[p_name].extend(['qiita_optional_parameter'])
+                opt_params[p_name].extend(["qiita_optional_parameter"])
 
-            outputs = self.get_argument('outputs', None)
+            outputs = self.get_argument("outputs", None)
             if outputs:
                 outputs = loads(outputs)
-            dflt_param_set = loads(self.get_argument('default_parameter_sets'))
-            analysis_only = self.get_argument('analysis_only', False)
+            dflt_param_set = loads(self.get_argument("default_parameter_sets"))
+            analysis_only = self.get_argument("analysis_only", False)
 
             parameters = req_params
             parameters.update(opt_params)
 
             cmd = qdb.software.Command.create(
-                plugin, cmd_name, cmd_desc, parameters, outputs,
-                analysis_only=analysis_only)
+                plugin,
+                cmd_name,
+                cmd_desc,
+                parameters,
+                outputs,
+                analysis_only=analysis_only,
+            )
 
             if dflt_param_set is not None:
                 for name, vals in dflt_param_set.items():
@@ -177,9 +186,11 @@ def _get_command(plugin_name, plugin_version, cmd_name):
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
-        raise HTTPError(500, reason='Error instantiating cmd %s of plugin '
-                        '%s %s: %s' % (cmd_name, plugin_name,
-                                       plugin_version, str(e)))
+        raise HTTPError(
+            500,
+            reason="Error instantiating cmd %s of plugin "
+            "%s %s: %s" % (cmd_name, plugin_name, plugin_version, str(e)),
+        )
 
     return cmd
 
@@ -214,13 +225,15 @@ class CommandHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             cmd = _get_command(plugin_name, plugin_version, cmd_name)
             response = {
-                'name': cmd.name,
-                'description': cmd.description,
-                'required_parameters': cmd.required_parameters,
-                'optional_parameters': cmd.optional_parameters,
-                'default_parameter_sets': {
-                    p.name: p.values for p in cmd.default_parameter_sets},
-                'outputs': cmd.outputs}
+                "name": cmd.name,
+                "description": cmd.description,
+                "required_parameters": cmd.required_parameters,
+                "optional_parameters": cmd.optional_parameters,
+                "default_parameter_sets": {
+                    p.name: p.values for p in cmd.default_parameter_sets
+                },
+                "outputs": cmd.outputs,
+            }
         self.write(response)
 
 
@@ -250,10 +263,10 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
     def post(self):
         """Reloads the plugins"""
         conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
-        software = set([qdb.software.Software.from_file(fp, update=True)
-                        for fp in conf_files])
-        definition = set(
-            [s for s in software if s.type == 'artifact definition'])
+        software = set(
+            [qdb.software.Software.from_file(fp, update=True) for fp in conf_files]
+        )
+        definition = set([s for s in software if s.type == "artifact definition"])
         transformation = software - definition
         for s in definition:
             s.activate()

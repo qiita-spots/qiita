@@ -5,17 +5,21 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from copy import deepcopy
 from itertools import chain
 from os.path import join
-from copy import deepcopy
+
 from iteration_utilities import duplicates
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
-from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
-                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-from .base_metadata_template import (
-    BaseSample, MetadataTemplate, QIITA_COLUMN_NAME)
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+
+from .base_metadata_template import QIITA_COLUMN_NAME, BaseSample, MetadataTemplate
+from .constants import (
+    PREP_TEMPLATE_COLUMNS,
+    PREP_TEMPLATE_COLUMNS_TARGET_GENE,
+    TARGET_GENE_DATA_TYPES,
+)
 
 
 def _check_duplicated_columns(prep_cols, sample_cols):
@@ -37,9 +41,9 @@ def _check_duplicated_columns(prep_cols, sample_cols):
     dups = set(duplicates(prep_cols))
     if dups:
         raise qdb.exceptions.QiitaDBColumnError(
-            'Duplicated column names in the sample and prep info '
-            'files: %s. You need to delete that duplicated field' %
-            ','.join(dups))
+            "Duplicated column names in the sample and prep info "
+            "files: %s. You need to delete that duplicated field" % ",".join(dups)
+        )
 
 
 class PrepSample(BaseSample):
@@ -50,6 +54,7 @@ class PrepSample(BaseSample):
     BaseSample
     Sample
     """
+
     _table = "prep_template_sample"
     _table_prefix = "prep_"
     _id_column = "prep_template_id"
@@ -80,20 +85,29 @@ class PrepTemplate(MetadataTemplate):
     MetadataTemplate
     SampleTemplate
     """
+
     _table = "prep_template_sample"
     _table_prefix = "prep_"
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
-    _filepath_table = 'prep_template_filepath'
+    _filepath_table = "prep_template_filepath"
     _forbidden_words = {
-                        'sampleid',
-                        'qiita_study_id',
-                        'qiita_prep_id',
-                        QIITA_COLUMN_NAME}
+        "sampleid",
+        "qiita_study_id",
+        "qiita_prep_id",
+        QIITA_COLUMN_NAME,
+    }
 
     @classmethod
-    def create(cls, md_template, study, data_type, investigation_type=None,
-               name=None, creation_job_id=None):
+    def create(
+        cls,
+        md_template,
+        study,
+        data_type,
+        investigation_type=None,
+        name=None,
+        creation_job_id=None,
+    ):
         r"""Creates the metadata template in the database
 
         Parameters
@@ -125,8 +139,7 @@ class PrepTemplate(MetadataTemplate):
             # Check if the data_type is the id or the string
             if isinstance(data_type, int):
                 data_type_id = data_type
-                data_type_str = qdb.util.convert_from_id(data_type,
-                                                         "data_type")
+                data_type_str = qdb.util.convert_from_id(data_type, "data_type")
             else:
                 data_type_id = qdb.util.convert_to_id(data_type, "data_type")
                 data_type_str = data_type
@@ -135,11 +148,11 @@ class PrepTemplate(MetadataTemplate):
             # data_type being created - if possible
             if investigation_type is None:
                 if data_type_str in TARGET_GENE_DATA_TYPES:
-                    investigation_type = 'AMPLICON'
-                elif data_type_str == 'Metagenomic':
-                    investigation_type = 'WGS'
-                elif data_type_str == 'Metatranscriptomic':
-                    investigation_type = 'RNA-Seq'
+                    investigation_type = "AMPLICON"
+                elif data_type_str == "Metagenomic":
+                    investigation_type = "WGS"
+                elif data_type_str == "Metatranscriptomic":
+                    investigation_type = "RNA-Seq"
             if investigation_type is not None:
                 cls.validate_investigation_type(investigation_type)
 
@@ -149,15 +162,17 @@ class PrepTemplate(MetadataTemplate):
                 pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
             md_template = cls._clean_validate_template(md_template, study.id)
-            _check_duplicated_columns(list(md_template.columns),
-                                      study.sample_template.categories)
+            _check_duplicated_columns(
+                list(md_template.columns), study.sample_template.categories
+            )
 
             # check that we are within the limit of number of samples
             ms = cls.max_samples()
             nsamples = md_template.shape[0]
             if ms is not None and nsamples > ms:
-                raise ValueError(f"{nsamples} exceeds the max allowed number "
-                                 f"of samples: {ms}")
+                raise ValueError(
+                    f"{nsamples} exceeds the max allowed number of samples: {ms}"
+                )
 
             # Insert the metadata template
             if creation_job_id:
@@ -166,14 +181,14 @@ class PrepTemplate(MetadataTemplate):
                          VALUES (%s, %s, %s)
                          RETURNING prep_template_id"""
                 qdb.sql_connection.TRN.add(
-                    sql, [data_type_id, investigation_type, creation_job_id])
+                    sql, [data_type_id, investigation_type, creation_job_id]
+                )
             else:
                 sql = """INSERT INTO qiita.prep_template
                             (data_type_id, investigation_type)
                          VALUES (%s, %s)
                          RETURNING prep_template_id"""
-                qdb.sql_connection.TRN.add(
-                    sql, [data_type_id, investigation_type])
+                qdb.sql_connection.TRN.add(sql, [data_type_id, investigation_type])
             prep_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             try:
@@ -187,11 +202,13 @@ class PrepTemplate(MetadataTemplate):
                 qdb.sql_connection.TRN.add(sql, [study.id])
                 prep_samples = set(md_template.index.values)
                 unknown_samples = prep_samples.difference(
-                    qdb.sql_connection.TRN.execute_fetchflatten())
+                    qdb.sql_connection.TRN.execute_fetchflatten()
+                )
                 if unknown_samples:
                     raise qdb.exceptions.QiitaDBExecutionError(
-                        'Samples found in prep template but not sample '
-                        'template: %s' % ', '.join(unknown_samples))
+                        "Samples found in prep template but not sample "
+                        "template: %s" % ", ".join(unknown_samples)
+                    )
 
                 # some other error we haven't seen before so raise it
                 raise
@@ -209,8 +226,7 @@ class PrepTemplate(MetadataTemplate):
             pt.generate_files()
 
             # Add the name to the prep information
-            pt.name = (name if name is not None
-                       else "Prep information %s" % pt.id)
+            pt.name = name if name is not None else "Prep information %s" % pt.id
 
             return pt
 
@@ -229,13 +245,13 @@ class PrepTemplate(MetadataTemplate):
             The investigation type is not in the ENA ontology
         """
         with qdb.sql_connection.TRN:
-            ontology = qdb.ontology.Ontology(
-                qdb.util.convert_to_id('ENA', 'ontology'))
+            ontology = qdb.ontology.Ontology(qdb.util.convert_to_id("ENA", "ontology"))
             terms = ontology.terms + ontology.user_defined_terms
             if investigation_type not in terms:
                 raise qdb.exceptions.QiitaDBColumnError(
                     "'%s' is Not a valid investigation_type. Choose from: %s"
-                    % (investigation_type, ', '.join(terms)))
+                    % (investigation_type, ", ".join(terms))
+                )
 
     @classmethod
     def delete(cls, id_):
@@ -270,7 +286,8 @@ class PrepTemplate(MetadataTemplate):
             if artifact_attached:
                 raise qdb.exceptions.QiitaDBExecutionError(
                     "Cannot remove prep template %d because it has an artifact"
-                    " associated with it" % id_)
+                    " associated with it" % id_
+                )
 
             # artifacts that are archived are not returned as part of the code
             # above and we need to clean them before moving forward
@@ -278,8 +295,7 @@ class PrepTemplate(MetadataTemplate):
                      FROM qiita.preparation_artifact
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, args)
-            archived_artifacts = set(
-                qdb.sql_connection.TRN.execute_fetchflatten())
+            archived_artifacts = set(qdb.sql_connection.TRN.execute_fetchflatten())
             ANALYSIS = qdb.analysis.Analysis
             if archived_artifacts:
                 for aid in archived_artifacts:
@@ -292,8 +308,7 @@ class PrepTemplate(MetadataTemplate):
                                 FROM qiita.analysis_sample
                                 WHERE artifact_id IN %s)"""
                     qdb.sql_connection.TRN.add(sql, [tuple([aid])])
-                    analyses = set(
-                        qdb.sql_connection.TRN.execute_fetchflatten())
+                    analyses = set(qdb.sql_connection.TRN.execute_fetchflatten())
                     for _id in analyses:
                         ANALYSIS.delete_analysis_artifacts(_id)
                     qdb.artifact.Artifact.delete(aid)
@@ -309,7 +324,8 @@ class PrepTemplate(MetadataTemplate):
 
             # Remove the rows from prep_template_samples
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
-                cls._table, cls._id_column)
+                cls._table, cls._id_column
+            )
             qdb.sql_connection.TRN.add(sql, args)
 
             # Remove the row from study_prep_template
@@ -319,7 +335,8 @@ class PrepTemplate(MetadataTemplate):
 
             # Remove the row from prep_template
             sql = "DELETE FROM qiita.prep_template WHERE {0} = %s".format(
-                cls._id_column)
+                cls._id_column
+            )
             qdb.sql_connection.TRN.add(sql, args)
 
             qdb.sql_connection.TRN.execute()
@@ -398,9 +415,11 @@ class PrepTemplate(MetadataTemplate):
             if not qdb.sql_connection.TRN.execute_fetchlast():
                 return True
 
-            tg_columns = set(chain.from_iterable(
-                [v.columns for v in
-                 PREP_TEMPLATE_COLUMNS_TARGET_GENE.values()]))
+            tg_columns = set(
+                chain.from_iterable(
+                    [v.columns for v in PREP_TEMPLATE_COLUMNS_TARGET_GENE.values()]
+                )
+            )
 
             if not columns & tg_columns:
                 return True
@@ -438,13 +457,16 @@ class PrepTemplate(MetadataTemplate):
                                            WHERE parent_id = %s)"""
                     qdb.sql_connection.TRN.add(sql, [artifact.id])
                     if qdb.sql_connection.TRN.execute_fetchlast():
-                        return False, ("The artifact attached to the prep "
-                                       "template has already been processed. "
-                                       "No new samples can be added to the "
-                                       "prep template")
+                        return False, (
+                            "The artifact attached to the prep "
+                            "template has already been processed. "
+                            "No new samples can be added to the "
+                            "prep template"
+                        )
 
-        _check_duplicated_columns(list(new_columns), qdb.study.Study(
-            self.study_id).sample_template.categories)
+        _check_duplicated_columns(
+            list(new_columns), qdb.study.Study(self.study_id).sample_template.categories
+        )
 
         return True, ""
 
@@ -470,8 +492,8 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, [self.id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBError(
-                    "Prep template %d already has an artifact associated"
-                    % self.id)
+                    "Prep template %d already has an artifact associated" % self.id
+                )
             sql = """UPDATE qiita.prep_template
                      SET artifact_id = %s
                      WHERE prep_template_id = %s"""
@@ -505,8 +527,7 @@ class PrepTemplate(MetadataTemplate):
 
         sql = """UPDATE qiita.prep_template SET investigation_type = %s
                  WHERE {0} = %s""".format(self._id_column)
-        qdb.sql_connection.perform_as_transaction(
-            sql, [investigation_type, self.id])
+        qdb.sql_connection.perform_as_transaction(sql, [investigation_type, self.id])
 
     @property
     def study_id(self):
@@ -556,15 +577,20 @@ class PrepTemplate(MetadataTemplate):
         """
         with qdb.sql_connection.TRN:
             # figuring out the filepath of the prep template
-            _id, fp = qdb.util.get_mountpoint('templates')[0]
+            _id, fp = qdb.util.get_mountpoint("templates")[0]
             # update timestamp in the DB first
             qdb.sql_connection.TRN.add(
                 """UPDATE qiita.prep_template
                    SET modification_timestamp = CURRENT_TIMESTAMP
-                   WHERE prep_template_id = %s""", [self._id])
+                   WHERE prep_template_id = %s""",
+                [self._id],
+            )
             ctime = self.modification_timestamp
-            fp = join(fp, '%d_prep_%d_%s.txt' % (self.study_id, self._id,
-                      ctime.strftime("%Y%m%d-%H%M%S")))
+            fp = join(
+                fp,
+                "%d_prep_%d_%s.txt"
+                % (self.study_id, self._id, ctime.strftime("%Y%m%d-%H%M%S")),
+            )
             # storing the template
             self.to_file(fp)
             # adding the fp to the object
@@ -594,10 +620,10 @@ class PrepTemplate(MetadataTemplate):
                         JOIN qiita.visibility USING (visibility_id)
                      WHERE prep_template_id = %s and visibility_id NOT IN %s"""
             qdb.sql_connection.TRN.add(
-                sql, [self._id, qdb.util.artifact_visibilities_to_skip()])
+                sql, [self._id, qdb.util.artifact_visibilities_to_skip()]
+            )
 
-            return qdb.util.infer_status(
-                qdb.sql_connection.TRN.execute_fetchindex())
+            return qdb.util.infer_status(qdb.sql_connection.TRN.execute_fetchindex())
 
     @property
     def qiime_map_fp(self):
@@ -609,10 +635,10 @@ class PrepTemplate(MetadataTemplate):
             The filepath of the QIIME mapping file
         """
         for x in qdb.util.retrieve_filepaths(
-                self._filepath_table, self._id_column, self.id,
-                sort='descending'):
-            if x['fp_type'] == 'qiime_map':
-                return x['fp']
+            self._filepath_table, self._id_column, self.id, sort="descending"
+        ):
+            if x["fp_type"] == "qiime_map":
+                return x["fp"]
 
     @property
     def ebi_experiment_accessions(self):
@@ -623,7 +649,7 @@ class PrepTemplate(MetadataTemplate):
         dict of {str: str}
             The EBI experiment accessions numbers keyed by sample id
         """
-        return self._get_accession_numbers('ebi_experiment_accession')
+        return self._get_accession_numbers("ebi_experiment_accession")
 
     @ebi_experiment_accessions.setter
     def ebi_experiment_accessions(self, value):
@@ -639,7 +665,7 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBError
             If a sample in `value` already has an accession number
         """
-        self._update_accession_numbers('ebi_experiment_accession', value)
+        self._update_accession_numbers("ebi_experiment_accession", value)
 
     @property
     def is_submitted_to_ebi(self):
@@ -678,7 +704,8 @@ class PrepTemplate(MetadataTemplate):
         if self.artifact:
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "Prep info file '%d' has files attached, you cannot delete "
-                "samples." % (self._id))
+                "samples." % (self._id)
+            )
 
         self._common_delete_sample_steps(sample_names)
 
@@ -718,8 +745,9 @@ class PrepTemplate(MetadataTemplate):
 
         if add_ebi_accessions:
             accessions = self.ebi_experiment_accessions
-            df['qiita_ebi_experiment_accessions'] = df.index.map(
-                lambda sid: accessions[sid])
+            df["qiita_ebi_experiment_accessions"] = df.index.map(
+                lambda sid: accessions[sid]
+            )
 
         return df
 
@@ -812,12 +840,18 @@ class PrepTemplate(MetadataTemplate):
             if pcmd is not None:
                 parent_cmd_name = pcmd.name
                 parent_merging_scheme = pcmd.merging_scheme
-                if not parent_merging_scheme['ignore_parent_command']:
+                if not parent_merging_scheme["ignore_parent_command"]:
                     phms = _get_node_info(workflow, parent)
 
             hms = qdb.util.human_merging_scheme(
-                ccmd.name, ccmd.merging_scheme, parent_cmd_name,
-                parent_merging_scheme, cparams, [], pparams)
+                ccmd.name,
+                ccmd.merging_scheme,
+                parent_cmd_name,
+                parent_merging_scheme,
+                cparams,
+                [],
+                pparams,
+            )
 
             # if the parent should not ignore its parent command, then we need
             # to merge the previous result with the new one
@@ -833,9 +867,12 @@ class PrepTemplate(MetadataTemplate):
             parents = list(workflow.graph.predecessors(node))
             for pnode in parents:
                 pred = _get_predecessors(workflow, pnode)
-                cxns = {x[0]: x[2]
-                        for x in workflow.graph.get_edge_data(
-                            pnode, node)['connections'].connections}
+                cxns = {
+                    x[0]: x[2]
+                    for x in workflow.graph.get_edge_data(pnode, node)[
+                        "connections"
+                    ].connections
+                }
                 data = [pnode, node, cxns]
                 if pred is None:
                     pred = []
@@ -875,19 +912,23 @@ class PrepTemplate(MetadataTemplate):
         if workflow is not None:
             prep_jobs = []
         else:
-            prep_jobs = [j for c in self.artifact.descendants.nodes()
-                         for j in c.jobs(show_hidden=True)
-                         if j.command.software.type ==
-                         'artifact transformation']
+            prep_jobs = [
+                j
+                for c in self.artifact.descendants.nodes()
+                for j in c.jobs(show_hidden=True)
+                if j.command.software.type == "artifact transformation"
+            ]
         merging_schemes = {
             qdb.archive.Archive.get_merging_scheme_from_job(j): {
-                x: str(y.id) for x, y in j.outputs.items()}
+                x: str(y.id) for x, y in j.outputs.items()
+            }
             # we are going to select only the jobs that were a 'success', that
             # are not 'hidden' and that have an output - jobs that are not
             # hidden and a successs but that do not have outputs are jobs which
             # resulting artifacts (outputs) were deleted
-            for j in prep_jobs if j.status == 'success' and not j.hidden
-            and j.outputs}
+            for j in prep_jobs
+            if j.status == "success" and not j.hidden and j.outputs
+        }
 
         # 2.
         pt_dt = self.data_type()
@@ -895,7 +936,7 @@ class PrepTemplate(MetadataTemplate):
         # the job
         if workflow is not None:
             starting_job = list(workflow.graph.nodes())[0]
-            pt_artifact = starting_job.parameters.values['artifact_type']
+            pt_artifact = starting_job.parameters.values["artifact_type"]
         else:
             starting_job = None
             pt_artifact = self.artifact.artifact_type
@@ -910,20 +951,22 @@ class PrepTemplate(MetadataTemplate):
                 reqs_satisfied = True
                 total_conditions_satisfied = 0
 
-                if wk_params['sample']:
+                if wk_params["sample"]:
                     df = ST(self.study_id).to_dataframe(samples=list(self))
-                    for k, v in wk_params['sample'].items():
-                        if k not in df.columns or (v != '*' and v not in
-                                                   df[k].unique()):
+                    for k, v in wk_params["sample"].items():
+                        if k not in df.columns or (
+                            v != "*" and v not in df[k].unique()
+                        ):
                             reqs_satisfied = False
                         else:
                             total_conditions_satisfied += 1
 
-                if wk_params['prep']:
+                if wk_params["prep"]:
                     df = self.to_dataframe()
-                    for k, v in wk_params['prep'].items():
-                        if k not in df.columns or (v != '*' and v not in
-                                                   df[k].unique()):
+                    for k, v in wk_params["prep"].items():
+                        if k not in df.columns or (
+                            v != "*" and v not in df[k].unique()
+                        ):
                             reqs_satisfied = False
                         else:
                             total_conditions_satisfied += 1
@@ -933,10 +976,12 @@ class PrepTemplate(MetadataTemplate):
 
         if not workflows:
             # raises option a.
-            msg = (f'This preparation data type: "{pt_dt}" and/or artifact '
-                   f'type "{pt_artifact}" does not have valid workflows; this '
-                   'could be due to required parameters, please check the '
-                   'available workflows.')
+            msg = (
+                f'This preparation data type: "{pt_dt}" and/or artifact '
+                f'type "{pt_artifact}" does not have valid workflows; this '
+                "could be due to required parameters, please check the "
+                "available workflows."
+            )
             raise ValueError(msg)
 
         # let's just keep one, let's give it preference to the one with the
@@ -952,7 +997,7 @@ class PrepTemplate(MetadataTemplate):
                 missing_artifacts[mscheme] = node
         if not missing_artifacts:
             # raises option b.
-            raise ValueError('This preparation is complete')
+            raise ValueError("This preparation is complete")
 
         # 3.
         previous_jobs = dict()
@@ -967,8 +1012,9 @@ class PrepTemplate(MetadataTemplate):
                 params = cdp.values.copy()
 
                 icxns = {y: x for x, y in cxns.items()}
-                reqp = {x: icxns[y[1][0]]
-                        for x, y in cdp_cmd.required_parameters.items()}
+                reqp = {
+                    x: icxns[y[1][0]] for x, y in cdp_cmd.required_parameters.items()
+                }
                 cmds_to_create.append([cdp, cdp_cmd, params, reqp])
 
                 info = _get_node_info(wk, pnode)
@@ -988,16 +1034,17 @@ class PrepTemplate(MetadataTemplate):
                 reqp = dict()
                 for x, y in pdp_cmd.required_parameters.items():
                     if wkartifact_type not in y[1]:
-                        raise ValueError(f'{wkartifact_type} is not part '
-                                         'of this preparation and cannot '
-                                         'be applied')
+                        raise ValueError(
+                            f"{wkartifact_type} is not part "
+                            "of this preparation and cannot "
+                            "be applied"
+                        )
                     reqp[x] = wkartifact_type
 
                 cmds_to_create.append([pdp, pdp_cmd, params, reqp])
 
                 if starting_job is not None:
-                    init_artifacts = {
-                        wkartifact_type: f'{starting_job.id}:'}
+                    init_artifacts = {wkartifact_type: f"{starting_job.id}:"}
                 else:
                     init_artifacts = {wkartifact_type: str(self.artifact.id)}
 
@@ -1016,45 +1063,52 @@ class PrepTemplate(MetadataTemplate):
                 if previous_job is None:
                     for iname, dname in rp.items():
                         if dname not in init_artifacts:
-                            msg = (f'Missing Artifact type: "{dname}" in '
-                                   'this preparation; this might be due '
-                                   'to missing steps or not having the '
-                                   'correct raw data.')
+                            msg = (
+                                f'Missing Artifact type: "{dname}" in '
+                                "this preparation; this might be due "
+                                "to missing steps or not having the "
+                                "correct raw data."
+                            )
                             # raises option c.
                             raise ValueError(msg)
                         req_params[iname] = init_artifacts[dname]
                     if len(dp.command.required_parameters) > 1:
                         for pn in GH.predecessors(node):
                             info = _get_node_info(wk, pn)
-                            n, cnx, _ = GH.get_edge_data(
-                                pn, node)['connections'].connections[0]
-                            if info not in merging_schemes or \
-                                    n not in merging_schemes[info]:
-                                msg = ('This workflow contains a step with '
-                                       'multiple inputs so it cannot be '
-                                       'completed automatically, please add '
-                                       'the commands by hand.')
+                            n, cnx, _ = GH.get_edge_data(pn, node)[
+                                "connections"
+                            ].connections[0]
+                            if (
+                                info not in merging_schemes
+                                or n not in merging_schemes[info]
+                            ):
+                                msg = (
+                                    "This workflow contains a step with "
+                                    "multiple inputs so it cannot be "
+                                    "completed automatically, please add "
+                                    "the commands by hand."
+                                )
                                 raise ValueError(msg)
                             req_params[cnx] = merging_schemes[info][n]
                 else:
                     if len(dp.command.required_parameters) == 1:
                         cxns = dict()
                         for iname, dname in rp.items():
-                            req_params[iname] = f'{previous_job.id}{dname}'
+                            req_params[iname] = f"{previous_job.id}{dname}"
                             cxns[dname] = iname
                         connections = {previous_job: cxns}
                     else:
                         connections = dict()
                         for pn in GH.predecessors(node):
                             pndp = pn.default_parameter
-                            n, cnx, _ = GH.get_edge_data(
-                                pn, node)['connections'].connections[0]
+                            n, cnx, _ = GH.get_edge_data(pn, node)[
+                                "connections"
+                            ].connections[0]
                             _job = previous_dps[pndp.id]
-                            req_params[cnx] = f'{_job.id}{n}'
+                            req_params[cnx] = f"{_job.id}{n}"
                             connections[_job] = {n: cnx}
                 params.update(req_params)
-                job_params = qdb.software.Parameters.load(
-                    cmd, values_dict=params)
+                job_params = qdb.software.Parameters.load(cmd, values_dict=params)
 
                 if params in previous_jobs.values():
                     for x, y in previous_jobs.items():
@@ -1064,16 +1118,18 @@ class PrepTemplate(MetadataTemplate):
                     if workflow is None:
                         PW = qdb.processing_job.ProcessingWorkflow
                         workflow = PW.from_scratch(user, job_params)
-                        current_job = [
-                            j for j in workflow.graph.nodes()][0]
+                        current_job = [j for j in workflow.graph.nodes()][0]
                     else:
                         if previous_job is None:
                             current_job = workflow.add(
-                                job_params, req_params=req_params)
+                                job_params, req_params=req_params
+                            )
                         else:
                             current_job = workflow.add(
-                                job_params, req_params=req_params,
-                                connections=connections)
+                                job_params,
+                                req_params=req_params,
+                                connections=connections,
+                            )
                     previous_jobs[current_job] = params
                 previous_dps[dp.id] = current_job
 
@@ -1089,15 +1145,17 @@ class PrepTemplate(MetadataTemplate):
             The list of archivde Artifacts
         """
         with qdb.sql_connection.TRN:
-
             sql = """SELECT artifact_id
                      FROM qiita.preparation_artifact
                         LEFT JOIN qiita.artifact USING (artifact_id)
                      WHERE prep_template_id = %s AND visibility_id IN %s"""
             qdb.sql_connection.TRN.add(
-                sql, [self.id, qdb.util.artifact_visibilities_to_skip()])
-            return [qdb.artifact.Artifact(ai)
-                    for ai in qdb.sql_connection.TRN.execute_fetchflatten()]
+                sql, [self.id, qdb.util.artifact_visibilities_to_skip()]
+            )
+            return [
+                qdb.artifact.Artifact(ai)
+                for ai in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     @property
     def creation_job_id(self):

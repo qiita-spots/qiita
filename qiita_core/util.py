@@ -7,16 +7,16 @@
 # -----------------------------------------------------------------------------
 from functools import wraps
 from os.path import dirname
+
 from git import Repo
 from git.exc import InvalidGitRepositoryError
 
 from qiita_core.qiita_settings import qiita_config, r_client
-from qiita_pet import __version__ as qiita_pet_lib_version
-from qiita_db.sql_connection import TRN
 from qiita_db.environment_manager import reset_test_database
+from qiita_db.sql_connection import TRN
+from qiita_pet import __version__ as qiita_pet_lib_version
 
-
-REDIS_QIITA_GIT_SHA_KEY = 'qiita-git-sha'
+REDIS_QIITA_GIT_SHA_KEY = "qiita-git-sha"
 
 
 def is_test_environment():
@@ -54,11 +54,14 @@ def qiita_test_checker(test=False):
     RuntimeError
         If Qiita is set up to work in a production environment
     """
+
     def class_modifier(cls):
         if not is_test_environment() or test:
-            raise RuntimeError("Working in a production environment. Not "
-                               "executing the tests to keep the production "
-                               "database safe.")
+            raise RuntimeError(
+                "Working in a production environment. Not "
+                "executing the tests to keep the production "
+                "database safe."
+            )
 
         # Now, we decorate the setup and teardown functions
         class DecoratedClass(cls):
@@ -71,16 +74,20 @@ def qiita_test_checker(test=False):
                 pass
 
         return DecoratedClass
+
     return class_modifier
 
 
 def execute_as_transaction(func):
     """Decorator to make a method execute inside a transaction"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         from qiita_db.sql_connection import TRN
+
         with TRN:
             return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -94,7 +101,7 @@ def update_redis_qiita_sha_version():
         sha = repo.active_branch.commit.hexsha
         repo.__del__()
     except (InvalidGitRepositoryError, TypeError):
-        sha = ''
+        sha = ""
 
     r_client.set(REDIS_QIITA_GIT_SHA_KEY, sha)
 
@@ -109,12 +116,12 @@ def get_qiita_version():
     """
     sha = r_client.get(REDIS_QIITA_GIT_SHA_KEY)
     if sha is None:
-        sha = ''
+        sha = ""
 
     return (qiita_pet_lib_version, sha)
 
 
-def get_release_info(study_status='public'):
+def get_release_info(study_status="public"):
     """Returns the studies and the archive release details
 
     Parameters
@@ -130,24 +137,24 @@ def get_release_info(study_status='public'):
         The release MD5, filepath and timestamp
     """
     portal = qiita_config.portal
-    md5sum = r_client.get('%s:release:%s:md5sum' % (portal, study_status))
-    filepath = r_client.get('%s:release:%s:filepath' % (portal, study_status))
-    timestamp = r_client.get('%s:release:%s:time' % (portal, study_status))
+    md5sum = r_client.get("%s:release:%s:md5sum" % (portal, study_status))
+    filepath = r_client.get("%s:release:%s:filepath" % (portal, study_status))
+    timestamp = r_client.get("%s:release:%s:time" % (portal, study_status))
     # replacing None values for empty strings as the text is displayed nicely
     # in the GUI
-    md5sum = '' if md5sum is None else md5sum.decode('ascii')
-    filepath = '' if filepath is None else filepath.decode('ascii')
-    timestamp = '' if timestamp is None else timestamp.decode('ascii')
-    biom_metadata_release = ((md5sum, filepath, timestamp))
+    md5sum = "" if md5sum is None else md5sum.decode("ascii")
+    filepath = "" if filepath is None else filepath.decode("ascii")
+    timestamp = "" if timestamp is None else timestamp.decode("ascii")
+    biom_metadata_release = (md5sum, filepath, timestamp)
 
-    md5sum = r_client.get('release-archive:md5sum')
-    filepath = r_client.get('release-archive:filepath')
-    timestamp = r_client.get('release-archive:time')
+    md5sum = r_client.get("release-archive:md5sum")
+    filepath = r_client.get("release-archive:filepath")
+    timestamp = r_client.get("release-archive:time")
     # replacing None values for empty strings as the text is displayed nicely
     # in the GUI
-    md5sum = '' if md5sum is None else md5sum.decode('ascii')
-    filepath = '' if filepath is None else filepath.decode('ascii')
-    timestamp = '' if timestamp is None else timestamp.decode('ascii')
-    archive_release = ((md5sum, filepath, timestamp))
+    md5sum = "" if md5sum is None else md5sum.decode("ascii")
+    filepath = "" if filepath is None else filepath.decode("ascii")
+    timestamp = "" if timestamp is None else timestamp.decode("ascii")
+    archive_release = (md5sum, filepath, timestamp)
 
     return (biom_metadata_release, archive_release)

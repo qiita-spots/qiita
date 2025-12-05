@@ -6,9 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.util import convert_to_id
 from qiita_db.exceptions import QiitaDBLookupError
 from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
 
 
 def ontology_patch_handler(req_op, req_path, req_value=None, req_from=None):
@@ -33,25 +33,27 @@ def ontology_patch_handler(req_op, req_path, req_value=None, req_from=None):
         is a human readable string with the error message in case that status
         is 'error'.
     """
-    if req_op == 'add':
-        req_path = [v for v in req_path.split('/') if v]
+    if req_op == "add":
+        req_path = [v for v in req_path.split("/") if v]
         if len(req_path) != 1:
-            return {'status': 'error',
-                    'message': 'Incorrect path parameter'}
+            return {"status": "error", "message": "Incorrect path parameter"}
         req_path = req_path[0]
 
         try:
-            o_id = convert_to_id(req_path, 'ontology')
+            o_id = convert_to_id(req_path, "ontology")
         except QiitaDBLookupError:
-            return {'status': 'error',
-                    'message': 'Ontology "%s" does not exist' % req_path}
+            return {
+                "status": "error",
+                "message": 'Ontology "%s" does not exist' % req_path,
+            }
 
         ontology = Ontology(o_id)
         ontology.add_user_defined_term(req_value)
 
-        return {'status': 'success',
-                'message': ''}
+        return {"status": "success", "message": ""}
     else:
-        return {'status': 'error',
-                'message': 'Operation "%s" not supported. '
-                           'Current supported operations: add' % req_op}
+        return {
+            "status": "error",
+            "message": 'Operation "%s" not supported. '
+            "Current supported operations: add" % req_op,
+        }

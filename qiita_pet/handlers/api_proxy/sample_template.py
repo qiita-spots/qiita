@@ -5,19 +5,18 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from json import loads
 from collections import defaultdict
+from json import loads
 
-from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import r_client
-from qiita_db.util import generate_analyses_list_per_study
+from qiita_core.util import execute_as_transaction
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBUnknownIDError
 from qiita_db.metadata_template.sample_template import SampleTemplate
-from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.util import generate_analyses_list_per_study
 from qiita_pet.handlers.api_proxy.util import check_access
 
-SAMPLE_TEMPLATE_KEY_FORMAT = 'sample_template_%s'
+SAMPLE_TEMPLATE_KEY_FORMAT = "sample_template_%s"
 
 
 def _check_sample_template_exists(samp_id):
@@ -35,11 +34,11 @@ def _check_sample_template_exists(samp_id):
          'message': msg}
     """
     if not SampleTemplate.exists(int(samp_id)):
-        return {'status': 'error',
-                'message': 'Sample template %d does not exist' % int(samp_id)
-                }
-    return {'status': 'success',
-            'message': ''}
+        return {
+            "status": "error",
+            "message": "Sample template %d does not exist" % int(samp_id),
+        }
+    return {"status": "success", "message": ""}
 
 
 def sample_template_get_req(samp_id, user_id):
@@ -64,7 +63,7 @@ def sample_template_get_req(samp_id, user_id):
         Format {sample: {column: value, ...}, ...}
     """
     exists = _check_sample_template_exists(int(samp_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
     access_error = check_access(int(samp_id), user_id)
     if access_error:
@@ -75,9 +74,7 @@ def sample_template_get_req(samp_id, user_id):
     if access_error:
         return access_error
     df = template.to_dataframe()
-    return {'status': 'success',
-            'message': '',
-            'template': df.to_dict(orient='index')}
+    return {"status": "success", "message": "", "template": df.to_dict(orient="index")}
 
 
 def sample_template_samples_get_req(samp_id, user_id):
@@ -100,16 +97,17 @@ def sample_template_samples_get_req(samp_id, user_id):
          samples is list of samples in the template
     """
     exists = _check_sample_template_exists(int(samp_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
     access_error = check_access(samp_id, user_id)
     if access_error:
         return access_error
 
-    return {'status': 'success',
-            'message': '',
-            'samples': sorted(x for x in SampleTemplate(int(samp_id)))
-            }
+    return {
+        "status": "success",
+        "message": "",
+        "samples": sorted(x for x in SampleTemplate(int(samp_id))),
+    }
 
 
 def sample_template_meta_cats_get_req(samp_id, user_id):
@@ -132,16 +130,17 @@ def sample_template_meta_cats_get_req(samp_id, user_id):
          samples is list of metadata categories in the template
     """
     exists = _check_sample_template_exists(int(samp_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
     access_error = check_access(samp_id, user_id)
     if access_error:
         return access_error
 
-    return {'status': 'success',
-            'message': '',
-            'categories': sorted(SampleTemplate(int(samp_id)).categories)
-            }
+    return {
+        "status": "success",
+        "message": "",
+        "categories": sorted(SampleTemplate(int(samp_id)).categories),
+    }
 
 
 def sample_template_category_get_req(category, samp_id, user_id):
@@ -165,7 +164,7 @@ def sample_template_category_get_req(category, samp_id, user_id):
          'values': dict of {str: object}}
     """
     exists = _check_sample_template_exists(int(samp_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
     access_error = check_access(samp_id, user_id)
     if access_error:
@@ -175,12 +174,11 @@ def sample_template_category_get_req(category, samp_id, user_id):
     try:
         values = st.get_category(category)
     except QiitaDBColumnError:
-        return {'status': 'error',
-                'message': 'Category %s does not exist in sample template' %
-                category}
-    return {'status': 'success',
-            'message': '',
-            'values': values}
+        return {
+            "status": "error",
+            "message": "Category %s does not exist in sample template" % category,
+        }
+    return {"status": "success", "message": "", "values": values}
 
 
 def analyses_associated_with_study(study_id, user_id):
@@ -208,32 +206,30 @@ def analyses_associated_with_study(study_id, user_id):
 
     values = generate_analyses_list_per_study(study_id)
 
-    return {'status': 'success',
-            'message': '',
-            'values': values}
+    return {"status": "success", "message": "", "values": values}
 
 
 def get_sample_template_processing_status(st_id):
     # Initialize variables here
     processing = False
-    alert_type = ''
-    alert_msg = ''
+    alert_type = ""
+    alert_msg = ""
     job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % st_id)
     if job_info:
-        job_info = defaultdict(lambda: '', loads(job_info))
-        job_id = job_info['job_id']
+        job_info = defaultdict(lambda: "", loads(job_info))
+        job_id = job_info["job_id"]
         job = ProcessingJob(job_id)
         job_status = job.status
-        processing = job_status not in ('success', 'error')
+        processing = job_status not in ("success", "error")
         if processing:
-            alert_type = 'info'
-            alert_msg = 'This sample template is currently being processed'
-        elif job_status == 'error':
-            alert_type = 'danger'
-            alert_msg = job.log.msg.replace('\n', '</br>')
+            alert_type = "info"
+            alert_msg = "This sample template is currently being processed"
+        elif job_status == "error":
+            alert_type = "danger"
+            alert_msg = job.log.msg.replace("\n", "</br>")
         else:
-            alert_type = job_info['alert_type']
-            alert_msg = job_info['alert_msg'].replace('\n', '</br>')
+            alert_type = job_info["alert_type"]
+            alert_msg = job_info["alert_msg"].replace("\n", "</br>")
 
     return processing, alert_type, alert_msg
 
@@ -262,7 +258,7 @@ def sample_template_filepaths_get_req(study_id, user_id):
         All files in the sample template, as [(id, URL), ...]
     """
     exists = _check_sample_template_exists(int(study_id))
-    if exists['status'] != 'success':
+    if exists["status"] != "success":
         return exists
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -271,10 +267,6 @@ def sample_template_filepaths_get_req(study_id, user_id):
     try:
         template = SampleTemplate(int(study_id))
     except QiitaDBUnknownIDError as e:
-        return {'status': 'error',
-                'message': str(e)}
+        return {"status": "error", "message": str(e)}
 
-    return {'status': 'success',
-            'message': '',
-            'filepaths': template.get_filepaths()
-            }
+    return {"status": "success", "message": "", "filepaths": template.get_filepaths()}

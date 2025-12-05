@@ -31,14 +31,14 @@ Classes
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+import warnings
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
-import warnings
 
+import qiita_db as qdb
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-import qiita_db as qdb
 
 
 class Study(qdb.base.QiitaObject):
@@ -74,17 +74,18 @@ class Study(qdb.base.QiitaObject):
     All setters raise QiitaDBStatusError if trying to change a public study.
     You should not be doing that.
     """
+
     _table = "study"
     _portal_table = "study_portal"
     # The following columns are considered not part of the study info
-    _non_info = frozenset(["email", "study_title", "ebi_study_accession",
-                           "autoloaded"])
+    _non_info = frozenset(["email", "study_title", "ebi_study_accession", "autoloaded"])
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
-        if self.status != 'sandbox':
+        if self.status != "sandbox":
             raise qdb.exceptions.QiitaDBStatusError(
-                "Illegal operation on non-sandbox study!")
+                "Illegal operation on non-sandbox study!"
+            )
 
     @classmethod
     def from_title(cls, title):
@@ -115,7 +116,8 @@ class Study(qdb.base.QiitaObject):
 
         if not sid:
             raise qdb.exceptions.QiitaDBUnknownIDError(
-                cls._table, f'"{title}" does not exist')
+                cls._table, f'"{title}" does not exist'
+            )
 
         return qdb.study.Study(sid[0])
 
@@ -150,9 +152,9 @@ class Study(qdb.base.QiitaObject):
                         JOIN qiita.study_artifact USING (artifact_id)
                      WHERE study_id = %s and visibility_id NOT IN %s"""
             qdb.sql_connection.TRN.add(
-                sql, [self._id, qdb.util.artifact_visibilities_to_skip()])
-            return qdb.util.infer_status(
-                qdb.sql_connection.TRN.execute_fetchindex())
+                sql, [self._id, qdb.util.artifact_visibilities_to_skip()]
+            )
+            return qdb.util.infer_status(qdb.sql_connection.TRN.execute_fetchindex())
 
     @staticmethod
     def all_data_types():
@@ -194,7 +196,7 @@ class Study(qdb.base.QiitaObject):
             sids = set(qdb.sql_connection.TRN.execute_fetchflatten())
             # If status is sandbox, all the studies that are not present in the
             # study_artifact table are also sandbox
-            if status == 'sandbox':
+            if status == "sandbox":
                 sql = """SELECT study_id
                          FROM qiita.study
                             JOIN qiita.study_portal USING (study_id)
@@ -203,8 +205,7 @@ class Study(qdb.base.QiitaObject):
                                 SELECT study_id
                                 FROM qiita.study_artifact)"""
                 qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
-                sids = sids.union(
-                    qdb.sql_connection.TRN.execute_fetchflatten())
+                sids = sids.union(qdb.sql_connection.TRN.execute_fetchflatten())
 
             return sids
 
@@ -242,18 +243,22 @@ class Study(qdb.base.QiitaObject):
             accessed as a list of dictionaries, keyed on column name.
         """
         # The following tables are considered part of info
-        _info_cols = frozenset(chain(
-            qdb.util.get_table_cols('study'),
-            qdb.util.get_table_cols('study_status'),
-            qdb.util.get_table_cols('timeseries_type'),
-            # placeholder for table study_publication
-            ['publications']))
+        _info_cols = frozenset(
+            chain(
+                qdb.util.get_table_cols("study"),
+                qdb.util.get_table_cols("study_status"),
+                qdb.util.get_table_cols("timeseries_type"),
+                # placeholder for table study_publication
+                ["publications"],
+            )
+        )
 
         if info_cols is None:
             info_cols = _info_cols
         elif not _info_cols.issuperset(info_cols):
-            warnings.warn("Non-info columns passed: %s" % ", ".join(
-                set(info_cols) - _info_cols))
+            warnings.warn(
+                "Non-info columns passed: %s" % ", ".join(set(info_cols) - _info_cols)
+            )
 
         search_cols = ",".join(sorted(_info_cols.intersection(info_cols)))
 
@@ -281,14 +286,16 @@ class Study(qdb.base.QiitaObject):
             rows = qdb.sql_connection.TRN.execute_fetchindex()
             if study_ids is not None and len(rows) != len(study_ids):
                 raise qdb.exceptions.QiitaDBError(
-                    'Non-portal-accessible studies asked for!')
+                    "Non-portal-accessible studies asked for!"
+                )
 
             res = []
             for r in rows:
                 r = dict(r)
-                if 'ebi_study_accession' in info_cols:
-                    r['ebi_submission_status'] = cls(
-                        r['study_id']).ebi_submission_status
+                if "ebi_study_accession" in info_cols:
+                    r["ebi_submission_status"] = cls(
+                        r["study_id"]
+                    ).ebi_submission_status
                 res.append(r)
 
             return res
@@ -348,27 +355,26 @@ class Study(qdb.base.QiitaObject):
         # make sure not passing non-info columns in the info dict
         if cls._non_info.intersection(info):
             raise qdb.exceptions.QiitaDBColumnError(
-                "non info keys passed: %s" % cls._non_info.intersection(info))
+                "non info keys passed: %s" % cls._non_info.intersection(info)
+            )
 
         # cleaning up title, this is also done in JS for the GUI but rather
         # be safe than sorry
-        title = ' '.join(title.split()).strip()
+        title = " ".join(title.split()).strip()
 
         with qdb.sql_connection.TRN:
             if cls.exists(title):
-                raise qdb.exceptions.QiitaDBDuplicateError(
-                    "Study", "title: %s" % title)
+                raise qdb.exceptions.QiitaDBDuplicateError("Study", "title: %s" % title)
 
             # add default values to info
             insertdict = deepcopy(info)
-            insertdict['email'] = owner.id
-            insertdict['study_title'] = title
+            insertdict["email"] = owner.id
+            insertdict["study_title"] = title
             if "reprocess" not in insertdict:
-                insertdict['reprocess'] = False
+                insertdict["reprocess"] = False
 
             # No nuns allowed
-            insertdict = {k: v for k, v in insertdict.items()
-                          if v is not None}
+            insertdict = {k: v for k, v in insertdict.items() if v is not None}
 
             # make sure dictionary only has keys for available columns in db
             qdb.util.check_table_cols(insertdict, cls._table)
@@ -378,8 +384,8 @@ class Study(qdb.base.QiitaObject):
             # Insert study into database
             sql = """INSERT INTO qiita.{0} ({1})
                      VALUES ({2}) RETURNING study_id""".format(
-                cls._table, ','.join(insertdict),
-                ','.join(['%s'] * len(insertdict)))
+                cls._table, ",".join(insertdict), ",".join(["%s"] * len(insertdict))
+            )
 
             # make sure data in same order as sql column names,
             # and ids are used
@@ -395,13 +401,13 @@ class Study(qdb.base.QiitaObject):
 
             # Add to both QIITA and given portal (if not QIITA)
             portal_id = qdb.util.convert_to_id(
-                qiita_config.portal, 'portal_type', 'portal')
+                qiita_config.portal, "portal_type", "portal"
+            )
             sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                      VALUES (%s, %s)"""
             args = [[study_id, portal_id]]
-            if qiita_config.portal != 'QIITA':
-                qp_id = qdb.util.convert_to_id(
-                    'QIITA', 'portal_type', 'portal')
+            if qiita_config.portal != "QIITA":
+                qp_id = qdb.util.convert_to_id("QIITA", "portal_type", "portal")
                 args.append([study_id, qp_id])
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
@@ -435,10 +441,11 @@ class Study(qdb.base.QiitaObject):
             # checking that the id_ exists
             cls(id_)
 
-            if qdb.util.exists_table('sample_%d' % id_):
+            if qdb.util.exists_table("sample_%d" % id_):
                 raise qdb.exceptions.QiitaDBError(
                     'Study "%s" cannot be erased because it has a '
-                    'sample template' % cls(id_).title)
+                    "sample template" % cls(id_).title
+                )
 
             args = [id_]
 
@@ -488,10 +495,10 @@ class Study(qdb.base.QiitaObject):
             results = dict(qdb.sql_connection.TRN.execute_fetchindex())
             # when the system is empty,
             # it's possible to get an empty dict, fixing
-            if 'admin' not in results:
-                results['admin'] = []
-            if 'user' not in results:
-                results['user'] = []
+            if "admin" not in results:
+                results["admin"] = []
+            if "user" not in results:
+                results["user"] = []
 
             return results
 
@@ -515,7 +522,7 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
-# --- Attributes ---
+    # --- Attributes ---
     @property
     def autoloaded(self):
         """Returns if the study was autoloaded
@@ -626,8 +633,7 @@ class Study(qdb.base.QiitaObject):
         """
         sql = """UPDATE qiita.{0} SET public_raw_download = %s
                  WHERE study_id = %s""".format(self._table)
-        qdb.sql_connection.perform_as_transaction(
-            sql, [public_raw_download, self._id])
+        qdb.sql_connection.perform_as_transaction(sql, [public_raw_download, self._id])
 
     @property
     def info(self):
@@ -639,29 +645,28 @@ class Study(qdb.base.QiitaObject):
             info of study keyed to column names
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(
-                self._table)
+            sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
             info = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
             # remove non-info items from info
             for item in self._non_info:
                 info.pop(item)
             # removed because redundant to the id already stored in the object
-            info.pop('study_id')
+            info.pop("study_id")
 
-            if info['principal_investigator_id']:
-                info['principal_investigator'] = qdb.study.StudyPerson(
-                    info["principal_investigator_id"])
+            if info["principal_investigator_id"]:
+                info["principal_investigator"] = qdb.study.StudyPerson(
+                    info["principal_investigator_id"]
+                )
             else:
-                info['principal_investigator'] = None
-            del info['principal_investigator_id']
+                info["principal_investigator"] = None
+            del info["principal_investigator_id"]
 
-            if info['lab_person_id']:
-                info['lab_person'] = qdb.study.StudyPerson(
-                    info["lab_person_id"])
+            if info["lab_person_id"]:
+                info["lab_person"] = qdb.study.StudyPerson(info["lab_person_id"])
             else:
-                info['lab_person'] = None
-            del info['lab_person_id']
+                info["lab_person"] = None
+            del info["lab_person_id"]
 
             return info
 
@@ -684,15 +689,16 @@ class Study(qdb.base.QiitaObject):
         if not info:
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
 
-        if 'study_id' in info:
+        if "study_id" in info:
             raise qdb.exceptions.QiitaDBColumnError("Cannot set study_id!")
 
         if self._non_info.intersection(info):
             raise qdb.exceptions.QiitaDBColumnError(
-                "non info keys passed: %s" % self._non_info.intersection(info))
+                "non info keys passed: %s" % self._non_info.intersection(info)
+            )
 
         with qdb.sql_connection.TRN:
-            if 'timeseries_type_id' in info:
+            if "timeseries_type_id" in info:
                 # We only lock if the timeseries type changes
                 self._lock_non_sandbox()
 
@@ -711,7 +717,8 @@ class Study(qdb.base.QiitaObject):
             data.append(self._id)
 
             sql = "UPDATE qiita.{0} SET {1} WHERE study_id = %s".format(
-                self._table, ','.join(sql_vals))
+                self._table, ",".join(sql_vals)
+            )
             qdb.sql_connection.TRN.add(sql, data)
             qdb.sql_connection.TRN.execute()
 
@@ -728,12 +735,14 @@ class Study(qdb.base.QiitaObject):
             sql = """SELECT email FROM qiita.{0}_users
                      WHERE study_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return [qdb.user.User(uid)
-                    for uid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [
+                qdb.user.User(uid)
+                for uid in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     @property
     def publications(self):
-        """ Returns list of publications from this study
+        """Returns list of publications from this study
 
         Returns
         -------
@@ -763,7 +772,7 @@ class Study(qdb.base.QiitaObject):
         """
         # Check that a list is actually passed
         if not isinstance(values, list):
-            raise TypeError('publications should be a list')
+            raise TypeError("publications should be a list")
 
         with qdb.sql_connection.TRN:
             # Delete the previous pmids associated with the study
@@ -780,7 +789,7 @@ class Study(qdb.base.QiitaObject):
 
     @property
     def investigation(self):
-        """ Returns Investigation this study is part of
+        """Returns Investigation this study is part of
 
         If the study doesn't have an investigation associated with it, it will
         return None
@@ -815,8 +824,11 @@ class Study(qdb.base.QiitaObject):
                                    WHERE study_id = %s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             exists = qdb.sql_connection.TRN.execute_fetchlast()
-        return (qdb.metadata_template.sample_template.SampleTemplate(self._id)
-                if exists else None)
+        return (
+            qdb.metadata_template.sample_template.SampleTemplate(self._id)
+            if exists
+            else None
+        )
 
     @property
     def data_types(self):
@@ -846,7 +858,8 @@ class Study(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT email FROM qiita.{} WHERE study_id = %s""".format(
-                self._table)
+                self._table
+            )
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.user.User(qdb.sql_connection.TRN.execute_fetchlast())
 
@@ -889,17 +902,17 @@ class Study(qdb.base.QiitaObject):
 
             # Check that a list is actually passed
             if not isinstance(values, list):
-                raise TypeError('Environmental packages should be a list')
+                raise TypeError("Environmental packages should be a list")
 
             # Get all the environmental packages
-            env_pkgs = [pkg[0]
-                        for pkg in qdb.util.get_environmental_packages()]
+            env_pkgs = [pkg[0] for pkg in qdb.util.get_environmental_packages()]
 
             # Check that all the passed values are valid environmental packages
             missing = set(values).difference(env_pkgs)
             if missing:
-                raise ValueError('Environmetal package(s) not recognized: %s'
-                                 % ', '.join(missing))
+                raise ValueError(
+                    "Environmetal package(s) not recognized: %s" % ", ".join(missing)
+                )
 
             # Delete the previous environmental packages associated with
             # the study
@@ -965,8 +978,8 @@ class Study(qdb.base.QiitaObject):
         """
         if self.ebi_study_accession is not None:
             raise qdb.exceptions.QiitaDBError(
-                "Study %s already has an EBI study accession"
-                % self.id)
+                "Study %s already has an EBI study accession" % self.id
+            )
         sql = """UPDATE qiita.{}
                  SET ebi_study_accession = %s
                  WHERE study_id = %s""".format(self._table)
@@ -974,9 +987,8 @@ class Study(qdb.base.QiitaObject):
 
     def _ebi_submission_jobs(self):
         """Helper code to avoid duplication"""
-        plugin = qdb.software.Software.from_name_and_version(
-            'Qiita', 'alpha')
-        cmd = plugin.get_command('submit_to_EBI')
+        plugin = qdb.software.Software.from_name_and_version("Qiita", "alpha")
+        cmd = plugin.get_command("submit_to_EBI")
 
         sql = """SELECT processing_job_id,
                     pj.command_parameters->>'artifact' as aid,
@@ -1018,10 +1030,10 @@ class Study(qdb.base.QiitaObject):
         artifacts, & 'failed' if there are artifacts with failed jobs without
         successful ones.
         """
-        status = 'not submitted'
+        status = "not submitted"
         with qdb.sql_connection.TRN:
             if self.ebi_study_accession:
-                status = 'submitted'
+                status = "submitted"
 
             jobs = defaultdict(dict)
             for info in self._ebi_submission_jobs():
@@ -1030,21 +1042,22 @@ class Study(qdb.base.QiitaObject):
                     continue
                 jobs[js][aid] = jid
 
-            if 'queued' in jobs or 'running' in jobs:
-                status = 'submitting'
-            elif 'error' in jobs:
+            if "queued" in jobs or "running" in jobs:
+                status = "submitting"
+            elif "error" in jobs:
                 aids_error = []
                 aids_other = []
                 for s, aids in jobs.items():
                     for aid in aids.keys():
-                        if s == 'error':
+                        if s == "error":
                             aids_error.append(aid)
                         else:
                             aids_other.append(aid)
                 difference = set(aids_error) - set(aids_other)
                 if difference:
-                    status = ('Some artifact submissions failed: %s' %
-                              ', '.join(map(str, list(difference))))
+                    status = "Some artifact submissions failed: %s" % ", ".join(
+                        map(str, list(difference))
+                    )
 
         return status
 
@@ -1066,7 +1079,7 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             return [t[0] for t in qdb.sql_connection.TRN.execute_fetchindex()]
 
-# --- methods ---
+    # --- methods ---
     def artifacts(self, dtype=None, artifact_type=None):
         """Returns the list of artifacts associated with the study
 
@@ -1104,8 +1117,10 @@ class Study(qdb.base.QiitaObject):
             sql_args.append(qdb.util.artifact_visibilities_to_skip())
 
             qdb.sql_connection.TRN.add(sql, sql_args)
-            return [qdb.artifact.Artifact(aid)
-                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [
+                qdb.artifact.Artifact(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     def prep_templates(self, data_type=None):
         """Return list of prep template ids
@@ -1133,8 +1148,10 @@ class Study(qdb.base.QiitaObject):
                      WHERE study_id = %s{0}
                      ORDER BY prep_template_id""".format(spec_data)
             qdb.sql_connection.TRN.add(sql, args)
-            return [qdb.metadata_template.prep_template.PrepTemplate(ptid)
-                    for ptid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            return [
+                qdb.metadata_template.prep_template.PrepTemplate(ptid)
+                for ptid in qdb.sql_connection.TRN.execute_fetchflatten()
+            ]
 
     def analyses(self):
         """Get all analyses where samples from this study have been used
@@ -1152,10 +1169,13 @@ class Study(qdb.base.QiitaObject):
                              WHERE sample_id IN %s
                              ORDER BY analysis_id"""
                     qdb.sql_connection.TRN.add(
-                        sql, [tuple(self.sample_template.keys())])
+                        sql, [tuple(self.sample_template.keys())]
+                    )
 
-                    return [qdb.analysis.Analysis(_id) for _id in
-                            qdb.sql_connection.TRN.execute_fetchflatten()]
+                    return [
+                        qdb.analysis.Analysis(_id)
+                        for _id in qdb.sql_connection.TRN.execute_fetchflatten()
+                    ]
             return []
 
     def has_access(self, user, no_public=False):
@@ -1176,12 +1196,12 @@ class Study(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # return True if the user is one of the admins
-            if user.level in {'superuser', 'admin'}:
+            if user.level in {"superuser", "admin"}:
                 return True
 
             # if no_public is False then just check if the study is public
             # and return True
-            if not no_public and self.status == 'public':
+            if not no_public and self.status == "public":
                 return True
 
             # let's check if the study belongs to this user or has been
@@ -1201,8 +1221,16 @@ class Study(qdb.base.QiitaObject):
                     )
                   """
             qdb.sql_connection.TRN.add(
-                sql, [user.email, qiita_config.portal, self.id,
-                      user.email, qiita_config.portal, self.id])
+                sql,
+                [
+                    user.email,
+                    qiita_config.portal,
+                    self.id,
+                    user.email,
+                    qiita_config.portal,
+                    self.id,
+                ],
+            )
             result = qdb.sql_connection.TRN.execute_fetchlast()
 
             return result
@@ -1222,8 +1250,11 @@ class Study(qdb.base.QiitaObject):
         """
         # The study is editable only if the user is the owner, is in the shared
         # list or the user is an admin
-        return (user.level in {'superuser', 'admin'} or self.owner == user or
-                user in self.shared_with)
+        return (
+            user.level in {"superuser", "admin"}
+            or self.owner == user
+            or user in self.shared_with
+        )
 
     def share(self, user):
         """Share the study with another user
@@ -1271,9 +1302,9 @@ class Study(qdb.base.QiitaObject):
         str
             Warnings during insertion
         """
-        message = ''
+        message = ""
         # converting to set just to facilitate operations
-        system_tags_admin = set(self.get_tags()['admin'])
+        system_tags_admin = set(self.get_tags()["admin"])
         user_level = user.level
         current_tags = set(self.tags)
         to_delete = current_tags - set(tags)
@@ -1282,25 +1313,24 @@ class Study(qdb.base.QiitaObject):
         if to_delete or to_add:
             with qdb.sql_connection.TRN:
                 if to_delete:
-                    if user_level != 'admin':
+                    if user_level != "admin":
                         admin_tags = to_delete & system_tags_admin
                         if admin_tags:
-                            message += 'You cannot remove: %s' % ', '.join(
-                                admin_tags)
+                            message += "You cannot remove: %s" % ", ".join(admin_tags)
                         to_delete = to_delete - admin_tags
 
                     if to_delete:
                         sql = """DELETE FROM qiita.per_study_tags
                                      WHERE study_id = %s AND study_tag IN %s"""
-                        qdb.sql_connection.TRN.add(
-                            sql, [self._id, tuple(to_delete)])
+                        qdb.sql_connection.TRN.add(sql, [self._id, tuple(to_delete)])
 
                 if to_add:
-                    if user_level != 'admin':
+                    if user_level != "admin":
                         admin_tags = to_add & system_tags_admin
                         if admin_tags:
-                            message += ('Only admins can assign: '
-                                        '%s' % ', '.join(admin_tags))
+                            message += "Only admins can assign: %s" % ", ".join(
+                                admin_tags
+                            )
                         to_add = to_add - admin_tags
 
                     if to_add:
@@ -1321,7 +1351,7 @@ class Study(qdb.base.QiitaObject):
 
                 qdb.sql_connection.TRN.execute()
         else:
-            message = 'No changes in the tags.'
+            message = "No changes in the tags."
 
         return message
 
@@ -1342,6 +1372,7 @@ class StudyPerson(qdb.base.QiitaObject):
     phone : str or None
         phone number of the person
     """
+
     _table = "study_person"
 
     @classmethod
@@ -1404,8 +1435,7 @@ class StudyPerson(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             if not cls.exists(name, affiliation):
-                raise qdb.exceptions.QiitaDBLookupError(
-                        'Study person does not exist')
+                raise qdb.exceptions.QiitaDBLookupError("Study person does not exist")
 
             sql = """SELECT study_person_id FROM qiita.{0}
                         WHERE name = %s
@@ -1481,14 +1511,15 @@ class StudyPerson(qdb.base.QiitaObject):
                 sql = """SELECT study_id
                          FROM qiita.study
                          WHERE {} = %s"""
-                cols = ['lab_person_id', 'principal_investigator_id']
+                cols = ["lab_person_id", "principal_investigator_id"]
                 rel = {}
                 for c in cols:
                     qdb.sql_connection.TRN.add(sql.format(c), [id_])
                     rel[c] = qdb.sql_connection.TRN.execute_fetchindex()
                 raise qdb.exceptions.QiitaDBError(
                     'StudyPerson "%s" cannot be deleted because there are '
-                    'studies referencing it: %s' % (id_, str(rel)))
+                    "studies referencing it: %s" % (id_, str(rel))
+                )
 
             sql = "DELETE FROM qiita.study_person WHERE study_person_id = %s"
             qdb.sql_connection.TRN.add(sql, [id_])
