@@ -147,7 +147,8 @@ class Analysis(qdb.base.QiitaObject):
         description : str
             Description of the analysis
         from_default : bool, optional
-            If True, use the default analysis to populate selected samples.
+            If True, use the default analysis to populate selected samples;
+            when True, we will create a `build_analysis_files` job.
             Default False.
         merge_duplicated_sample_ids : bool, optional
             If the duplicated sample ids in the selected studies should be
@@ -155,13 +156,22 @@ class Analysis(qdb.base.QiitaObject):
             the artifact id
         categories : list of str, optional
             If not None, use _only_ these categories for the metaanalysis
-        reservation : str
+        reservation : str, optional
             The slurm reservation to asign to the analysis
 
         Returns
         -------
         qdb.analysis.Analysis
             The newly created analysis
+
+        Notes
+        -----
+        Before 12.09.25 this method was fully tangled with `build_analysis_files`, which
+        meant that we couldn't create a stand alone analysis; additionally, this method
+        had the intrinsic assumption that we can create an analysis not from default but not
+        pass any sample/artifact information - which will create an empty analysis but still submit
+        a build_analysis_files file. Thus, we are using this assumption to define if we should
+        create the `build_analysis_files` job
         """
         with qdb.sql_connection.TRN:
             portal_id = qdb.util.convert_to_id(
@@ -199,6 +209,7 @@ class Analysis(qdb.base.QiitaObject):
             if reservation is not None:
                 instance.slurm_reservation = reservation
 
+        if from_default:
             # Once the analysis is created, we can create the mapping file and
             # the initial set of artifacts
             plugin = qdb.software.Software.from_name_and_version("Qiita", "alpha")
@@ -218,8 +229,8 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [a_id, job.id])
             qdb.sql_connection.TRN.execute()
 
-        # Doing the submission outside of the transaction
-        job.submit()
+            job.submit()
+
         return instance
 
     @classmethod
