@@ -222,12 +222,15 @@ class Analysis(qdb.base.QiitaObject):
                     "categories": categories,
                 },
             )
+
             job = qdb.processing_job.ProcessingJob.create(owner, params, True)
-            sql = """INSERT INTO qiita.analysis_processing_job
-                        (analysis_id, processing_job_id)
-                     VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [a_id, job.id])
-            qdb.sql_connection.TRN.execute()
+
+            with qdb.sql_connection.TRN:
+                sql = """INSERT INTO qiita.analysis_processing_job
+                            (analysis_id, processing_job_id)
+                        VALUES (%s, %s)"""
+                qdb.sql_connection.TRN.add(sql, [a_id, job.id])
+                qdb.sql_connection.TRN.execute()
 
             job.submit()
 
