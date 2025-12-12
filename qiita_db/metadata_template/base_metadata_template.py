@@ -470,8 +470,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
     # forbidden_words not defined for base class. Please redefine for
     # sub-classes.
     _forbidden_words = {}
-    # qiita-unique integer identifier mapping table
-    _id_map_table = None
 
     @classmethod
     def _check_id(cls, id_):
