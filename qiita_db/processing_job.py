@@ -1226,7 +1226,11 @@ class ProcessingJob(qdb.base.QiitaObject):
                 pvals = job.parameters.values
                 if "analysis" in pvals:
                     cmd_out_id = None
-                    analysis = qdb.analysis.Analysis(job.parameters.values["analysis"])
+                    analysis = qdb.analysis.Analysis(pvals["analysis"])
+                    if "artifacts" in pvals:
+                        parents = [
+                            qdb.artifact.Artifact(aid) for aid in pvals["artifacs"]
+                        ]
                 else:
                     cmd_out_id = provenance["cmd_out_id"]
                     analysis = None
