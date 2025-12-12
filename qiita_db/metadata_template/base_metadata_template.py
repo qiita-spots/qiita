@@ -470,6 +470,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
     # forbidden_words not defined for base class. Please redefine for
     # sub-classes.
     _forbidden_words = {}
+    # qiita-unique integer identifier mapping table
+    _id_map_table = None
 
     @classmethod
     def _check_id(cls, id_):
@@ -935,6 +937,21 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
         return new_samples, new_cols
+
+    def unique_ids(self):
+        r"""Return a stable mapping of sample_name to integers
+
+        Obtain a map from a sample_name to an integer. The association is
+        unique Qiita-wide and 1-1.
+
+        This method is idempotent.
+
+        Returns
+        ------
+        dict
+            {sample_name: integer_index}
+        """
+        raise IncompetentQiitaDeveloperError()
 
     @classmethod
     def exists(cls, obj_id):

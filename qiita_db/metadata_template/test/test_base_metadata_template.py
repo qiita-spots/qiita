@@ -41,7 +41,14 @@ class TestMetadataTemplateReadOnly(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MT(1)
 
-    def test_exist(self):
+    def test_unique_ids(self):
+        """Unique IDs raises an error because it's not called from a subclass
+        """
+        MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            MT.unique_ids(self.study)
+
+    def test_exists(self):
         """Exists raises an error because it's not called from a subclass"""
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         with self.assertRaises(IncompetentQiitaDeveloperError):
