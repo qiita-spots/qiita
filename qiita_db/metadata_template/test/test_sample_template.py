@@ -500,7 +500,7 @@ class TestSampleTemplate(TestCase):
 
     def test_unique_ids(self):
         obs = self.tester.unique_ids()
-        exp = {name: idx for idx, name in enumerate(sorted(self.tester.keys()))}
+        exp = {name: idx for idx, name in enumerate(sorted(self.tester.keys()), 1)}
         self.assertEqual(obs, exp)
 
         # verify a repeat call is unchanged

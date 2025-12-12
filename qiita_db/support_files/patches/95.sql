@@ -7,7 +7,6 @@ CREATE TABLE map_sample_idx (
     sample_name VARCHAR NOT NULL PRIMARY KEY,
     study_idx BIGINT NOT NULL,
     sample_idx BIGINT DEFAULT NEXTVAL('sequence_sample_idx') NOT NULL,
-    UNIQUE (study_idx, sample_idx),
     UNIQUE (sample_idx),
     CONSTRAINT fk_study FOREIGN KEY (study_idx) REFERENCES qiita.study (study_id)
 );
