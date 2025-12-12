@@ -1470,6 +1470,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         validator_jobs = []
         with qdb.sql_connection.TRN:
             cmd_id = self.command.id
+            parameters = self.parameters.values
             for out_name, a_data in artifacts_data.items():
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
@@ -1506,6 +1507,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # belong to the same analysis, so we can just ask the
                     # first artifact for the analysis that it belongs to
                     analysis = self.input_artifacts[0].analysis.id
+                elif "analysis" in parameters:
+                    # if we made it this far in the if/elif block it means that
+                    # we are dealing with a job that was generated to link study/template
+                    # artifacts and an analysis; thus, using the analysis parameter from
+                    # the job itself
+                    analysis = parameters["analysis"]
 
                 # Once the validate job completes, it needs to know if it has
                 # been generated from a command (and how) or if it has been
@@ -1521,11 +1528,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                 cmd_out_id = qdb.sql_connection.TRN.execute_fetchlast()
                 naming_params = self.command.naming_order
                 if naming_params:
-                    params = self.parameters.values
                     art_name = "%s %s" % (
                         out_name,
                         " ".join(
-                            [str(params[p]).split("/")[-1] for p in naming_params]
+                            [str(parameters[p]).split("/")[-1] for p in naming_params]
                         ),
                     )
                 else:
