@@ -341,6 +341,50 @@ class PrepTemplate(MetadataTemplate):
 
             qdb.sql_connection.TRN.execute()
 
+    def unique_ids(self):
+        r"""Return a stable mapping of sample_name to integers
+
+        Obtain a map from a sample_name to an integer. The association is
+        unique Qiita-wide and 1-1.
+
+        This method is idempotent.
+
+        Returns
+        ------
+        dict
+            {sample_name: integer_index}
+        """
+        sample_idx = qdb.study.Study(self.study_id).sample_template.unique_ids()
+
+        paired = []
+        for p_id in sorted(self.keys()):
+            if p_id in sample_idx:
+                paired.append([self._id, sample_idx[p_id]])
+
+        with qdb.sql_connection.TRN:
+            # insert any IDs not present
+            sql = """INSERT INTO map_prep_sample_idx (prep_idx, sample_idx)
+                     VALUES (%s, %s)
+                     ON CONFLICT (prep_idx, sample_idx)
+                     DO NOTHING"""
+            qdb.sql_connection.TRN.add(sql, paired, many=True)
+
+            # obtain the association
+            sql = """SELECT
+                         sample_name,
+                         prep_sample_idx
+                     FROM map_prep_sample_idx
+                     JOIN map_sample_idx USING (sample_idx)"""
+            qdb.sql_connection.TRN.add(sql)
+
+            # form into a dict
+            mapping = {r[0]: r[1] for r in qdb.sql_connection.TRN.execute_fetchindex()}
+
+            # commit in the event changes were made
+            qdb.sql_connection.TRN.commit()
+
+        return mapping
+
     def data_type(self, ret_id=False):
         """Returns the data_type or the data_type id
 
