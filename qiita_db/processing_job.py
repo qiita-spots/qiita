@@ -1217,13 +1217,13 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             provenance = loads(self.parameters.values["provenance"])
             job = ProcessingJob(provenance["job"])
+            pvals = job.parameters.values
             if "data_type" in a_info:
                 # This job is resulting from a private job
                 parents = None
                 params = None
                 name = None
                 data_type = a_info["data_type"]
-                pvals = job.parameters.values
                 if "analysis" in pvals:
                     cmd_out_id = None
                     analysis = qdb.analysis.Analysis(pvals["analysis"])
