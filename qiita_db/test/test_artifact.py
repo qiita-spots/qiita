@@ -1236,7 +1236,7 @@ class ArtifactTests(TestCase):
     def test_unique_ids(self):
         art = qdb.artifact.Artifact(1)
         obs = art.unique_ids()
-        exp = {name: idx for idx, name in enumerate(sorted(art.prep_templates[0].keys()))}
+        exp = {name: idx for idx, name in enumerate(sorted(art.prep_templates[0].keys()), 1)}
         self.assertEqual(obs, exp)
 
         # verify repeat calls are unchanged
