@@ -374,8 +374,10 @@ class PrepTemplate(MetadataTemplate):
                          sample_name,
                          prep_sample_idx
                      FROM map_prep_sample_idx
-                     JOIN map_sample_idx USING (sample_idx)"""
-            qdb.sql_connection.TRN.add(sql)
+                     JOIN map_sample_idx USING (sample_idx)
+                     WHERE prep_idx=%s
+                     """
+            qdb.sql_connection.TRN.add(sql, [self._id, ])
 
             # form into a dict
             mapping = {r[0]: r[1] for r in qdb.sql_connection.TRN.execute_fetchindex()}
