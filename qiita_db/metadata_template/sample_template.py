@@ -198,8 +198,10 @@ class SampleTemplate(MetadataTemplate):
             sql = """SELECT
                          sample_name,
                          sample_idx
-                     FROM map_sample_idx"""
-            qdb.sql_connection.TRN.add(sql)
+                     FROM map_sample_idx
+                     WHERE study_idx=%s
+                     """
+            qdb.sql_connection.TRN.add(sql, [self._id, ])
 
             # form into a dict
             mapping = {r[0]: r[1] for r in qdb.sql_connection.TRN.execute_fetchindex()}
