@@ -329,16 +329,6 @@ class Artifact(qdb.base.QiitaObject):
         qiita_db.artifact.Artifact
             A new instance of Artifact
 
-        Raises
-        ------
-        QiitaDBArtifactCreationError
-            If `filepaths` is not provided
-            If both `parents` and `prep_template` are provided
-            If none of `parents` and `prep_template` are provided
-            If `parents` is provided but `processing_parameters` is not
-            If both `prep_template` and `processing_parameters` is provided
-            If not all the artifacts in `parents` belong to the same study
-
         Notes
         -----
         The visibility of the artifact is set by default to `sandbox` if
@@ -353,18 +343,30 @@ class Artifact(qdb.base.QiitaObject):
                 "at least one filepath is required."
             )
 
-        if bool(parents) != bool(processing_parameters):
-            # When provided, parents and processing parameters both should be
-            # provided (this is effectively doing an XOR)
+        # Check that the combination of parameters is correct
+        if bool(parents) and bool(prep_template):
             raise qdb.exceptions.QiitaDBArtifactCreationError(
-                "When provided, both parents and processing parameters should "
-                "be provided"
+                "Not valid: parents and prep_template provided"
+            )
+        elif bool(parents) and not bool(processing_parameters):
+            raise qdb.exceptions.QiitaDBArtifactCreationError(
+                "Not valid: both parents and processing_parameters need to be provided"
+            )
+        elif bool(prep_template) and bool(processing_parameters):
+            raise qdb.exceptions.QiitaDBArtifactCreationError(
+                "Not valid: both prep_template and processing_parameters provided"
+            )
+        elif not bool(parents) and not bool(prep_template):
+            raise qdb.exceptions.QiitaDBArtifactCreationError(
+                "Not valid: both parents and prep_template need to be provided"
             )
         elif bool(analysis) and not bool(data_type):
-            # When provided, analysis and data_type both should be
-            # provided (this is effectively doing an XOR)
             raise qdb.exceptions.QiitaDBArtifactCreationError(
-                "When provided, both analysis and data_type should be provided"
+                "Not valid: both analysis and data_type need to be provided"
+            )
+        elif bool(prep_template) and bool(data_type):
+            raise qdb.exceptions.QiitaDBArtifactCreationError(
+                "Not valid: both prep_template and data_type need to be provided"
             )
 
         # There are three different ways of creating an Artifact, but all of
