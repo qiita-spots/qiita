@@ -364,6 +364,10 @@ class Artifact(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBArtifactCreationError(
                 "Not valid: both prep_template and data_type need to be provided"
             )
+        elif not bool(prep_template) and not bool(parents) and not bool(analysis):
+            raise qdb.exceptions.QiitaDBArtifactCreationError(
+                "Not valid: no prep_template, parents or analysis provided"
+            )
 
         # There are three different ways of creating an Artifact, but all of
         # them execute a set of common operations. Declare functions to avoid
