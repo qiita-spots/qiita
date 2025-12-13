@@ -1242,7 +1242,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     analysis = qdb.analysis.Analysis(pvals["analysis"])
                     if "artifacts" in pvals:
                         parents = [
-                            qdb.artifact.Artifact(aid) for aid in pvals["artifacs"]
+                            qdb.artifact.Artifact(aid) for aid in pvals["artifacts"]
                         ]
                 else:
                     analysis = None
