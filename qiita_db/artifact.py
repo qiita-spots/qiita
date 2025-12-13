@@ -353,19 +353,7 @@ class Artifact(qdb.base.QiitaObject):
                 "at least one filepath is required."
             )
 
-        # Check that the combination of parameters is correct
-        counts = (
-            int(bool(parents or processing_parameters))
-            + int(prep_template is not None)
-            + int(bool(analysis or data_type))
-        )
-        if counts != 1:
-            # More than one parameter has been provided
-            raise qdb.exceptions.QiitaDBArtifactCreationError(
-                "One and only one of parents, prep template or analysis must "
-                "be provided"
-            )
-        elif bool(parents) != bool(processing_parameters):
+        if bool(parents) != bool(processing_parameters):
             # When provided, parents and processing parameters both should be
             # provided (this is effectively doing an XOR)
             raise qdb.exceptions.QiitaDBArtifactCreationError(
