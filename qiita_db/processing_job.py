@@ -1243,7 +1243,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                     if "artifacts" in pvals:
                         # as this is going to be the first artifact of an analysis, we
                         # need to provide the data type so we are going to make sure all
-                        # the parents data_types are the same and assing that one
+                        # the parents data_types are the same and assigning that one; note
+                        # that (1) we are doing this to be stringent but it should be responsability
+                        # of the plugin creating this artifact, and (2) to keep the same functionality
+                        # we are going to make sure that params is not set as it shouldn't be passed when
+                        # assiging to an analysis
+                        params = None
                         data_type = set(
                             [
                                 qdb.artifact.Artifact(aid).data_type
