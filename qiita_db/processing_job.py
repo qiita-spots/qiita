@@ -1244,6 +1244,15 @@ class ProcessingJob(qdb.base.QiitaObject):
                         parents = [
                             qdb.artifact.Artifact(aid) for aid in pvals["artifacts"]
                         ]
+                        # as this is going to be the first artifact of an analysis, we
+                        # need to provide the data type so we are going to make sure all
+                        # the parents data_types are the same and assing that one
+                        data_type = set([p.data_type for p in parents])
+                        if len(data_type) != 1:
+                            raise ValueError(
+                                f"Not valida parents data_types: {data_type}"
+                            )
+                        data_type = data_type.pop()
                 else:
                     analysis = None
 
