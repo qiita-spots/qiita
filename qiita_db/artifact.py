@@ -1877,7 +1877,7 @@ class Artifact(qdb.base.QiitaObject):
 
         with qdb.sql_connection.TRN:
             # insert any IDs not present
-            sql = """INSERT INTO map_artifact_sample_idx (artifact_idx, prep_sample_idx)
+            sql = """INSERT INTO qiita.map_artifact_sample_idx (artifact_idx, prep_sample_idx)
                      VALUES (%s, %s)
                      ON CONFLICT (artifact_idx, prep_sample_idx)
                      DO NOTHING"""
@@ -1887,9 +1887,9 @@ class Artifact(qdb.base.QiitaObject):
             sql = """SELECT
                          sample_name,
                          artifact_sample_idx
-                     FROM map_artifact_sample_idx
-                     JOIN map_prep_sample_idx USING (prep_sample_idx)
-                     JOIN map_sample_idx USING (sample_idx)
+                     FROM qiita.map_artifact_sample_idx
+                     JOIN qiita.map_prep_sample_idx USING (prep_sample_idx)
+                     JOIN qiita.map_sample_idx USING (sample_idx)
                      WHERE artifact_idx=%s
                      """
             qdb.sql_connection.TRN.add(sql, [self._id, ])

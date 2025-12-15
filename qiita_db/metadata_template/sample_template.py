@@ -192,7 +192,7 @@ class SampleTemplate(MetadataTemplate):
         samples = [[self._id, s_id] for s_id in sorted(self.keys())]
         with qdb.sql_connection.TRN:
             # insert any IDs not present
-            sql = """INSERT INTO map_sample_idx (study_idx, sample_name)
+            sql = """INSERT INTO qiita.map_sample_idx (study_idx, sample_name)
                      VALUES (%s, %s)
                      ON CONFLICT (sample_name)
                      DO NOTHING"""
@@ -202,7 +202,7 @@ class SampleTemplate(MetadataTemplate):
             sql = """SELECT
                          sample_name,
                          sample_idx
-                     FROM map_sample_idx
+                     FROM qiita.map_sample_idx
                      WHERE study_idx=%s
                      """
             qdb.sql_connection.TRN.add(sql, [self._id, ])

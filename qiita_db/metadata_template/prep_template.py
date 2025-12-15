@@ -363,7 +363,7 @@ class PrepTemplate(MetadataTemplate):
 
         with qdb.sql_connection.TRN:
             # insert any IDs not present
-            sql = """INSERT INTO map_prep_sample_idx (prep_idx, sample_idx)
+            sql = """INSERT INTO qiita.map_prep_sample_idx (prep_idx, sample_idx)
                      VALUES (%s, %s)
                      ON CONFLICT (prep_idx, sample_idx)
                      DO NOTHING"""
@@ -373,8 +373,8 @@ class PrepTemplate(MetadataTemplate):
             sql = """SELECT
                          sample_name,
                          prep_sample_idx
-                     FROM map_prep_sample_idx
-                     JOIN map_sample_idx USING (sample_idx)
+                     FROM qiita.map_prep_sample_idx
+                     JOIN qiita.map_sample_idx USING (sample_idx)
                      WHERE prep_idx=%s
                      """
             qdb.sql_connection.TRN.add(sql, [self._id, ])
