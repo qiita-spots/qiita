@@ -1257,7 +1257,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                         )
                         if len(data_type) != 1:
                             raise ValueError(
-                                f"Not valida parents data_types: {data_type}"
+                                f"Not valid parents data_types: {data_type}"
                             )
                         data_type = data_type.pop()
                 else:

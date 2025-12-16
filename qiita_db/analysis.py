@@ -847,7 +847,7 @@ class Analysis(qdb.base.QiitaObject):
                     "Can't add/remove samples from this analysis"
                 )
 
-    def add_samples(self, samples):
+    def add_samples(self, samples, overwrite_lock=False):
         """Adds samples to the analysis
 
         Parameters
@@ -855,9 +855,13 @@ class Analysis(qdb.base.QiitaObject):
         samples : dictionary of lists
             samples and the artifact id they come from in form
             {artifact_id: [sample1, sample2, ...], ...}
+        overwrite_lock : bool, optional
+            if True it will ignore the sample-lock and will allow adding
+            samples to a non-default analysis
         """
         with qdb.sql_connection.TRN:
-            self._lock_samples()
+            if not overwrite_lock:
+                self._lock_samples()
 
             for aid, samps in samples.items():
                 # get previously selected samples for aid and filter them out
