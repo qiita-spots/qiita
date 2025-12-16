@@ -1217,16 +1217,16 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             provenance = loads(self.parameters.values["provenance"])
             job = ProcessingJob(provenance["job"])
+            pvals = job.parameters.values
             if "data_type" in a_info:
                 # This job is resulting from a private job
                 parents = None
                 params = None
                 name = None
                 data_type = a_info["data_type"]
-                pvals = job.parameters.values
                 if "analysis" in pvals:
                     cmd_out_id = None
-                    analysis = qdb.analysis.Analysis(job.parameters.values["analysis"])
+                    analysis = qdb.analysis.Analysis(pvals["analysis"])
                 else:
                     cmd_out_id = provenance["cmd_out_id"]
                     analysis = None
@@ -1237,8 +1237,31 @@ class ProcessingJob(qdb.base.QiitaObject):
                 params = job.parameters
                 cmd_out_id = provenance["cmd_out_id"]
                 name = provenance["name"]
-                analysis = None
                 data_type = None
+                if "analysis" in pvals:
+                    analysis = qdb.analysis.Analysis(pvals["analysis"])
+                    if "artifacts" in pvals:
+                        # as this is going to be the first artifact of an analysis, we
+                        # need to provide the data type so we are going to make sure all
+                        # the parents data_types are the same and assigning that one; note
+                        # that (1) we are doing this to be stringent but it should be responsability
+                        # of the plugin creating this artifact, and (2) to keep the same functionality
+                        # we are going to make sure that params is not set as it shouldn't be passed when
+                        # assiging to an analysis
+                        params = None
+                        data_type = set(
+                            [
+                                qdb.artifact.Artifact(aid).data_type
+                                for aid in pvals["artifacts"]
+                            ]
+                        )
+                        if len(data_type) != 1:
+                            raise ValueError(
+                                f"Not valid parents data_types: {data_type}"
+                            )
+                        data_type = data_type.pop()
+                else:
+                    analysis = None
 
             # Create the artifact
             atype = a_info["artifact_type"]
@@ -1470,6 +1493,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         validator_jobs = []
         with qdb.sql_connection.TRN:
             cmd_id = self.command.id
+            parameters = self.parameters.values
             for out_name, a_data in artifacts_data.items():
                 # Correct the format of the filepaths parameter so we can
                 # create a validate job
@@ -1506,6 +1530,12 @@ class ProcessingJob(qdb.base.QiitaObject):
                     # belong to the same analysis, so we can just ask the
                     # first artifact for the analysis that it belongs to
                     analysis = self.input_artifacts[0].analysis.id
+                elif "analysis" in parameters:
+                    # if we made it this far in the if/elif block it means that
+                    # we are dealing with a job that was generated to link study/template
+                    # artifacts and an analysis; thus, using the analysis parameter from
+                    # the job itself
+                    analysis = parameters["analysis"]
 
                 # Once the validate job completes, it needs to know if it has
                 # been generated from a command (and how) or if it has been
@@ -1521,11 +1551,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                 cmd_out_id = qdb.sql_connection.TRN.execute_fetchlast()
                 naming_params = self.command.naming_order
                 if naming_params:
-                    params = self.parameters.values
                     art_name = "%s %s" % (
                         out_name,
                         " ".join(
-                            [str(params[p]).split("/")[-1] for p in naming_params]
+                            [str(parameters[p]).split("/")[-1] for p in naming_params]
                         ),
                     )
                 else:
