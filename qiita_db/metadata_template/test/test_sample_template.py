@@ -624,6 +624,15 @@ class TestSampleTemplate(TestCase):
         st = qdb.metadata_template.sample_template.SampleTemplate(1)
         self.assertTrue(st.id, 1)
 
+    def test_unique_ids(self):
+        obs = self.tester.unique_ids()
+        exp = {name: idx for idx, name in enumerate(sorted(self.tester.keys()), 1)}
+        self.assertEqual(obs, exp)
+
+        # verify a repeat call is unchanged
+        obs = self.tester.unique_ids()
+        self.assertEqual(obs, exp)
+
     def test_table_name(self):
         """Table name return the correct string"""
         obs = qdb.metadata_template.sample_template.SampleTemplate._table_name(

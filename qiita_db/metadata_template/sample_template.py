@@ -176,6 +176,45 @@ class SampleTemplate(MetadataTemplate):
         """
         return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 
+    def unique_ids(self):
+        r"""Return a stable mapping of sample_name to integers
+
+        Obtain a map from a sample_name to an integer. The association is
+        unique Qiita-wide and 1-1.
+
+        This method is idempotent.
+
+        Returns
+        ------
+        dict
+            {sample_name: integer_index}
+        """
+        samples = [[self._id, s_id] for s_id in sorted(self.keys())]
+        with qdb.sql_connection.TRN:
+            # insert any IDs not present
+            sql = """INSERT INTO qiita.map_sample_idx (study_idx, sample_name)
+                     VALUES (%s, %s)
+                     ON CONFLICT (sample_name)
+                     DO NOTHING"""
+            qdb.sql_connection.TRN.add(sql, samples, many=True)
+
+            # obtain the association
+            sql = """SELECT
+                         sample_name,
+                         sample_idx
+                     FROM qiita.map_sample_idx
+                     WHERE study_idx=%s
+                     """
+            qdb.sql_connection.TRN.add(sql, [self._id, ])
+
+            # form into a dict
+            mapping = {r[0]: r[1] for r in qdb.sql_connection.TRN.execute_fetchindex()}
+
+            # commit in the event changes were made
+            qdb.sql_connection.TRN.commit()
+
+        return mapping
+
     def delete_samples(self, sample_names):
         """Delete `sample_names` from sample information file
 

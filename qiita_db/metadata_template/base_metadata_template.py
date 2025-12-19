@@ -945,6 +945,21 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
         return new_samples, new_cols
 
+    def unique_ids(self):
+        r"""Return a stable mapping of sample_name to integers
+
+        Obtain a map from a sample_name to an integer. The association is
+        unique Qiita-wide and 1-1.
+
+        This method is idempotent.
+
+        Returns
+        ------
+        dict
+            {sample_name: integer_index}
+        """
+        raise IncompetentQiitaDeveloperError()
+
     @classmethod
     def exists(cls, obj_id):
         r"""Checks if already exists a MetadataTemplate for the provided object

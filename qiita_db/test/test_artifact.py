@@ -1357,6 +1357,16 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(artifact.id)
 
+    def test_unique_ids(self):
+        art = qdb.artifact.Artifact(1)
+        obs = art.unique_ids()
+        exp = {name: idx for idx, name in enumerate(sorted(art.prep_templates[0].keys()), 1)}
+        self.assertEqual(obs, exp)
+
+        # verify repeat calls are unchanged
+        obs = art.unique_ids()
+        self.assertEqual(obs, exp)
+
     def test_name_setter(self):
         a = qdb.artifact.Artifact(1)
         self.assertEqual(a.name, "Raw data 1")

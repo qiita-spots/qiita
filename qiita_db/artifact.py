@@ -1853,3 +1853,51 @@ class Artifact(qdb.base.QiitaObject):
                      SET human_reads_filter_method_id = %s
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [idx[0], self.id])
+
+    def unique_ids(self):
+        r"""Return a stable mapping of sample_name to integers
+
+        Obtain a map from a sample_name to an integer. The association is
+        unique Qiita-wide and 1-1.
+
+        This method is idempotent.
+
+        Returns
+        ------
+        dict
+            {sample_name: integer_index}
+        """
+        if len(self.prep_templates) == 0:
+            raise ValueError("No associated prep template")
+
+        if len(self.prep_templates) > 1:
+            raise ValueError("Cannot assign against multiple prep templates")
+
+        paired = [[self._id, ps_idx] for ps_idx in sorted(self.prep_templates[0].unique_ids().values())]
+
+        with qdb.sql_connection.TRN:
+            # insert any IDs not present
+            sql = """INSERT INTO qiita.map_artifact_sample_idx (artifact_idx, prep_sample_idx)
+                     VALUES (%s, %s)
+                     ON CONFLICT (artifact_idx, prep_sample_idx)
+                     DO NOTHING"""
+            qdb.sql_connection.TRN.add(sql, paired, many=True)
+
+            # obtain the association
+            sql = """SELECT
+                         sample_name,
+                         artifact_sample_idx
+                     FROM qiita.map_artifact_sample_idx
+                     JOIN qiita.map_prep_sample_idx USING (prep_sample_idx)
+                     JOIN qiita.map_sample_idx USING (sample_idx)
+                     WHERE artifact_idx=%s
+                     """
+            qdb.sql_connection.TRN.add(sql, [self._id, ])
+
+            # form into a dict
+            mapping = {r[0]: r[1] for r in qdb.sql_connection.TRN.execute_fetchindex()}
+
+            # commit in the event changes were made
+            qdb.sql_connection.TRN.commit()
+
+        return mapping
