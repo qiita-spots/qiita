@@ -64,7 +64,7 @@ from .studies import (
 from .user import user_jobs_get_req
 from .util import check_access, check_fp
 
-__version__ = "2025.11"
+__version__ = "2026.01"
 
 __all__ = [
     "prep_template_summary_get_req",
