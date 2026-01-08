@@ -6,9 +6,9 @@ Version 2026.01
 
 Deployed on Januray 9th, 2026
 
-* `ArtifactHandler` it also returns the parents ids, if they exits; this can be used by any plugin.
-* Replaced `flake8` with `ruff`.
-* `build_analysis_files` now allows to create a new `Analysis` without automatically submiting a job.
+* `ArtifactHandler` also returns the parents ids, if they exits; this can be used by any plugin.
+*  `ruff` replaces `flake8`.
+* `build_analysis_files` now allows creation of a new `Analysis` without automatically submitting a job.
 * `Analysis.add_samples` now accepts new samples after creation; before it was only possible via the default_analysis.
 * Introduction of Qiita-wide unique identifiers for [study, prep and artifact](https://github.com/qiita-spots/qiita/pull/3499). Thank you @wasade!
 * New commands available in `qp-pacbio`: `PacBio adapter removal via lima/pbmarkdup`, `Woltka v0.1.7 with cov and id filter` and `Feature Table from LCG/MAG`; also deprecated `Woltka v0.1.7, minimap2`. [More information](https://github.com/qiita-spots/qp-pacbio).
