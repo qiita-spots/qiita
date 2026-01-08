@@ -28,7 +28,7 @@ from . import user  # noqa
 from . import processing_job  # noqa
 
 
-__version__ = "2025.11"
+__version__ = "2026.01"
 
 __all__ = [
     "analysis",
