@@ -4,7 +4,7 @@
 Version 2026.01
 ---------------
 
-Deployed on Januray 9th, 2026å
+Deployed on Januray 9th, 2026
 
 * `ArtifactHandler` it also returns the parents ids, if they exits; this can be used by any plugin.
 * Replaced `flake8` with `ruff`.
