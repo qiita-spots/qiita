@@ -370,8 +370,11 @@ def drop_and_rebuild_tst_database(drop_labcontrol=False):
         # before we delete the full database we want to check if there are any artifact files
         # created in the test environment - normally from plugins - and delete them; first we will
         # find them and then we will delete them as a transaction
+        # NOTE: default testing artifact ids are <= 9 so not changing them
         for artifact in qdb.artifact.Artifact.iter():
-            for fp in artifact.filepaths():
+            if artifact.id <= 9:
+                continue
+            for fp in artifact.filepaths:
                 fp = fp["fp"]
                 if exists(fp):
                     qdb.util._rm_files(qdb.sql_connection.TRN, fp)
