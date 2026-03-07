@@ -127,7 +127,6 @@ setup(
         "networkx",
         "humanize==4.11",
         "wtforms<3.0.0",
-        "nltk<=3.8.1",
         "openpyxl",
         "sphinx-bootstrap-theme",
         "Sphinx<3.0",
