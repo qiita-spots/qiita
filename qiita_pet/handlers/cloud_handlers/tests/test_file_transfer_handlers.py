@@ -1,8 +1,10 @@
 import filecmp
 from os import remove, makedirs
-from os.path import exists, basename, join, isdir, splitext
+from os.path import exists, basename, join, isdir, splitext, abspath
 from unittest import main
 from shutil import rmtree, make_archive
+import hashlib
+import tempfile
 
 import qiita_db as qdb
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
@@ -110,42 +112,131 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
 
         # test raise error if no file is given
         obs = self.post_authed(self.endpoint)
-        self.assertEqual(obs.reason, "No files to upload defined!")
+        self.assertIn("No files to upload defined!", obs.reason)
 
         # test correct mechanism
         with open(fp_source, 'rb') as fh:
-            obs = self.post_authed(self.endpoint, files={'bar/': fh})
-            self.assertIn('Stored 1 files into BASE_DATA_DIR of Qiita',
+            content = fh.read()
+            files = {'file': ("dummy", content, "text/plain")}
+            obs = self.post_authed(self.endpoint, files=files)
+            self.assertIn('No target_filepath defined!', obs.reason)
+
+            data = {'target_filepath': fp_target}
+            obs = self.post_authed(self.endpoint, files=files, data=data)
+            self.assertIn('No current_chunk argument provided', obs.reason)
+
+            data['current_chunk'] = 1
+            obs = self.post_authed(self.endpoint, files=files, data=data)
+            self.assertIn('No total_chunks argument provided', obs.reason)
+
+            data['total_chunks'] = 1
+            obs = self.post_authed(self.endpoint, files=files, data=data)
+            self.assertIn('Stored 1 file into BASE_DATA_DIR of Qiita',
                           str(obs.content))
             self.assertTrue(filecmp.cmp(fp_source, fp_target, shallow=False))
 
         # check if error is raised, if file already exists
-        with open(fp_source, 'rb') as fh:
-            # we need to let qiita thinks for this test, to NOT be in test mode
-            with TRN:
-                TRN.add("UPDATE settings SET test = False")
-                TRN.execute()
-            obs = self.post_authed(self.endpoint, files={'bar/': fh})
-            # reset test mode to true
-            with TRN:
-                TRN.add("UPDATE settings SET test = True")
-                TRN.execute()
-            self.assertIn("already present in Qiita's BASE_DATA_DIR!",
-                          obs.reason)
+        # we need to let qiita thinks for this test, to NOT be in test mode
+        with TRN:
+            TRN.add("UPDATE settings SET test = False")
+            TRN.execute()
+        obs = self.post_authed(self.endpoint, files=files, data=data)
+        # reset test mode to true
+        with TRN:
+            TRN.add("UPDATE settings SET test = True")
+            TRN.execute()
+        self.assertIn("already present in Qiita's BASE_DATA_DIR!",
+                        obs.reason)
 
-        # test transfer of multiple files
-        if exists(fp_target):
-            remove(fp_target)
-        with open(fp_source, 'rb') as fh1:
-            with open(fp_source2, 'rb') as fh2:
-                obs = self.post_authed(
-                    self.endpoint, files={'bar/': fh1, 'barr/': fh2})
-                self.assertIn('Stored 2 files into BASE_DATA_DIR of Qiita',
-                              str(obs.content))
-                self.assertTrue(filecmp.cmp(fp_source, fp_target,
-                                            shallow=False))
-                self.assertTrue(filecmp.cmp(fp_source2, fp_target2,
-                                            shallow=False))
+        # I ditched sending multiple files on 2026-03.24 in favor of a clean
+        # interface to transfer a single but huge file in chunks
+        # # test transfer of multiple files
+        # if exists(fp_target):
+        #     remove(fp_target)
+        # with open(fp_source, 'rb') as fh1:
+        #     with open(fp_source2, 'rb') as fh2:
+        #         obs = self.post_authed(
+        #             self.endpoint, files={'bar/': fh1, 'barr/': fh2})
+        #         self.assertIn('Stored 2 files into BASE_DATA_DIR of Qiita',
+        #                       str(obs.content))
+        #         self.assertTrue(filecmp.cmp(fp_source, fp_target,
+        #                                     shallow=False))
+        #         self.assertTrue(filecmp.cmp(fp_source2, fp_target2,
+        #                                     shallow=False))
+
+    def test_chuncked_transfer(self):
+        long_content = (b"This is a very long file content, "
+                        b"that needs to be chunked :-)")
+        chunk_size = 25
+        chunks = {c+1: long_content[i:i+chunk_size]
+                  for c, i
+                  in enumerate(range(0, len(long_content), chunk_size))}
+
+        # transfer all but second chunk
+        fp_target = self.base_data_dir + '/chunked.txt'
+        self._clean_up_files.append(fp_target)
+        data = {'target_filepath': fp_target,
+                'total_chunks': len(chunks)}
+        resumable_identifier = hashlib.md5(
+            abspath(fp_target).encode()).hexdigest()
+        for i, content in chunks.items():
+            self._clean_up_files.append(resumable_identifier + ('%i' % i))
+            if i == 2:
+                continue
+            data['current_chunk'] = i
+            obs = self.post_authed(
+                self.endpoint,
+                files={'file': ("dummy", content, "text/plain")},
+                data=data)
+            # test that chunk 1 transferred OK, chunk 3 also BUT file
+            # could not yet be reconstructed as chunk 2 is missing
+            if i < len(chunks):
+                self.assertEqual(obs.status_code, 200)
+            else:
+                self.assertIn(
+                    ("Not all %i chunks for file %s have been "
+                     "transferred yet") % (len(chunks), fp_target),
+                     obs.reason)
+            # also test presense of chunk
+            self.assertTrue(exists(join(
+                tempfile.gettempdir(), resumable_identifier + '.%i' % i)))
+
+        # transfer missing chunk
+        data['current_chunk'] = 2
+        obs = self.post_authed(
+            self.endpoint,
+            files={'file': ("dummy", chunks[data['current_chunk']],
+                            "text/plain")},
+            data=data)
+        self.assertEqual(obs.status_code, 200)
+        self.assertTrue(exists(join(
+                tempfile.gettempdir(),
+                resumable_identifier + '.%i' % data['current_chunk'])))
+
+        # all chunks have been transferred, but file has not been reconstructed
+        # as last expected chunk needs to be re-transferred to trigger this
+        data['current_chunk'] = 3
+        obs = self.post_authed(
+            self.endpoint,
+            files={'file': ("dummy", chunks[data['current_chunk']],
+                            "text/plain")},
+            data=data)
+        self.assertEqual(obs.status_code, 200)
+
+        # test existance of transferred and reconstructred file
+        self.assertTrue(exists(fp_target))
+        self.assertIn(b'Stored 1 file into BASE_DATA_DIR of Qiita',
+                      obs.content)
+
+        # test that tmp files have been removed
+        self.assertTrue(all([not exists(join(
+                tempfile.gettempdir(),
+                resumable_identifier + '.%i' % i)) for i in chunks.keys()]))
+
+        # test file content
+        with open(fp_target, 'r') as f:
+            filecontent = f.read()
+            self.assertEqual(long_content.decode("utf-8"), filecontent)
 
     def _create_test_dir(self, prefix=None):
         """Creates a test directory with files and subdirs."""
@@ -191,8 +282,11 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
         with open(fp_zipped, 'rb') as fh:
             obs = self.post_authed(
                 self.endpoint,
-                data={'is_directory': 'true'},
-                files={dir: fh})
+                data={'is_directory': 'true',
+                      'target_filepath': dir,
+                      'current_chunk': 1,
+                      'total_chunks': 1},
+                files={'file': ("dummy", fh.read(), "text/plain")})
 
         return obs
 
