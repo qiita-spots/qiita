@@ -2389,12 +2389,13 @@ def send_email(to, subject, body):
     msg.attach(MIMEText(body, "plain"))
 
     # connect to smtp server, using ssl if needed
+    host = qiita_config.smtp_host
     if qiita_config.smtp_ssl:
-        smtp = SMTP_SSL()
+        smtp = SMTP_SSL(host)
     else:
-        smtp = SMTP()
+        smtp = SMTP(host)
     smtp.set_debuglevel(False)
-    smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
+    smtp.connect(host, qiita_config.smtp_port)
     # try tls, if not available on server just ignore error
     try:
         smtp.starttls()
