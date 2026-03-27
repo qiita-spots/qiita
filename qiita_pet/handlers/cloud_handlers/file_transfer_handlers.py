@@ -239,7 +239,8 @@ class PushFileToCentralHandler(RequestHandler):
             raise HTTPError(
                 400,
                 reason=("No files to upload defined! Ensure your POST request "
-                        "contains e.g. {'file': ['body': b\"data\"]}."))
+                        "contains e.g. {'file': ('dummy', b\"data\", "
+                        "'application/octet-stream)}."))
 
         try:
             filepath = self.get_argument('target_filepath')
