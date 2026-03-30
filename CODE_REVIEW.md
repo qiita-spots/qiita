@@ -2,15 +2,15 @@
 
 Generated: 2026-03-30
 
-## Fix Immediately
+## Fixed
 
-| # | Issue | Location | Effort |
+| # | Issue | Location | Status |
 |---|-------|----------|--------|
-| 1 | Auth bypass — add `return` after `_set_error()` in INSDC_download | `qiita_ware/private_plugin.py:454` | 1 line |
-| 2 | Add `@authenticated` to `UserMessagesHandler.post()` | `qiita_pet/handlers/user_handlers.py:396` | 1 line |
-| 3 | Open redirect — validate `next` param is same-origin | `qiita_pet/handlers/auth_handlers.py:144-188` | Small |
-| 4 | Replace `shell=True` with list args in launchers and `launch_local()` | `scripts/qiita-private-launcher:35-41`, `scripts/qiita-private-launcher-slurm:38-57`, `qiita_db/processing_job.py:228-232` | Small |
-| 5 | Use `shlex.quote()` for SSH command | `qiita_ware/commands.py:88` | 1 line |
+| 1 | Auth bypass — added `return` after `_set_error()` in INSDC_download | `qiita_ware/private_plugin.py:456` | Done |
+| 2 | Added `@authenticated` to `UserMessagesHandler.post()` | `qiita_pet/handlers/user_handlers.py:397` | Done |
+| 3 | Open redirect — validate `next` param is same-origin via `urlparse` | `qiita_pet/handlers/auth_handlers.py:145-156` | Done |
+| 4 | Replaced `shell=True` with list args in launchers and `launch_local()` | `scripts/qiita-private-launcher:40-41`, `scripts/qiita-private-launcher-slurm:51-57`, `qiita_db/processing_job.py:228-232` | Done |
+| 5 | Used `shlex.quote()` for SSH command | `qiita_ware/commands.py:89` | Done |
 
 ## Fix Short-Term
 
