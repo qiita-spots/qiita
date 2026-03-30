@@ -48,13 +48,13 @@ def start(qiita_env, command, arguments):
     with open(fp, "w") as f:
         f.write(SBATCHFILE % (dirpath, dirpath, "\n".join(lines)))
 
-    cmd = "sbatch %s" % fp
+    cmd = ["sbatch", fp]
 
     epilogue = environ.get("QIITA_JOB_SCHEDULER_EPILOGUE", "")
     if epilogue:
-        cmd = f"{cmd} --epilog {epilogue}"
+        cmd.extend(["--epilog", epilogue])
 
-    proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:
         raise ValueError(

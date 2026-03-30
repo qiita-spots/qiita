@@ -37,8 +37,8 @@ def start(qiita_env, command, arguments):
     close(fd)
     with open(fp, "w") as f:
         f.write(SCRIPT % (qiita_env, " ".join(cmd)))
-    cmd = "bash %s" % fp
-    proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    cmd = ["bash", fp]
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     remove(fp)
     if proc.returncode and proc.returncode != 0:
