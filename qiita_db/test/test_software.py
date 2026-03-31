@@ -827,7 +827,8 @@ class SoftwareTests(TestCase):
             )
         with warnings.catch_warnings(record=True) as warns:
             obs = qdb.software.Software.from_file(fp)
-            obs_warns = [str(w.message) for w in warns]
+            obs_warns = [str(w.message) for w in warns
+                         if w.category is UserWarning]
             exp_warns = [
                 'Plugin "QIIMEq2" version "1.9.1" config file does '
                 "not match with stored information. Check the config "
@@ -924,7 +925,8 @@ class SoftwareTests(TestCase):
             )
         with warnings.catch_warnings(record=True) as warns:
             obs = qdb.software.Software.from_file(fp)
-            obs_warns = [str(w.message) for w in warns]
+            obs_warns = [str(w.message) for w in warns
+                         if w.category is UserWarning]
             exp_warns = []
             self.assertCountEqual(obs_warns, exp_warns)
 

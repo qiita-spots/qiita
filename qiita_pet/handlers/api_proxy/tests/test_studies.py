@@ -35,9 +35,10 @@ from qiita_pet.handlers.api_proxy.studies import (
 class TestStudyAPI(TestCase):
     def setUp(self):
         self._clean_up_files = []
+        self.study_id = None
 
     def tearDown(self):
-        if self.study_id and qdb.study.Study.exists("Test EBI study"):
+        if self.study_id is not None and qdb.study.Study.exists("Test EBI study"):
             study =  qdb.study.Study(self.study_id)
             for a in study.artifacts():
                 qdb.artifact.Artifact.delete(a.id)
