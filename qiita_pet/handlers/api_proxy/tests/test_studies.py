@@ -47,7 +47,7 @@ class TestStudyAPI(TestCase):
             qdb.metadata_template.sample_template.SampleTemplate.delete(self.study_id)
             qdb.study.Study.delete(self.study_id)
 
-        for f in self.files_to_remove:
+        for f in self._clean_up_files:
             if exists(f):
                 if isdir(f):
                     rmtree(f)

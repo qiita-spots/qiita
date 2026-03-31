@@ -91,6 +91,7 @@ class CommandsTests(TestCase):
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
         _, self.base_fp = get_mountpoint("preprocessed_data")[0]
+        self.study_id = None
 
     def tearDown(self):
         if self.study_id and Study.exists("Test EBI study"):
