@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 from datetime import datetime
 from glob import glob
-from os import path
-from os.path import basename, join
+from os import path, remove
+from os.path import basename, join, exists, isdir
 from shutil import copyfile, rmtree
 from tempfile import mkdtemp
 from unittest import TestCase, main, skipIf
@@ -91,6 +91,23 @@ class CommandsTests(TestCase):
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
         _, self.base_fp = get_mountpoint("preprocessed_data")[0]
+
+    def tearDown(self):
+        if self.study_id and Study.exists("Test EBI study"):
+            study = Study(self.study_id)
+            for a in study.artifacts():
+                Artifact.delete(a.id)
+            for pt in study.prep_templates():
+                PrepTemplate.delete(pt.id)
+            SampleTemplate.delete(self.study_id)
+            Study.delete(self.study_id)
+
+        for f in self.files_to_remove:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
 
     def write_demux_files(self, prep_template, generate_hdf5=True):
         """Writes a demux test file to avoid duplication of code"""

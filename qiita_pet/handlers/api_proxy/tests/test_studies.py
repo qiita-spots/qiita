@@ -37,12 +37,21 @@ class TestStudyAPI(TestCase):
         self._clean_up_files = []
 
     def tearDown(self):
-        for fp in self._clean_up_files:
-            if exists(fp):
-                if isdir(fp):
-                    rmtree(fp)
+        if self.study_id and qdb.study.Study.exists("Test EBI study"):
+            study =  qdb.study.Study(self.study_id)
+            for a in study.artifacts():
+                qdb.artifact.Artifact.delete(a.id)
+            for pt in study.prep_templates():
+                qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+            qdb.metadata_template.sample_template.SampleTemplate.delete(self.study_id)
+            qdb.study.Study.delete(self.study_id)
+
+        for f in self.files_to_remove:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
                 else:
-                    remove(fp)
+                    remove(f)
 
 
 class TestStudyAPI1(TestStudyAPI):
