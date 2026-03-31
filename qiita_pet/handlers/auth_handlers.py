@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from urllib.parse import urlparse
+
 from tornado.escape import json_encode, url_escape
 
 from qiita_core.exceptions import (
@@ -141,12 +143,19 @@ class AuthLoginHandler(BaseHandler):
     def post(self):
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
+        default_page = "%s/" % qiita_config.portal_dir
         nextpage = self.get_argument("next", None)
         if nextpage is None:
-            if "auth/" not in self.request.headers["Referer"]:
-                nextpage = self.request.headers["Referer"]
+            referer = self.request.headers.get("Referer", "")
+            if referer and "auth/" not in referer:
+                nextpage = referer
             else:
-                nextpage = "%s/" % qiita_config.portal_dir
+                nextpage = default_page
+
+        # Prevent open redirect: only allow relative paths
+        parsed = urlparse(nextpage)
+        if parsed.scheme or parsed.netloc:
+            nextpage = default_page
 
         msg = ""
         # check the user level

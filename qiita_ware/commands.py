@@ -9,6 +9,7 @@
 from functools import partial
 from os import environ, remove, stat
 from os.path import basename, exists, isdir, join
+from shlex import quote
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
@@ -85,7 +86,7 @@ def _list_valid_files(ssh, directory):
     """
     valid_file_extensions = tuple(qiita_config.valid_upload_extension)
 
-    stdin, stdout, stderr = ssh.exec_command("ls %s" % directory)
+    stdin, stdout, stderr = ssh.exec_command("ls %s" % quote(directory))
     stderr = stderr.read().decode("utf-8")
     if stderr:
         raise ValueError(stderr)
