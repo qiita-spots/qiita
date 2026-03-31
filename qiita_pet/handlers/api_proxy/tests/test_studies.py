@@ -148,6 +148,7 @@ class TestStudyAPI1(TestStudyAPI):
         new_study = qdb.study.Study.create(
             qdb.user.User("test@foo.bar"), "Some New Study for test", info
         )
+        self.study_id = new_study.id
 
         obs = study_get_req(new_study.id, "test@foo.bar")
         exp = {
