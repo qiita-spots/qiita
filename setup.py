@@ -108,7 +108,7 @@ setup(
     },
     scripts=glob("scripts/*"),
     # making sure that numpy is installed before biom
-    setup_requires=["numpy", "cython"],
+    setup_requires=["numpy==1.22.3", "cython"],
     install_requires=[
         "psycopg2",
         "click",

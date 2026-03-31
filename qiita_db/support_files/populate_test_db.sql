@@ -7106,7 +7106,7 @@ SELECT
 -- Name: study_study_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
 --
 SELECT
-    pg_catalog.setval ('qiita.study_study_id_seq', 1, true);
+    pg_catalog.setval ('qiita.study_study_id_seq', 2, true);
 
 --
 -- Name: term_term_id_seq; Type: SEQUENCE SET; Schema: qiita; Owner: antoniog
