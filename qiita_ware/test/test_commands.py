@@ -8,7 +8,7 @@
 from datetime import datetime
 from glob import glob
 from os import path, remove
-from os.path import basename, join, exists, isdir
+from os.path import basename, exists, isdir, join
 from shutil import copyfile, rmtree
 from tempfile import mkdtemp
 from unittest import TestCase, main, skipIf
@@ -152,6 +152,7 @@ class CommandsTests(TestCase):
             "lab_person_id": StudyPerson(1),
         }
         study = Study.create(User("test@foo.bar"), "Test EBI study", info)
+        self.study_id = study.id
         metadata_dict = {
             "Sample1": {
                 "collection_timestamp": datetime(2015, 6, 1, 7, 0, 0),

@@ -68,7 +68,7 @@ jobs:
           conda env list
           conda activate qiita
           pip install -U pip
-          pip install sphinx sphinx-bootstrap-theme pytest-timer Click coverage numpy==1.22.3
+          pip install sphinx sphinx-bootstrap-theme pytest-timer Click coverage
 
           # Configuring SSH
           cp /etc/ssh/sshd_config sshd_config
@@ -95,6 +95,8 @@ jobs:
           export REDBIOM_HOST="http://localhost:7379"
 
           pip install . --no-binary redbiom
+          # forcing numpy version
+          pip install numpy==1.22.3
           # 10.2022
           # this is for redbiom / biom-format (so fine to delete in the future)
           pip install future
