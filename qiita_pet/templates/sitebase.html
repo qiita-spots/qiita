@@ -125,9 +125,18 @@
           $('#navigation-bar').css('visibility', 'hidden');
           $('#jumbotron').css('visibility', 'hidden');
         }
+        else if (browser_name !== 'Chrome' && browser_name !== 'Chrome Mobile') {
+          if (!localStorage.getItem('chrome-warning-dismissed')) {
+            $('#chrome-warning').show();
+          }
+        }
       }
 
       $(document).ready(function() {
+        $('#chrome-warning-close').on('click', function() {
+          localStorage.setItem('chrome-warning-dismissed', 'true');
+        });
+
         $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             if(parseInt(result.studies) > 0) {
                 $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
@@ -563,6 +572,12 @@
         </div>
       </div>
 
+
+      <div id="chrome-warning" class="alert alert-warning alert-dismissable" style="display:none;">
+        <a href="#" class="close" data-dismiss="alert" id="chrome-warning-close">&times;</a>
+        <strong>Browser Notice:</strong> Qiita is optimized for Google Chrome. You may experience issues with your current browser.
+        <a href="https://www.google.com/chrome/browser/" target="_blank">Download Chrome</a>.
+      </div>
 
       {% if message != '' %}
           {% if level not in {'danger', 'success', 'info', 'warning'} %}
