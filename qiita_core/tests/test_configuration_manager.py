@@ -139,8 +139,7 @@ class ConfigurationManagerTests(TestCase):
         with warnings.catch_warnings(record=True) as warns:
             obs._get_main(self.conf)
 
-            obs_warns = [str(w.message) for w in warns
-                         if w.category is UserWarning]
+            obs_warns = [str(w.message) for w in warns]
             exp_warns = [
                 "Random cookie secret generated.",
                 "Random JWT secret generated.  Non Public Artifact "
@@ -198,8 +197,7 @@ class ConfigurationManagerTests(TestCase):
             self.assertEqual(obs.help_email, "foo@bar.com")
             self.assertEqual(obs.sysadmin_email, "jeff@bar.com")
 
-            obs_warns = [str(w.message) for w in warns
-                         if w.category is UserWarning]
+            obs_warns = [str(w.message) for w in warns if w.category is UserWarning]
             exp_warns = [
                 "Using the github fake email for HELP_EMAIL, are you sure this is OK?",
                 "Using the github fake email for SYSADMIN_EMAIL, "
