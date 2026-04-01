@@ -137,7 +137,7 @@ setup(
         "sphinx_rtd_theme",
         "paramiko",
         "seaborn",
-        "matplotlib",
+        "matplotlib==3.5.0",
         "scipy<=1.10.1",
         "pytest",
         "ruff",
