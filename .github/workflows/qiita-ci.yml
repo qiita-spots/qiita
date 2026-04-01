@@ -68,7 +68,7 @@ jobs:
           conda env list
           conda activate qiita
           pip install -U pip
-          pip install sphinx sphinx-bootstrap-theme pytest-timer Click coverage
+          pip install sphinx sphinx-bootstrap-theme pytest-timer Click coverage numpy=1.22.3
 
           # Configuring SSH
           cp /etc/ssh/sshd_config sshd_config
