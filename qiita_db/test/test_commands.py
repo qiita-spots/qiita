@@ -33,15 +33,10 @@ class TestMakeStudyFromCmd(TestCase):
 
     def test_make_study_from_cmd(self):
         fh = StringIO(self.config1)
-        qdb.commands.load_study_from_cmd("test@test.com", "newstudy", fh)
-
-        with qdb.sql_connection.TRN:
-            sql = """SELECT study_id
-                     FROM qiita.study
-                     WHERE email = %s AND study_title = %s"""
-            qdb.sql_connection.TRN.add(sql, ["test@test.com", "newstudy"])
-            study_id = qdb.sql_connection.TRN.execute_fetchflatten()
-        self.assertEqual(study_id, [2])
+        study_title = "newstudy"
+        qdb.commands.load_study_from_cmd("test@test.com", study_title, fh)
+        study_from_title = qdb.study.Study.from_title(study_title)
+        self.assertEqual(study_from_title, qdb.study.Study(study_from_title.id))
 
         fh2 = StringIO(self.config2)
         with self.assertRaises(configparser.NoOptionError):
