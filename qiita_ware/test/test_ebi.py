@@ -41,16 +41,17 @@ class TestEBISubmission(TestCase):
         self.files_to_remove = []
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
+        self.study_id = None
 
     def tearDown(self):
-        if Study.exists("Test EBI study"):
-            study = Study.from_title("Test EBI study")
+        if self.study_id and Study.exists("Test EBI study"):
+            study = Study(self.study_id)
             for a in study.artifacts():
                 Artifact.delete(a.id)
             for pt in study.prep_templates():
                 PrepTemplate.delete(pt.id)
             SampleTemplate.delete(self.study_id)
-            Study.delete(study.id)
+            Study.delete(self.study_id)
 
         for f in self.files_to_remove:
             if exists(f):
