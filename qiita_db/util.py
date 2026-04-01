@@ -2647,7 +2647,7 @@ def _resource_allocation_plot_helper(df, ax, curr, models, col_name):
     )
     success_df["node_name"] = success_df["node_name"].fillna("unknown")
     slurm_hosts = set(success_df["node_name"].tolist())
-    cmap = colormaps.get_cmap("Accent")
+    cmap = colormaps["Accent"]
     if len(slurm_hosts) > len(cmap.colors):
         raise ValueError(f"""'Accent' colormap only has {len(cmap.colors)}
                      colors, but {len(slurm_hosts)} hosts are provided.""")

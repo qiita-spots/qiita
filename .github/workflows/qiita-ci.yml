@@ -64,11 +64,11 @@ jobs:
           # Setting up main qiita conda environment
           conda config --add channels conda-forge
           conda deactivate
-          conda create --quiet --yes -n qiita python=3.9 pip libgfortran numpy nginx cython redis
+          conda create --quiet --yes -n qiita python=3.9 pip libgfortran nginx cython redis
           conda env list
           conda activate qiita
           pip install -U pip
-          pip install sphinx sphinx-bootstrap-theme nose-timer Click coverage
+          pip install sphinx sphinx-bootstrap-theme pytest-timer Click coverage
 
           # Configuring SSH
           cp /etc/ssh/sshd_config sshd_config
@@ -95,6 +95,8 @@ jobs:
           export REDBIOM_HOST="http://localhost:7379"
 
           pip install . --no-binary redbiom
+          # forcing numpy version
+          pip install numpy==1.22.3 matplotlib==3.5.0
           # 10.2022
           # this is for redbiom / biom-format (so fine to delete in the future)
           pip install future
@@ -197,7 +199,7 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
-          nosetests $COVER_PACKAGE --with-doctest --with-coverage --with-timer -v --cover-package=${COVER_PACKAGE// / --cover-package=} -e 'test_submit_EBI_parse_EBI_reply_failure' -e 'test_full_submission'
+          pytest $COVER_PACKAGE --cov=${COVER_PACKAGE// / --cov=} --timer-top-n 0 -v --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
 
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`

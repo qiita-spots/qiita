@@ -399,6 +399,9 @@ class TestPrepAPI(TestCase):
             with open(fp, "w") as f:
                 f.write("")
 
+        if exists(self.update_fp):
+            remove(self.update_fp)
+
         r_client.flushdb()
 
     def _wait_for_parallel_job(self, key):

@@ -43,10 +43,10 @@ qiita pet webserver start --port=7532
 # Linting
 ruff check qiita_* setup.py scripts/qiita* notebooks/*/*.py
 
-# Testing (uses nosetests)
-nosetests qiita_db --with-coverage -v                    # Full module
-nosetests qiita_pet qiita_core qiita_ware --with-coverage  # Other modules
-nosetests qiita_db/test/test_artifact.py --with-coverage    # Single file
+# Testing (uses pytest)
+pytest qiita_db --cov=qiita_db -v                          # Full module
+pytest qiita_pet qiita_core qiita_ware --cov               # Other modules
+pytest qiita_db/test/test_artifact.py --cov=qiita_db        # Single file
 ```
 
 CI runs qiita_db tests separately from qiita_pet/qiita_core/qiita_ware tests.
@@ -59,7 +59,7 @@ If a test produces an **incorrect expected value**: DO NOT change the expected v
 - Tests live in `<module>/test/test_*.py`
 - Use `@qiita_test_checker()` decorator (from `qiita_core.util`) on test classes that modify the database — this auto-drops and rebuilds the qiita schema after the test class runs
 - All tests within a decorated class must be independent of each other (execution order is not guaranteed)
-- Test framework: `unittest.TestCase` run with `nosetests`
+- Test framework: `unittest.TestCase` run with `pytest`
 
 ## Branch Structure
 

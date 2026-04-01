@@ -197,7 +197,7 @@ class ConfigurationManagerTests(TestCase):
             self.assertEqual(obs.help_email, "foo@bar.com")
             self.assertEqual(obs.sysadmin_email, "jeff@bar.com")
 
-            obs_warns = [str(w.message) for w in warns]
+            obs_warns = [str(w.message) for w in warns if w.category is UserWarning]
             exp_warns = [
                 "Using the github fake email for HELP_EMAIL, are you sure this is OK?",
                 "Using the github fake email for SYSADMIN_EMAIL, "

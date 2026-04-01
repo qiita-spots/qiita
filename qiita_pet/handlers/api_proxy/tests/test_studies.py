@@ -35,14 +35,24 @@ from qiita_pet.handlers.api_proxy.studies import (
 class TestStudyAPI(TestCase):
     def setUp(self):
         self._clean_up_files = []
+        self.study_id = None
 
     def tearDown(self):
-        for fp in self._clean_up_files:
-            if exists(fp):
-                if isdir(fp):
-                    rmtree(fp)
+        if self.study_id is not None and qdb.study.Study.exists("Test EBI study"):
+            study =  qdb.study.Study(self.study_id)
+            for a in study.artifacts():
+                qdb.artifact.Artifact.delete(a.id)
+            for pt in study.prep_templates():
+                qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+            qdb.metadata_template.sample_template.SampleTemplate.delete(self.study_id)
+            qdb.study.Study.delete(self.study_id)
+
+        for f in self._clean_up_files:
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
                 else:
-                    remove(fp)
+                    remove(f)
 
 
 class TestStudyAPI1(TestStudyAPI):
@@ -139,6 +149,7 @@ class TestStudyAPI1(TestStudyAPI):
         new_study = qdb.study.Study.create(
             qdb.user.User("test@foo.bar"), "Some New Study for test", info
         )
+        self.study_id = new_study.id
 
         obs = study_get_req(new_study.id, "test@foo.bar")
         exp = {
