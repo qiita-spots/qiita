@@ -433,7 +433,10 @@ class TestEBISubmission(TestCase):
             "lab_person_id": StudyPerson(1),
         }
 
-        study = Study.create(User("test@foo.bar"), "Test EBI study", info)
+        if Study.exists("Test EBI study"):
+            study = Study.from_title("Test EBI study")
+        else:
+            study = Study.create(User("test@foo.bar"), "Test EBI study", info)
         self.study_id = study.id
 
         metadata_dict = {
