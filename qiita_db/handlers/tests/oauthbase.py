@@ -16,8 +16,6 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class OauthTestingBase(TestHandlerBase):
-    __test__ = False
-
     def setUp(self):
         self.token = "TESTINGOAUTHSTUFF"
         self.header = {"Authorization": "Bearer " + self.token}
