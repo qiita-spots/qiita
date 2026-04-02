@@ -202,7 +202,7 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
-          pytest $COVER_PACKAGE --timer-top-n 0 -v --cov=${ALL_PACKAGES// / --cov=} --cov-report=lcov \
+          pytest $COVER_PACKAGE --doctest-modules --timer-top-n 0 -v --cov=${ALL_PACKAGES// / --cov=} --cov-report=lcov \
             --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
 
           # killing the qiita server to run the next commands
