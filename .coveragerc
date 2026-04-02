@@ -1,6 +1,10 @@
 [run]
 omit =
-    qiita_db/support_files/**/*
-    **/test/**
-    **/tests/**
+    qiita_db/support_files/*/*
+    qiita_db/support_files/*/*/*
+    qiita_db/support_files/*/*/*/*
+    */test/*
+    */tests/*
+    */*/test/*
+    */*/tests/*
 relative_files = True
