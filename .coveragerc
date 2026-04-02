@@ -3,8 +3,8 @@ omit =
     qiita_db/support_files/*/*
     qiita_db/support_files/*/*/*
     qiita_db/support_files/*/*/*/*
-    */test/*
-    */tests/*
-    */*/test/*
-    */*/tests/*
+    */test/*.py
+    */tests/*.py
+    */*/test/*.py
+    */*/tests/*.py
 relative_files = True
