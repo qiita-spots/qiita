@@ -16,6 +16,9 @@ jobs:
           - cover_package: "qiita_db"
           - cover_package: "qiita_pet qiita_core qiita_ware"
 
+    env:
+      ALL_PACKAGES: "qiita_db qiita_pet qiita_core qiita_ware"
+
     services:
       postgres:
         # Docker Hub image
@@ -199,7 +202,8 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
-          pytest $COVER_PACKAGE --cov=${COVER_PACKAGE// / --cov=} --timer-top-n 0 -v --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' --deselect 'qiita_ware/test/test_ebi.py::test_full_submission' --cov-report=lcov
+          pytest $COVER_PACKAGE --timer-top-n 0 -v --cov=${ALL_PACKAGES// / --cov=} --cov-report=lcov \
+            --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
 
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`
