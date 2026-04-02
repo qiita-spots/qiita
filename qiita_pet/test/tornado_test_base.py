@@ -25,6 +25,7 @@ from qiita_pet.webserver import Application
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
+    __test__ = False
     database = False
     app = Application()
 
