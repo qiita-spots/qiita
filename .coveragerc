@@ -1,8 +1,6 @@
 [run]
 omit =
-    qiita_db/support_files/*/*
-    qiita_db/support_files/*/*/*
-    qiita_db/support_files/*/*/*/*
+    qiita_db/support_files/**/*
     */test/*.py
     */tests/*.py
     */*/test/*.py
