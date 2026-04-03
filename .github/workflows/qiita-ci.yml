@@ -237,11 +237,11 @@ jobs:
           fi
 
       - name: Submit coveralls
-          uses: AndreMiras/coveralls-python-action@develop
-          with:
-            github-token: ${{ secrets.github_token }}
-            flag-name: "${{ matrix.cover_package }}"
-            parallel: true
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          github-token: ${{ secrets.github_token }}
+          flag-name: "${{ matrix.cover_package }}"
+          parallel: true
 
   coveralls-finish:
     needs: main
