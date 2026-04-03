@@ -1,2 +1,12 @@
 [run]
-omit = qiita_db/support_files/**/*
+include =
+    qiita_db/*.py
+    qiita_db/**/*.py
+    qiita_pet/*.py
+    qiita_pet/**/*.py
+    qiita_core/*.py
+    qiita_core/**/*.py
+    qiita_ware/*.py
+    qiita_ware/**/*.py
+omit =
+    qiita_db/support_files/**/*
