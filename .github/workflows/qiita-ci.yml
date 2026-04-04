@@ -199,6 +199,9 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
+          pytest $COVER_PACKAGE --collect-only -q 2>&1 | tail -5
+          pytest $COVER_PACKAGE --doctest-modules --collect-only -q 2>&1 | tail -5
+
           pytest $COVER_PACKAGE --cov=${COVER_PACKAGE// / --cov=} --timer-top-n 0 -v \
             --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' \
             --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
@@ -252,6 +255,18 @@ jobs:
         with:
           github-token: ${{ secrets.github_token }}
           parallel-finished: true
+
+      - name: Coverage debug report
+        shell: bash -l {0}
+        run: |
+          coverage report --sort=-diff > coverage_report.txt 2>&1 || true
+          coverage report --sort=cover > coverage_report.txt 2>&1 || true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.cover_package }}
+          path: coverage_report.txt
 
   lint:
     runs-on: ubuntu-latest
