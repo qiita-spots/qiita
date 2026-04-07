@@ -199,10 +199,9 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
-          coverage run --source=${COVER_PACKAGE// /,} -m pytest $COVER_PACKAGE --timer-top-n 0 -v \
+          coverage run -m pytest $COVER_PACKAGE --timer-top-n 0 -v \
             --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' \
             --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
-          coverage lcov --include="qiita_db/*,qiita_pet/*,qiita_core/*,qiita_ware/*" --omit="*/test/*,*/tests/*" -o coverage.lcov
 
           # debug
           ls -la coverage.lcov

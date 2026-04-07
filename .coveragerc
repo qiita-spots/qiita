@@ -1,3 +1,16 @@
 [run]
 relative_files = True
-omit = qiita_db/support_files/**/*
+omit =
+    qiita_db/support_files/**/*
+    */test/*
+    */tests/*
+
+[report]
+include =
+    qiita_db/*
+    qiita_pet/*
+    qiita_core/*
+    qiita_ware/*
+omit =
+    */test/*
+    */tests/*
