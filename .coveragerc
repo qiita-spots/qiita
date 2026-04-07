@@ -1,2 +1,3 @@
 [run]
+relative_files = True
 omit = qiita_db/support_files/**/*
