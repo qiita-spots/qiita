@@ -1,4 +1,9 @@
 [run]
-omit =
-    qiita_db/support_files/**/*
-relative_files = True
+omit = qiita_db/support_files/**/*
+
+[report]
+include =
+    qiita_db/*
+    qiita_pet/*
+    qiita_core/*
+    qiita_ware/*
