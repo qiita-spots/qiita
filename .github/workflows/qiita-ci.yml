@@ -199,10 +199,10 @@ jobs:
           export QIITA_JOB_SCHEDULER_EPILOGUE=`/path/to/epilogue/file`
           export REDBIOM_HOST="http://localhost:7379"
 
-          coverage run -m pytest $COVER_PACKAGE --timer-top-n 0 -v \
+          coverage run --source=${COVER_PACKAGE// /,} -m pytest $COVER_PACKAGE --timer-top-n 0 -v \
             --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' \
             --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
-          coverage lcov --include="qiita_db/*,qiita_pet/*,qiita_core/*,qiita_ware/*" -o coverage.lcov
+          coverage lcov --include="qiita_db/*,qiita_pet/*,qiita_core/*,qiita_ware/*" --omit="*/test/*,*/tests/*" -o coverage.lcov
 
           # debug
           ls -la coverage.lcov
@@ -244,28 +244,21 @@ jobs:
           fi
 
       - name: Upload to Coveralls
-        uses: coverallsapp/github-action@v2
+        uses: AndreMiras/coveralls-python-action@develop
         with:
           github-token: ${{ secrets.github_token }}
           flag-name: "${{ matrix.cover_package }}"
           parallel: true
-          file: coverage.lcov
 
   coveralls-finish:
     needs: main
     runs-on: ubuntu-latest
     steps:
       - name: Coveralls Finished
-        uses: coverallsapp/github-action@v2
+        uses: AndreMiras/coveralls-python-action@develop
         with:
           github-token: ${{ secrets.github_token }}
           parallel-finished: true
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-${{ matrix.cover_package }}
-          path: coverage_report.txt
 
   lint:
     runs-on: ubuntu-latest
