@@ -203,12 +203,6 @@ jobs:
             --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' \
             --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
 
-          # debug
-          ls -la coverage.lcov
-          head -20 coverage.lcov
-          wc -l coverage.lcov
-          # debug
-
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`
           kill $QIITA_PID
