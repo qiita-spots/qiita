@@ -202,7 +202,13 @@ jobs:
           coverage run -m pytest $COVER_PACKAGE --timer-top-n 0 -v \
             --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' \
             --deselect 'qiita_ware/test/test_ebi.py::test_full_submission'
-          coverage lcov -o coverage.lcov
+          coverage lcov --include="qiita_db/*,qiita_pet/*,qiita_core/*,qiita_ware/*" -o coverage.lcov
+
+          # debug
+          ls -la coverage.lcov
+          head -20 coverage.lcov
+          wc -l coverage.lcov
+          # debug
 
           # killing the qiita server to run the next commands
           QIITA_PID=`cat /tmp/supervisord.pid`
