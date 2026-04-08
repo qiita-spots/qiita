@@ -236,6 +236,44 @@ jobs:
               fi
           fi
 
+      - name: Debug coverage comparison
+        shell: bash -l {0}
+        env:
+          COVER_PACKAGE: ${{ matrix.cover_package }}
+        run: |
+          conda activate qiita
+          export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+          export QIITA_ROOTCA_CERT=`pwd`/qiita_core/support_files/ci_rootca.crt
+          export REDBIOM_HOST="http://localhost:7379"
+
+          pip install nose
+
+          # Run nosetests coverage
+          nosetests $COVER_PACKAGE --with-doctest --with-coverage \
+            --cover-package=${COVER_PACKAGE// / --cover-package=} \
+            -e 'test_submit_EBI_parse_EBI_reply_failure' \
+            -e 'test_full_submission' -v 2>&1 | tail -5
+          echo "=== Nosetests .coverage ==="
+          coverage report | tail -3
+          cp .coverage .coverage.nose
+
+          coverage erase
+
+          # Run pytest coverage
+          coverage run --source=${COVER_PACKAGE// /,} -m pytest $COVER_PACKAGE \
+            --timer-top-n 0 -v \
+            --deselect 'qiita_ware/test/test_ebi.py::test_submit_EBI_parse_EBI_reply_failure' \
+            --deselect 'qiita_ware/test/test_ebi.py::test_full_submission' 2>&1 | tail -5
+          echo "=== Pytest .coverage ==="
+          coverage report | tail -3
+
+          # Compare file-level differences
+          echo "=== Files with >10% coverage difference ==="
+          coverage report > /tmp/pytest_cov.txt
+          cp .coverage.nose .coverage
+          coverage report > /tmp/nose_cov.txt
+          diff /tmp/nose_cov.txt /tmp/pytest_cov.txt || true
+
       - name: Upload to Coveralls
         uses: AndreMiras/coveralls-python-action@develop
         with:
