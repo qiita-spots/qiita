@@ -29,3 +29,18 @@ def pytest_configure(config):
         for m in failed_modules:
             print(f"  {m}")
     print(f"=== End import summary ===\n", flush=True)
+
+
+def pytest_pycollect_makeitem(collector, name, obj):
+    """Undo inheritance of __test__ = False from base classes.
+
+    Nosetests did not inherit __test__ = False to subclasses,
+    but pytest does. This restores the nosetests behavior."""
+    import inspect
+
+    if inspect.isclass(obj) and name.startswith("Test"):
+        # If __test__ = False is inherited (not defined directly on this class),
+        # remove it so pytest collects the class
+        if not obj.__dict__.get("__test__", True) is False:
+            if getattr(obj, "__test__", True) is False:
+                obj.__test__ = True
