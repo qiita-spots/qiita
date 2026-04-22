@@ -101,3 +101,4 @@ Schema changes require patch files, never direct modification of the base schema
 
 - Maximum 200 lines changed (HTML/DBS/test data don't count, JavaScript does)
 - PRs that leave master inconsistent must go to a separate branch first
+- Every PR must add or review the entry under the upcoming-release section in `CHANGELOG.md`
