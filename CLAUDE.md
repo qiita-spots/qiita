@@ -19,7 +19,7 @@ Four main modules:
 
 Database interactions use `TRN` (transaction) objects with `TRN.add(sql, [params])` — never use Python string formatting for SQL parameters (psycopg2 parameterized queries only). Table/column names may use `str.format()`.
 
-Plugins communicate via API proxy handlers in `qiita_db/handlers/api_proxy/`.
+Plugins communicate via API proxy handlers in `qiita_pet/handlers/api_proxy/`.
 
 ## Priorities
 
@@ -27,6 +27,17 @@ Plugins communicate via API proxy handlers in `qiita_db/handlers/api_proxy/`.
 2. Correct code as verified by tests
 3. Maintainable code, using Don't Repeat Yourself (DRY) and Keep It Simple Stupid (KISS)
 4. Performance
+
+## Runtime Requirements
+
+- Python 3.9 (setup.py incorrectly says 3.6 — CI and INSTALL.md use 3.9)
+- PostgreSQL 13
+- Redis 2.8.17+ — typically two instances: main on port 7777, redbiom on 6379
+
+## Configuration
+
+- Template config: `qiita_core/support_files/config_test.cfg` — copy and point `QIITA_CONFIG_FP` at it
+- Other env vars that matter: `REDBIOM_HOST`, `QIITA_ROOTCA_CERT`
 
 ## Common Commands
 
@@ -43,13 +54,17 @@ qiita pet webserver start --port=7532
 # Linting
 ruff check qiita_* setup.py scripts/qiita* notebooks/*/*.py
 
-# Testing (uses pytest)
+# Testing (uses pytest; testpaths configured in setup.cfg)
 pytest qiita_db --cov=qiita_db -v                          # Full module
 pytest qiita_pet qiita_core qiita_ware --cov               # Other modules
 pytest qiita_db/test/test_artifact.py --cov=qiita_db        # Single file
 ```
 
-CI runs qiita_db tests separately from qiita_pet/qiita_core/qiita_ware tests.
+CI specifics:
+- qiita_db tests run separately from qiita_pet/qiita_core/qiita_ware tests due to schema rebuild overhead from `@qiita_test_checker`
+- CI invokes `coverage run -m pytest`, not bare `pytest`
+- The `qtp-biom` plugin must be installed for the full suite to pass
+- Two flaky EBI tests are deselected: `test_submit_EBI_parse_EBI_reply_failure`, `test_full_submission`
 
 ## Testing Conventions
 
@@ -86,3 +101,4 @@ Schema changes require patch files, never direct modification of the base schema
 
 - Maximum 200 lines changed (HTML/DBS/test data don't count, JavaScript does)
 - PRs that leave master inconsistent must go to a separate branch first
+- Every PR must add or review the entry under the upcoming-release section in `CHANGELOG.md`
