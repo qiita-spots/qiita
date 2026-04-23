@@ -10,6 +10,7 @@ from glob import glob
 from json import loads
 from os.path import join
 
+from tornado.ioloop import IOLoop
 from tornado.web import HTTPError
 
 import qiita_db as qdb
@@ -260,7 +261,7 @@ class CommandActivateHandler(OauthBaseHandler):
 
 class ReloadPluginAPItestHandler(OauthBaseHandler):
     @authenticate_oauth
-    def post(self):
+    async def post(self):
         """Reloads the plugins"""
         conf_files = sorted(glob(join(qiita_config.plugin_dir, "*.conf")))
         software = set(
@@ -268,11 +269,15 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
         )
         definition = set([s for s in software if s.type == "artifact definition"])
         transformation = software - definition
+        # register_commands shells out via Popen.communicate; run it in the
+        # default executor so the master ioloop can still serve the plugin's
+        # /activate/ callbacks that nginx may round-robin back here (#3515).
+        loop = IOLoop.current()
         for s in definition:
             s.activate()
-            s.register_commands()
+            await loop.run_in_executor(None, s.register_commands)
         for s in transformation:
             s.activate()
-            s.register_commands()
+            await loop.run_in_executor(None, s.register_commands)
 
         self.finish()
