@@ -13,6 +13,7 @@ Deployed on TBD
 * Test framework migrated from `nose` to `pytest`; obsolete `__test__ = False` markers removed and test artifacts are now auto-cleaned. [#3509](https://github.com/qiita-spots/qiita/pull/3509), [#3511](https://github.com/qiita-spots/qiita/pull/3511), [#3502](https://github.com/qiita-spots/qiita/pull/3502)
 * Added `CLAUDE.md` to guide Claude Code sessions in this repository. [#3508](https://github.com/qiita-spots/qiita/pull/3508)
 * Fixed a deadlock in `/apitest/reload_plugins/` where the master Tornado ioloop blocked on the plugin-registration subprocess, causing intermittent 504s from nginx when plugin callbacks were round-robined back to master (fixes [#3515](https://github.com/qiita-spots/qiita/issues/3515)).
+* Expanded `CLAUDE.md` with CI-sourced runtime details (webdis/nginx/supervisord, `QIITA_JOB_SCHEDULER_EPILOGUE`, `qiita-env make --no-load-ontologies`, `qiita-test-install`, `qiita plugins update`, production-DB zero-rows invariant, and the non-`qiita_db` matrix post-test checks).
 
 
 Version 2026.01
