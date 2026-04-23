@@ -12,6 +12,7 @@ Deployed on TBD
 * Fixed the broken "Unselect All" button on the upload page. [#3510](https://github.com/qiita-spots/qiita/pull/3510) (fixes [#3488](https://github.com/qiita-spots/qiita/issues/3488))
 * Test framework migrated from `nose` to `pytest`; obsolete `__test__ = False` markers removed and test artifacts are now auto-cleaned. [#3509](https://github.com/qiita-spots/qiita/pull/3509), [#3511](https://github.com/qiita-spots/qiita/pull/3511), [#3502](https://github.com/qiita-spots/qiita/pull/3502)
 * Added `CLAUDE.md` to guide Claude Code sessions in this repository. [#3508](https://github.com/qiita-spots/qiita/pull/3508)
+* Fixed a deadlock in `/apitest/reload_plugins/` where the master Tornado ioloop blocked on the plugin-registration subprocess, causing intermittent 504s from nginx when plugin callbacks were round-robined back to master (fixes [#3515](https://github.com/qiita-spots/qiita/issues/3515)).
 
 
 Version 2026.01
