@@ -157,7 +157,6 @@ class TestArtifactAPI(TestCase):
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
 
         self._files_to_remove = [self.update_fp]
-        self._files_to_remove = []
 
         # creating temporal files and artifact
         # NOTE: we don't need to remove the artifact created cause it's

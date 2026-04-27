@@ -225,11 +225,11 @@ def launch_local(env_script, start_script, url, job_id, job_dir):
     # When Popen() executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    cmd = "bash -c '%s; %s'" % (env_script, " ".join(cmd))
+    cmd = ["bash", "-c", "%s; %s" % (env_script, " ".join(cmd))]
     print("CMD STRING: %s" % cmd)
 
     # Popen() may also need universal_newlines=True
-    proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
 
     # Communicate pulls all stdout/stderr from the PIPEs
     # This call waits until cmd is done

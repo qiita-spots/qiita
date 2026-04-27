@@ -2389,12 +2389,13 @@ def send_email(to, subject, body):
     msg.attach(MIMEText(body, "plain"))
 
     # connect to smtp server, using ssl if needed
+    host = qiita_config.smtp_host
     if qiita_config.smtp_ssl:
-        smtp = SMTP_SSL()
+        smtp = SMTP_SSL(host)
     else:
-        smtp = SMTP()
+        smtp = SMTP(host)
     smtp.set_debuglevel(False)
-    smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
+    smtp.connect(host, qiita_config.smtp_port)
     # try tls, if not available on server just ignore error
     try:
         smtp.starttls()
@@ -2646,7 +2647,7 @@ def _resource_allocation_plot_helper(df, ax, curr, models, col_name):
     )
     success_df["node_name"] = success_df["node_name"].fillna("unknown")
     slurm_hosts = set(success_df["node_name"].tolist())
-    cmap = colormaps.get_cmap("Accent")
+    cmap = colormaps["Accent"]
     if len(slurm_hosts) > len(cmap.colors):
         raise ValueError(f"""'Accent' colormap only has {len(cmap.colors)}
                      colors, but {len(slurm_hosts)} hosts are provided.""")

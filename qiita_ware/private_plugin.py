@@ -453,6 +453,7 @@ def INSDC_download(job):
 
         if job.user.level != "admin":
             job._set_error("INSDC_download is only for administrators")
+            return
 
         job_dir = join(qiita_config.working_dir, job.id)
         qdb.util.create_nested_path(job_dir)

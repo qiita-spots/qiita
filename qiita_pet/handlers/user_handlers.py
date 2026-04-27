@@ -393,6 +393,7 @@ class UserMessagesHander(BaseHandler):
     def get(self):
         self.render("user_messages.html", messages=self.current_user.messages())
 
+    @authenticated
     def post(self):
         action = self.get_argument("action")
         messages = self.get_arguments("messages")

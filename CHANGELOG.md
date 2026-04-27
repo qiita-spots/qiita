@@ -1,6 +1,21 @@
 # Qiita changelog
 
 
+Version 2026.04
+---------------
+
+Deployed on TBD
+
+* `Tornado` file/directory handler now detects whether requests come through nginx (port 8383, fast delivery) or directly to the master Tornado instance (port 21174, slower fallback) — fixes test-mode file delivery and lets clients fetch directories that are managed as filetype directories. Thank you @sjanssen2! [#3483](https://github.com/qiita-spots/qiita/pull/3483)
+* Added a Greengenes2 tutorial. [#3506](https://github.com/qiita-spots/qiita/pull/3506)
+* SMTP connections now accept an explicit `host` parameter. [#3507](https://github.com/qiita-spots/qiita/pull/3507)
+* Fixed the broken "Unselect All" button on the upload page. [#3510](https://github.com/qiita-spots/qiita/pull/3510) (fixes [#3488](https://github.com/qiita-spots/qiita/issues/3488))
+* Test framework migrated from `nose` to `pytest`; obsolete `__test__ = False` markers removed and test artifacts are now auto-cleaned. [#3509](https://github.com/qiita-spots/qiita/pull/3509), [#3511](https://github.com/qiita-spots/qiita/pull/3511), [#3502](https://github.com/qiita-spots/qiita/pull/3502)
+* Added `CLAUDE.md` to guide Claude Code sessions in this repository. [#3508](https://github.com/qiita-spots/qiita/pull/3508)
+* Fixed a deadlock in `/apitest/reload_plugins/` where the master Tornado ioloop blocked on the plugin-registration subprocess, causing intermittent 504s from nginx when plugin callbacks were round-robined back to master (fixes [#3515](https://github.com/qiita-spots/qiita/issues/3515)).
+* Expanded `CLAUDE.md` with CI-sourced runtime details (webdis/nginx/supervisord, `QIITA_JOB_SCHEDULER_EPILOGUE`, `qiita-env make --no-load-ontologies`, `qiita-test-install`, `qiita plugins update`, production-DB zero-rows invariant, and the non-`qiita_db` matrix post-test checks).
+
+
 Version 2026.01
 ---------------
 

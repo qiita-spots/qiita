@@ -25,8 +25,25 @@ from qiita_pet.webserver import Application
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
+    __test__ = False
     database = False
     app = Application()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Restore nosetests behavior: __test__ = False should not propagate
+        # to subclasses. Only classes that explicitly set __test__ = False
+        # in their own __dict__ will be skipped.
+        if "__test__" not in cls.__dict__:
+            cls.__test__ = True
+
+    def runTest(self):
+        # Required by pytest's UnitTestCase.newinstance() which instantiates
+        # TestCase("runTest") for fixture discovery. Tornado's
+        # AsyncHTTPTestCase.__init__ crashes without this because it calls
+        # getattr(self, methodName) before unittest.TestCase.__init__ can
+        # handle the missing method gracefully.
+        pass
 
     def get_app(self):
         BaseHandler.get_current_user = Mock(return_value=User("test@foo.bar"))
@@ -90,6 +107,8 @@ class TestHandlerBase(AsyncHTTPTestCase):
 
 # adapted from: https://gist.github.com/crodjer/1e9989ab30fdc32db926
 class TestHandlerWebSocketBase(TestHandlerBase):
+    __test__ = False
+
     def setUp(self):
         super(TestHandlerWebSocketBase, self).setUp()
         socket, self.port = bind_unused_port()

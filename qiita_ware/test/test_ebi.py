@@ -432,8 +432,14 @@ class TestEBISubmission(TestCase):
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1),
         }
-        study = Study.create(User("test@foo.bar"), "Test EBI study", info)
+
+        if Study.exists("Test EBI study"):
+            study = Study.from_title("Test EBI study")
+            return study.prep_templates()[0].artifact
+        else:
+            study = Study.create(User("test@foo.bar"), "Test EBI study", info)
         self.study_id = study.id
+
         metadata_dict = {
             "Sample1": {
                 "collection_timestamp": "06/01/15 07:00:00",
@@ -460,6 +466,7 @@ class TestEBISubmission(TestCase):
         metadata = pd.DataFrame.from_dict(metadata_dict, orient="index", dtype=str)
         with warnings.catch_warnings(record=True):
             SampleTemplate.create(metadata, study)
+
         metadata_dict = {
             "Sample1": {
                 "primer": "GTGCCAGCMGCCGCGGTAA",

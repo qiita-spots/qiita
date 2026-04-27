@@ -910,7 +910,7 @@ class TestStudy(TestCase):
             ],
         )
 
-        self.assertEqual(qdb.study.Study(2).analyses(), [])
+        self.assertEqual(new.analyses(), [])
 
         qdb.study.Study.delete(new.id)
 
