@@ -4,7 +4,6 @@ from os.path import exists, basename, join, isdir, splitext, abspath
 from unittest import main
 from shutil import rmtree, make_archive
 import hashlib
-import tempfile
 
 import qiita_db as qdb
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
@@ -198,8 +197,12 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
                      "transferred yet") % (len(chunks), fp_target),
                      obs.reason)
             # also test presense of chunk
+            tmp_dirname = join(
+                self.base_data_dir,
+                'tmp_chunked_https_transfer',
+                resumable_identifier[:2])
             self.assertTrue(exists(join(
-                tempfile.gettempdir(), resumable_identifier + '.%i' % i)))
+                tmp_dirname, resumable_identifier + '.%i' % i)))
 
         # transfer missing chunk
         data['current_chunk'] = 2
@@ -210,7 +213,7 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
             data=data)
         self.assertEqual(obs.status_code, 200)
         self.assertTrue(exists(join(
-                tempfile.gettempdir(),
+                tmp_dirname,
                 resumable_identifier + '.%i' % data['current_chunk'])))
 
         # all chunks have been transferred, but file has not been reconstructed
@@ -230,7 +233,7 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
 
         # test that tmp files have been removed
         self.assertTrue(all([not exists(join(
-                tempfile.gettempdir(),
+                tmp_dirname,
                 resumable_identifier + '.%i' % i)) for i in chunks.keys()]))
 
         # test file content
