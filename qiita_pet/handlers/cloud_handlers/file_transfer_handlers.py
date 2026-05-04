@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import zipfile
 import hashlib
-import tempfile
 from io import BytesIO
 
 from tornado.gen import coroutine
@@ -303,8 +302,17 @@ class PushFileToCentralHandler(RequestHandler):
         # for multiple files, we need to uniquely identify the tmp files,
         # which we do here by hashing the target filepath
         resumable_identifier = hashlib.md5(filepath.encode()).hexdigest()
-        tmp_filename = os.path.join(
-            tempfile.gettempdir(), resumable_identifier)
+        # We need to use a temporary directory that is shared between all qiita
+        # central nodes.
+        tmp_dirname = os.path.join(basedatadir, 'tmp_chunked_https_transfer')
+        # To avoid overpopulating a single directory with too many files, we
+        # dynamically create sub-directories consisting of the first to
+        # characters of the resumable_identifier
+        tmp_dirname = os.path.join(tmp_dirname, resumable_identifier[:2])
+        # ensure that the directory exists
+        os.makedirs(tmp_dirname, exist_ok=True)
+
+        tmp_filename = os.path.join(tmp_dirname, resumable_identifier)
 
         # store each chunk to a temporary file
         with open(tmp_filename + ('.%i' % current_chunk), "wb") as tmp_file:
@@ -321,7 +329,7 @@ class PushFileToCentralHandler(RequestHandler):
                 # temporary directory instead of the requested target directory
                 target_fp = filepath
                 if sent_directory:
-                    target_fp = os.path.join(tempfile.gettempdir(),
+                    target_fp = os.path.join(tmp_dirname,
                                              resumable_identifier + '.zip')
                 with open(target_fp, 'wb') as targetfile:
                     for i in range(1, total_chunks + 1):
