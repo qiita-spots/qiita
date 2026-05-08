@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 import zipfile
+import hashlib
 from io import BytesIO
 
 from tornado.gen import coroutine
-from tornado.web import HTTPError, RequestHandler
+from tornado.web import HTTPError, RequestHandler, MissingArgumentError
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import execute_as_transaction, is_test_environment
@@ -200,60 +201,157 @@ class PushFileToCentralHandler(RequestHandler):
     @coroutine
     @execute_as_transaction
     def post(self):
-        if not self.request.files:
-            raise HTTPError(400, reason='No files to upload defined!')
+        """
+        Transfers (chunked) file content to Qiita main.
 
+        The content of one file is chunked and transferred in parts to Qiita
+        main. This function receives the chunkes, combined chunks into one file
+        and stores it at the provided filepath - within BASE_DATA_DIR.
+        Should is_directory be true, this function assumes the transferred
+        content is a zipped archive and attempts to decompress it.
+        Chunks must be numbered (starting with 1) and total number of expected
+        chunks must be provided to calculate end of transfer.
+
+        Expected arguments
+        ------------------
+        data: target_filepath : str
+            Mandatory.
+            Filepath in Qiita main, where transferred data shall be stored.
+        data: total_chunks : int
+            Mandatory.
+            Total number of content chunks to be expected for file transfer.
+        data: current_chunk : int
+            Current index (first is 1) of data chunk for file to be transferred.
+            Mandatory.
+        data: is_directory : bool
+            Optional, defaults to "false".
+            "false" if a single file is transferred, "true" if the transferred
+            file is a ZIP archive that shall be extracted after transfer.
+        files : multipart/form-data
+            Mandatory.
+            Only "body" of first element of object "file" is considered as
+            data chunk of the file to be transferred.
+        """
+        try:
+            data_chunk = self.request.files["file"][0]["body"]
+        except (KeyError, IndexError):
+            raise HTTPError(
+                400,
+                reason=("No files to upload defined! Ensure your POST request "
+                        "contains e.g. {'file': ('dummy', b\"data\", "
+                        "'application/octet-stream)}."))
+
+        try:
+            filepath = self.get_argument('target_filepath')
+        except MissingArgumentError:
+            raise HTTPError(
+                400,
+                reason=('No target_filepath defined! You need to provide a '
+                        'filepath in Qiita main, where the transferred file '
+                        'should be stored.'))
+
+        try:
+            current_chunk = int(self.get_body_argument('current_chunk'))
+        except MissingArgumentError:
+            raise HTTPError(
+                400,
+                reason=('No current_chunk argument provided. Should be 1 for '
+                        'small files but > 1 for larger files, which needs to '
+                        'be transferred in multiple chunks.'))
+
+        try:
+            total_chunks = int(self.get_body_argument('total_chunks'))
+        except MissingArgumentError:
+            raise HTTPError(
+                400,
+                reason=('No total_chunks argument provided. Should be 1 for '
+                        'small files, but without knowing the total expected '
+                        'number of chunks, we cannot combine larger chunked '
+                        'files.'))
+
+        # differentiate between regular files and whole directories,
+        # which must be zipped AND the client must provide the
+        # is_directory='true' body argument.
+        sent_directory = self.get_body_argument(
+            'is_directory', "false") == "true"
+
+        # Compute the actual target filepath
         # canonic version of base_data_dir
         basedatadir = os.path.abspath(qiita_config.base_data_dir)
-        stored_files = []
-        stored_directories = []
+        # chop BASE_DATA_DIR if provided by user of the function
+        if filepath.startswith(basedatadir):
+            filepath = filepath[len(basedatadir):]
+        # remove leading /
+        if filepath.startswith(os.sep):
+            filepath = filepath[len(os.sep):]
+        filepath = os.path.abspath(os.path.join(basedatadir, filepath))
 
-        for filespath, filelist in self.request.files.items():
-            if filespath.startswith(basedatadir):
-                filespath = filespath[len(basedatadir):]
+        # prevent overwriting existing files, except in test mode
+        if os.path.exists(filepath) and (not is_test_environment()):
+            raise HTTPError(403, reason=(
+                "The requested %s is already "
+                "present in Qiita's BASE_DATA_DIR!" %
+                ('directory' if sent_directory else 'file')))
+        # create parent directory if necessary
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
-            for file in filelist:
-                # differentiate between regular files and whole directories,
-                # which must be zipped AND the client must provide the
-                # is_directory='true' body argument.
-                sent_directory = self.get_body_argument(
-                    'is_directory', "false") == "true"
+        # The file is probably chunked. In order to avoid storing an
+        # incomplete file at the target filepath, we store a growing
+        # temporary file until current_chunk == total_chunks and only then
+        # move a compose file to the given location. To do so in parallel
+        # for multiple files, we need to uniquely identify the tmp files,
+        # which we do here by hashing the target filepath
+        resumable_identifier = hashlib.md5(filepath.encode()).hexdigest()
+        # We need to use a temporary directory that is shared between all qiita
+        # central nodes.
+        tmp_dirname = os.path.join(basedatadir, 'tmp_chunked_https_transfer')
+        # To avoid overpopulating a single directory with too many files, we
+        # dynamically create sub-directories consisting of the first to
+        # characters of the resumable_identifier
+        tmp_dirname = os.path.join(tmp_dirname, resumable_identifier[:2])
+        # ensure that the directory exists
+        os.makedirs(tmp_dirname, exist_ok=True)
 
-                filepath = os.path.join(filespath, file['filename'])
-                # remove leading /
-                if filepath.startswith(os.sep):
-                    filepath = filepath[len(os.sep):]
-                filepath = os.path.abspath(os.path.join(basedatadir, filepath))
+        tmp_filename = os.path.join(tmp_dirname, resumable_identifier)
 
+        # store each chunk to a temporary file
+        with open(tmp_filename + ('.%i' % current_chunk), "wb") as tmp_file:
+            tmp_file.write(bytes(data_chunk))
+
+        # last chunk, we can attempt to reconstruct the chunked file
+        if current_chunk == total_chunks:
+            # check that all chunks are present, we do NOT test if individual
+            # chunks might be corrupted
+            if all([os.path.exists(tmp_filename + ('.%i' % i))
+                    for i in range(1, total_chunks + 1)]):
+                # create the target file from individual chunks
+                # if a directory is transferred, combine one zip file in the
+                # temporary directory instead of the requested target directory
+                target_fp = filepath
                 if sent_directory:
-                    # if a whole directory was send, we want to store it at
-                    # the given dirname of the filepath
-                    filepath = os.path.dirname(filepath)
-
-                # prevent overwriting existing files, except in test mode
-                if os.path.exists(filepath) and (not is_test_environment()):
-                    raise HTTPError(403, reason=(
-                        "The requested %s is already "
-                        "present in Qiita's BASE_DATA_DIR!" %
-                        ('directory' if sent_directory else 'file')))
-
-                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                    target_fp = os.path.join(tmp_dirname,
+                                             resumable_identifier + '.zip')
+                with open(target_fp, 'wb') as targetfile:
+                    for i in range(1, total_chunks + 1):
+                        with open(tmp_filename + ('.%i' % i), 'rb') as f:
+                            targetfile.write(f.read())
+                        os.remove(tmp_filename + ('.%i' % i))
                 if sent_directory:
-                    with zipfile.ZipFile(BytesIO(file['body'])) as zf:
+                    with zipfile.ZipFile(target_fp, "r") as zf:
                         zf.extractall(filepath)
-                        stored_directories.append(filepath)
-                else:
-                    with open(filepath, "wb") as f:
-                        f.write(file['body'])
-                        stored_files.append(filepath)
+                    os.remove(target_fp)
 
-        for (_type, objs) in [('files', stored_files),
-                              ('directories', stored_directories)]:
-            if len(objs) > 0:
+                # reporting
                 self.write(
-                    "Stored %i %s into BASE_DATA_DIR of Qiita:\n%s\n" % (
-                        len(objs),
-                        _type,
-                        '\n'.join(map(lambda x: ' - %s' % x, objs))))
+                    "Stored 1 %s into BASE_DATA_DIR of Qiita:\n - %s\n" % (
+                        'file' if (not sent_directory) else 'directory',
+                        filepath))
+            else:
+                raise HTTPError(
+                    400, reason=(
+                        ("Not all %s chunks for file %s have been "
+                         "transferred yet") % (
+                             total_chunks,
+                             self.get_body_argument('target_filepath'))))
 
         self.finish()
