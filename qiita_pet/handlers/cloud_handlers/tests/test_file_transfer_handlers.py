@@ -147,22 +147,6 @@ class PushFileToCentralHandlerTests(OauthTestingBase):
         self.assertIn("already present in Qiita's BASE_DATA_DIR!",
                         obs.reason)
 
-        # I ditched sending multiple files on 2026-03.24 in favor of a clean
-        # interface to transfer a single but huge file in chunks
-        # # test transfer of multiple files
-        # if exists(fp_target):
-        #     remove(fp_target)
-        # with open(fp_source, 'rb') as fh1:
-        #     with open(fp_source2, 'rb') as fh2:
-        #         obs = self.post_authed(
-        #             self.endpoint, files={'bar/': fh1, 'barr/': fh2})
-        #         self.assertIn('Stored 2 files into BASE_DATA_DIR of Qiita',
-        #                       str(obs.content))
-        #         self.assertTrue(filecmp.cmp(fp_source, fp_target,
-        #                                     shallow=False))
-        #         self.assertTrue(filecmp.cmp(fp_source2, fp_target2,
-        #                                     shallow=False))
-
     def test_chuncked_transfer(self):
         long_content = (b"This is a very long file content, "
                         b"that needs to be chunked :-)")
