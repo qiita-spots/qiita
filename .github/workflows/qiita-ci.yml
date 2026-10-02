@@ -81,6 +81,7 @@ jobs:
       - name: Webdis install
         shell: bash -l {0}
         run: |
+          sudo apt-get update
           sudo apt-get -y install libevent-dev
           git clone https://github.com/nicolasff/webdis
           cd webdis
