@@ -919,8 +919,9 @@ class Artifact(qdb.base.QiitaObject):
 
         Notes
         -----
-        The visibility of an artifact is propagated to its ancestors, but it
-        only applies when the new visibility is more open than before.
+        The new visibility is applied to the full processing network: the
+        root of this artifact is resolved and every one of its descendants
+        is set to `value`, so this can both open and close the whole tree.
         """
         with qdb.sql_connection.TRN:
             # first let's check that this is a valid visibility

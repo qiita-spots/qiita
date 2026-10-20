@@ -452,6 +452,22 @@ class TestBaseHandlersUtils(TestCase):
                 test_user, 1, "replace", "/visibility/", req_value="wrong"
             )
 
+        # A user can read a public artifact but that doesn't allow them to
+        # change it; same for any other artifact in the now public study
+        a.visibility = "public"
+        demo_user = User("demo@microbio.me")
+        check_artifact_access(demo_user, a)
+        with self.assertRaises(QiitaHTTPError):
+            artifact_patch_request(
+                demo_user, 1, "replace", "/visibility/", req_value="sandbox"
+            )
+        with self.assertRaises(QiitaHTTPError):
+            artifact_patch_request(
+                demo_user, 1, "replace", "/name/", req_value="NEW_NAME"
+            )
+        self.assertEqual(a.visibility, "public")
+        self.assertEqual(a.name, "Raw data 1")
+
 
 class TestBaseHandlers(TestHandlerBase):
     def setUp(self):
