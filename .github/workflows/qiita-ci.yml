@@ -262,5 +262,5 @@ jobs:
         uses: actions/checkout@v2
       - name: lint
         run: |
-          pip install -q ruff
+          pip install -q ruff==0.14.8
           ruff check qiita_* setup.py scripts/qiita* notebooks/*/*.py
