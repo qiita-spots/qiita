@@ -339,6 +339,10 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     if access_error:
         return access_error
     user = User(str(user_id))
+    # check_access grants read access to everybody if the study is public,
+    # which is not enough to modify the artifact
+    if not pd.study.can_edit(user):
+        return {"status": "error", "message": "User has insufficient permissions"}
     status = "success"
     msg = "Artifact visibility changed to %s" % visibility
     # Set the approval to private if needs approval and admin

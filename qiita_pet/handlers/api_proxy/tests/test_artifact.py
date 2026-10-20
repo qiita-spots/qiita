@@ -426,6 +426,18 @@ class TestArtifactAPI(TestCase):
         exp = {"status": "error", "message": "User has insufficient permissions"}
         self.assertEqual(obs, exp)
 
+    def test_artifact_status_put_req_public_study_no_access(self):
+        # a public study is readable by everybody, which is not enough to
+        # change the visibility of its artifacts
+        Artifact(1).visibility = "public"
+        obs = artifact_status_put_req(1, "demo@microbio.me", "sandbox")
+        exp = {"status": "error", "message": "User has insufficient permissions"}
+        self.assertEqual(obs, exp)
+        self.assertEqual(Artifact(1).visibility, "public")
+        # the tests in this class share the database, so leave the artifact
+        # as the other tests expect to find it
+        Artifact(1).visibility = "private"
+
     def test_artifact_status_put_req_unknown_status(self):
         obs = artifact_status_put_req(1, "test@foo.bar", "BADSTAT")
         exp = {"status": "error", "message": "Unknown visibility value: BADSTAT"}

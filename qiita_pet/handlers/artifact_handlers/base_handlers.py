@@ -359,6 +359,14 @@ def artifact_patch_request(
         # Check if the user actually has access to the artifact
         artifact = Artifact(artifact_id)
         check_artifact_access(user, artifact)
+        # ... and that they can modify it; a public study is readable by
+        # everybody, which is not enough to change any of its artifacts
+        study = artifact.study
+        editable = study.can_edit(user) if study else artifact.analysis.can_edit(user)
+        if not editable:
+            raise QiitaHTTPError(
+                403, "User does not have permissions to edit artifact %s" % artifact_id
+            )
 
         if not req_value:
             raise QiitaHTTPError(404, "Missing value to replace")
