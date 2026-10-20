@@ -468,6 +468,10 @@ class TestBaseHandlersUtils(TestCase):
         self.assertEqual(a.visibility, "public")
         self.assertEqual(a.name, "Raw data 1")
 
+        # the tests in this class share the database, so leave the artifact
+        # as the other tests expect to find it
+        a.visibility = "private"
+
 
 class TestBaseHandlers(TestHandlerBase):
     def setUp(self):
