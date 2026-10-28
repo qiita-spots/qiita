@@ -1,6 +1,13 @@
 # Qiita changelog
 
 
+Unreleased
+----------
+
+* Changing the visibility of an artifact now requires edit permissions on its study or analysis; before, any authenticated user could change it in a public study. [#3524](https://github.com/qiita-spots/qiita/pull/3524).
+* Fixed the access checks that took a study being public as meaning its artifacts are public. A study is public if *any* of its artifacts is public, so in a study with mixed visibilities the files, prep information and artifact pages of the non-public artifacts were reachable by any authenticated user; `validate_filepath_access_by_user` and `check_artifact_access` now ignore the study's public status when the artifact itself is not public.
+
+
 Version 2026.01
 ---------------
 
