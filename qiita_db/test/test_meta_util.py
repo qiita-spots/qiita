@@ -43,6 +43,15 @@ class MetaUtilTests(TestCase):
             "UPDATE qiita.artifact SET visibility_id = %d" % id_status
         )
 
+    def _set_artifact_visibility(self, artifact_id, visibility):
+        # note that this is done via SQL, and not via Artifact.visibility, so
+        # the change is NOT propagated to the rest of the tree; that is what
+        # lets us build a study with mixed visibilities
+        qdb.sql_connection.perform_as_transaction(
+            "UPDATE qiita.artifact SET visibility_id = %s WHERE artifact_id = %s",
+            [qdb.util.convert_to_id(visibility, "visibility"), artifact_id],
+        )
+
     def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
 
@@ -166,6 +175,29 @@ class MetaUtilTests(TestCase):
         qdb.study.Study(1).share(user)
         qdb.analysis.Analysis(1).share(user)
         qdb.study.Study.delete(study.id)
+
+    def test_validate_filepath_access_by_user_mixed_visibility(self):
+        # a study is public if ANY of its artifacts is public (infer_status),
+        # so the artifacts of that study that are NOT public have to stay
+        # protected; demo has no access to Study(1)
+        self._set_artifact_private()
+        user = qdb.user.User("demo@microbio.me")
+
+        # artifact 1 -> filepaths 1, 2; artifact 2 -> 3, 4, 5;
+        # artifact 6 -> 12; all of them in Study(1)
+        for i in [1, 2, 3, 4, 5, 12]:
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(user, i))
+
+        # making a single artifact public is enough for the whole study to
+        # report itself as public
+        self._set_artifact_visibility(6, "public")
+        self.assertEqual(qdb.study.Study(1).status, "public")
+
+        # the public artifact is now reachable ...
+        self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(user, 12))
+        # ... but the ones that are still private are not
+        for i in [1, 2, 3, 4, 5]:
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(user, i))
 
     def test_get_lat_longs(self):
         # no public studies should return an empty array

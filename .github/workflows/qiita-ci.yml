@@ -8,7 +8,9 @@ on:
 jobs:
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   main:
-    runs-on: ubuntu-latest
+    # pinned: ubuntu-latest moved to Ubuntu 26 on 2026-10-19, which ships no
+    # preinstalled Miniconda and no Python 3.9
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -241,7 +243,7 @@ jobs:
 
   coveralls_finish:
     needs: main
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Coveralls Finished
         uses: AndreMiras/coveralls-python-action@develop
@@ -250,7 +252,7 @@ jobs:
           parallel-finished: true
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: ruff
         uses: actions/setup-python@v2

@@ -148,8 +148,11 @@ def validate_filepath_access_by_user(user, filepath_id):
             else:
                 study = artifact.study
                 if study:
-                    # let's take the visibility via the Study
-                    return artifact.study.has_access(user)
+                    # let's take the visibility via the Study. Note that
+                    # no_public is required: a study is public if ANY of its
+                    # artifacts is public (infer_status), so a public study
+                    # tells us nothing about this, non public, artifact
+                    return artifact.study.has_access(user, no_public=True)
                 else:
                     analysis = artifact.analysis
                     return analysis in (user.private_analyses | user.shared_analyses)
@@ -169,13 +172,15 @@ def validate_filepath_access_by_user(user, filepath_id):
             # however, the prep info file could not have any artifacts attached
             # , in that case we will use the study access level
             if a is None:
-                return qdb.study.Study(pt.study_id).has_access(user)
+                return qdb.study.Study(pt.study_id).has_access(user, no_public=True)
             else:
-                if a.visibility == "public" or a.study.has_access(user):
+                if a.visibility == "public" or a.study.has_access(user, no_public=True):
                     return True
                 else:
                     for c in a.descendants.nodes():
-                        if c.visibility == "public" or c.study.has_access(user):
+                        if c.visibility == "public" or c.study.has_access(
+                            user, no_public=True
+                        ):
                             return True
             return False
         # analyses

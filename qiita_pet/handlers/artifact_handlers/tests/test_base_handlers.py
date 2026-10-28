@@ -22,7 +22,9 @@ from qiita_db.artifact import Artifact
 from qiita_db.logger import LogEntry
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Command, Parameters
+from qiita_db.sql_connection import perform_as_transaction
 from qiita_db.user import User
+from qiita_db.util import convert_to_id
 from qiita_pet.exceptions import QiitaHTTPError
 from qiita_pet.handlers.artifact_handlers.base_handlers import (
     artifact_patch_request,
@@ -72,6 +74,25 @@ class TestBaseHandlersUtils(TestCase):
         check_artifact_access(User("shared@foo.bar"), a)
         a.visibility = "public"
         check_artifact_access(demo_u, a)
+
+    def test_check_artifact_access_mixed_visibility(self):
+        # a study is public if ANY of its artifacts is public (infer_status),
+        # so a non public artifact of that study has to stay protected
+        demo_u = User("demo@microbio.me")
+        a = Artifact(1)
+        self.assertEqual(a.visibility, "private")
+
+        # artifact 6 belongs to the same study as artifact 1; setting it via
+        # SQL so the change is not propagated to the rest of the tree
+        perform_as_transaction(
+            "UPDATE qiita.artifact SET visibility_id = %s WHERE artifact_id = %s",
+            [convert_to_id("public", "visibility"), 6],
+        )
+        self.assertEqual(a.study.status, "public")
+
+        # artifact 1 is still private, so demo must not get through
+        with self.assertRaises(HTTPError):
+            check_artifact_access(demo_u, a)
 
     def _assert_summary_equal(self, obs, exp):
         "Utility function for testing the artifact summary get request"

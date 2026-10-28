@@ -53,7 +53,10 @@ def check_artifact_access(user, artifact):
     else:
         analysis = artifact.analysis
         if study:
-            if not study.has_access(user):
+            # no_public is required: a study is public if ANY of its artifacts
+            # is public (infer_status), so a public study tells us nothing
+            # about this, non public, artifact
+            if not study.has_access(user, no_public=True):
                 raise QiitaHTTPError(403, "Access denied to study %s" % artifact.id)
         elif analysis:
             if not analysis.has_access(user):
